@@ -1087,6 +1087,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Listener de auth state para sincronizar sesión de Supabase con estado local
   useEffect(() => {
+    if (!supabase?.auth?.onAuthStateChange) return;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session) {
@@ -1102,7 +1104,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe?.();
   }, []);
 
   const toggleFavorite = (partId: string) => {
