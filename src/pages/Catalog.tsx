@@ -220,8 +220,8 @@ export const Catalog: React.FC<CatalogProps> = ({
 
       <div className="flex justify-between items-center text-zinc-900">
         <div>
-          <span className="text-[11px] font-mono text-violet-600 font-bold uppercase tracking-wider">Supermercado Express Premium</span>
-          <h2 className="text-[21px] font-bold font-display text-zinc-900">Buscador de Pasillos</h2>
+          <span className="text-[11px] font-mono text-orange-500 font-bold uppercase tracking-wider">Delivery Express</span>
+          <h2 className="text-[21px] font-bold font-display text-zinc-900">Buscar en el Menú</h2>
         </div>
         <span className="text-xs text-zinc-500 font-mono bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded-lg">
           {filteredProducts.length} articulos
@@ -237,7 +237,7 @@ export const Catalog: React.FC<CatalogProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Busca por viveres, SKU o ingredientes..."
+            placeholder="Busca platos, bebidas, ingredientes..."
             className="w-full bg-zinc-50 hover:bg-zinc-100 focus:bg-white border border-zinc-200 rounded-lg pl-10 pr-4 py-2.5 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-violet-500 transition-all shadow-sm"
           />
         </div>
@@ -263,7 +263,7 @@ export const Catalog: React.FC<CatalogProps> = ({
       <div className={`p-4 border border-zinc-200 rounded-lg bg-zinc-50/50 flex flex-col gap-3 transition-all ${showAdvanced ? 'block' : 'hidden md:flex'} text-zinc-900 shadow-sm`}>
         <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
           <span className="text-[11px] uppercase font-mono font-bold text-zinc-800 tracking-wider flex items-center gap-1.5">
-            <Carrot size={13} className="text-violet-600" /> Pasillos y Preferencias
+            <Carrot size={13} className="text-orange-500" /> Categorías
           </span>
           <button
             type="button"

@@ -222,8 +222,8 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
       setFormCodigo('');
       setFormNombre('');
       setFormDescripcion('');
-      setFormCategoria(config.categories?.[0] || 'Lácteos y Quesos');
-      setFormMarca('Pasillo 1 - Lacteos');
+      setFormCategoria(config.categories?.[0] || 'Hamburguesas');
+      setFormMarca('Hamburguesas');
       setFormModelo('');
       setFormAnioInicio(15);
       setFormAnioFin(4);
@@ -350,14 +350,14 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `marketo_backup_${isAuto ? 'auto_' : 'manual'}_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `foodapp_backup_${isAuto ? 'auto_' : 'manual'}_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
     if (!isAuto) {
-      localStorage.setItem('marketo_last_backup_date', String(new Date().getTime()));
+      localStorage.setItem('foodapp_last_backup_date', String(new Date().getTime()));
       alert("¡Respaldo de seguridad generado y descargado con éxito!");
     }
   };
@@ -481,7 +481,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `pedidos_marketo_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `pedidos_foodapp_${new Date().toISOString().split('T')[0]}.csv`);
     link.click();
   };
 
@@ -573,7 +573,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "plantilla_importacion_marketo.csv");
+      link.setAttribute("download", "plantilla_importacion_foodapp.csv");
     link.click();
   };
 
@@ -726,15 +726,15 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   // --- Lógica de Respaldo: Preguntar cada 15 días ---
   useEffect(() => {
     if (adminSection === 'reports' || adminSection === 'settings') {
-      const lastBackup = localStorage.getItem('marketo_last_backup_date');
+      const lastBackup = localStorage.getItem('foodapp_last_backup_date');
       const now = new Date().getTime();
       const fifteenDays = 15 * 24 * 60 * 60 * 1000;
 
       if (!lastBackup || (now - Number(lastBackup)) > fifteenDays) {
         if (confirm("🗓️ Han pasado 15 días desde su último respaldo. ¿Desea descargar una copia de seguridad de sus datos ahora?")) {
           handleManualBackup(true);
-          localStorage.setItem('marketo_last_backup_date', String(now));
-          console.log("💾 Marketo: Respaldo manual solicitado por periodo quincenal.");
+          localStorage.setItem('foodapp_last_backup_date', String(now));
+          console.log("💾 FoodApp: Respaldo manual solicitado por periodo quincenal.");
         }
       }
     }
@@ -1021,7 +1021,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                 type="text"
                 value={crudSearch}
                 onChange={(e) => setCrudSearch(e.target.value)}
-                placeholder="Filtrar por nombre, codigo SKU o pasillo..."
+                placeholder="Filtrar por nombre, codigo o categoría..."
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2.5 pl-9 pr-12 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 transition-all shadow-inner"
               />
               <button
@@ -1861,7 +1861,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                   type="text" 
                   value={newCouponCode} 
                   onChange={(e) => setNewCouponCode(e.target.value.toUpperCase().replace(/\s/g, ''))}
-                  placeholder="EJ: MARKETO10"
+                  placeholder="EJ: FOODAPP10"
                   className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-bold"
                 />
               </div>
@@ -2333,7 +2333,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{config.site_nombre || 'Marketo'}</span>
+                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{config.site_nombre || 'FoodApp'}</span>
                       <span className="text-[9px] text-slate-400 font-medium">ahora</span>
                     </div>
                     <h5 className="text-[12px] font-bold text-slate-800 leading-tight">¡Bienvenido a {config.site_nombre || 'nuestra tienda'}!</h5>
@@ -2922,7 +2922,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
 
             {/* Separator */}
             <div className="border-t border-dashed border-black mt-3 pt-3 text-xs font-bold uppercase">
-              PRODUCTOS ADQUIRIDOS
+              PRODUCTOS PEDIDOS
             </div>
 
             {/* Ordered Parts items list loop inside digital ticket receipt */}
@@ -2979,7 +2979,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
               <div className="w-full h-8 bg-black/10 rounded flex items-center justify-center text-[8px] tracking-[6px] text-gray-500 font-bold overflow-hidden select-none">
                 |||| | || || | |||| || | || ||| ||
               </div>
-              <p className="text-[9px] text-gray-400 font-mono mt-1">¡Gracias por preferirnos en Valencia!</p>
+              <p className="text-[9px] text-gray-400 font-mono mt-1">¡Gracias por preferirnos!</p>
             </div>
 
             {/* Close trigger button */}

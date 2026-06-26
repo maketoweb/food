@@ -19,8 +19,8 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
   const [formDescripcion, setFormDescripcion] = useState('');
   const [formDetalleAdicional, setFormDetalleAdicional] = useState('');
   const [uploadFormat, setUploadFormat] = useState<'image/webp' | 'image/jpeg'>('image/webp');
-  const [formCategoria, setFormCategoria] = useState('Lácteos y Quesos');
-  const [formSeccion, setFormSeccion] = useState('Pasillo 1 - Lacteos');
+  const [formCategoria, setFormCategoria] = useState('Hamburguesas');
+  const [formSeccion, setFormSeccion] = useState('Hamburguesas');
   const [formSubseccion, setFormSubseccion] = useState('');
   const [formAnioInicio, setFormAnioInicio] = useState(15);
   const [formAnioFin, setFormAnioFin] = useState(4);
@@ -218,7 +218,7 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
               type="text"
               value={formMarca}
               onChange={(e) => setFormMarca(e.target.value)}
-              placeholder="Ej. Marketo, Alpina, Kraft..."
+              placeholder="Ej. FoodApp, Artesanal, Premium..."
               className={`bg-[#09090b] border ${validationErrors.marca ? 'border-red-500/60 focus:border-red-500' : 'border-[#27272a] focus:border-emerald-500'} rounded-lg px-2.5 py-2 outline-none transition-colors`}
             />
             {validationErrors.marca && (

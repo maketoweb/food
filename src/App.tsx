@@ -172,13 +172,13 @@ function AppContent() {
             className="text-3xl font-extrabold font-display tracking-tight"
             style={{ animation: 'nameSlideUp 0.6s ease-out 0.4s both' }}
           >
-            {config.site_nombre || 'Marketo'}
+            {config.site_nombre || 'FoodApp'}
           </h1>
           <p
             className="text-violet-200 font-mono text-xs uppercase tracking-widest mt-2"
             style={{ animation: 'nameSlideUp 0.6s ease-out 0.6s both' }}
           >
-            Cargando pasillos...
+            Cargando menú...
           </p>
         </div>
       </div>
@@ -265,7 +265,7 @@ function AppContent() {
                   style={tab === 'catalog' ? { backgroundColor: config.theme_color || '#7c3aed' } : {}}
                   className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs rounded-xl font-bold transition-all cursor-pointer ${tab === 'catalog' ? 'text-white shadow-md shadow-violet-500/10' : 'text-zinc-750 hover:bg-zinc-200/50'}`}
                 >
-                  Pasillos del Súper
+                  Nuestro Menú
                 </button>
 
                 <button
@@ -485,7 +485,7 @@ function AppContent() {
                   onClick={() => setDrawerOpen(!drawerOpen)}
                   className="text-zinc-700 hover:text-violet-600 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
-                  <Menu size={14} /> Explorar pasillos
+                  <Menu size={14} /> Ver Carta
                 </button>
                 <div className="h-4 w-px bg-zinc-200"></div>
                 <button

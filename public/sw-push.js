@@ -2,7 +2,7 @@
 // Loaded via workbox importScripts (generateSW strategy)
 
 // ─── IndexedDB helpers para logo_url ───
-const DB_NAME = 'marketo-pwa';
+const DB_NAME = 'foodapp-pwa';
 const DB_VERSION = 1;
 const STORE_NAME = 'config';
 

@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f5f6f5; /* Woolworths clean light grey background */
+  --bg: #f8f9fa;
   --card: #ffffff;
-  --border: #e0e6e2; /* Soft grey-green border */
-  --accent-blue: #0f5d34; /* Woolworths Signature Green */
-  --accent-purple: #0a522d; /* Woolworths Darker Green */
-  --text: #1a1a1a; /* Charcoal grey for high contrast */
-  --muted: #555555; /* Soft Muted Grey */
+  --border: #e9ecef;
+  --accent-orange: #FF6B35;
+  --accent-red: #E63946;
+  --accent-yellow: #FFB703;
+  --accent-green: #2EC4B6;
+  --text: #1a1a1a;
+  --muted: #6c757d;
 }
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-display: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
   --font-mono: "Fira Code", monospace;
   
   --color-premium-dark: var(--bg);
@@ -20,42 +22,46 @@
   --color-premium-border: var(--border);
   --color-premium-text: var(--text);
   --color-premium-muted: var(--muted);
-  --color-electric-blue: var(--accent-blue);
-  --color-deep-purple: var(--accent-purple);
-  --color-neon-violet: var(--accent-blue);
+  --color-electric-orange: var(--accent-orange);
+  --color-deep-red: var(--accent-red);
+  --color-neon-orange: var(--accent-orange);
   
-  /* Overrides to map all "violet" classes to Woolworths Green shades */
-  --color-violet-50: #f1f7f3;
-  --color-violet-100: #e2ede6;
-  --color-violet-150: #cfe4d8;
-  --color-violet-200: #b0cfbe;
-  --color-violet-300: #8bb7a0;
-  --color-violet-400: #4c9b6f;
-  --color-violet-500: #1a7c47;
-  --color-violet-600: #0f5d34;
-  --color-violet-650: #0a522d;
-  --color-violet-700: #0d4d2b;
-  --color-violet-750: #0b4325;
-  --color-violet-800: #08371e;
-  --color-violet-900: #052614;
+  /* Pop-vibrant orange primary palette */
+  --color-violet-50: #fff4ed;
+  --color-violet-100: #ffe4d4;
+  --color-violet-150: #ffd4b8;
+  --color-violet-200: #ffb688;
+  --color-violet-300: #ff9050;
+  --color-violet-400: #FF6B35;
+  --color-violet-500: #FF5722;
+  --color-violet-600: #E64A19;
+  --color-violet-650: #D84315;
+  --color-violet-700: #BF360C;
+  --color-violet-750: #A62B08;
+  --color-violet-800: #8C2106;
+  --color-violet-900: #6D1A04;
 
-  /* Overrides to map "amber" / "orange" to Woolworths warm orange specials/sales color */
-  --color-amber-50: #fff6f0;
-  --color-amber-100: #ffebd6;
-  --color-amber-500: #e05a00;
-  --color-amber-600: #cc5200;
+  /* Vibrant red accent */
+  --color-amber-50: #fff0f0;
+  --color-amber-100: #ffe0e0;
+  --color-amber-500: #E63946;
+  --color-amber-600: #C62828;
   
-  /* Overrides to map "emerald" colors to Woolworths Green shades */
-  --color-emerald-50: #f1f7f3;
-  --color-emerald-100: #e2ede6;
-  --color-emerald-600: #0f5d34;
-  --color-emerald-650: #0a522d;
-  --color-emerald-700: #0d4d2b;
-  --color-emerald-800: #08371e;
+  /* Fresh green accent */
+  --color-emerald-50: #e8faf7;
+  --color-emerald-100: #d0f5ef;
+  --color-emerald-600: #2EC4B6;
+  --color-emerald-650: #20B2AA;
+  --color-emerald-700: #1A9E92;
+  --color-emerald-800: #148A7F;
+
+  /* Yellow highlight */
+  --color-yellow-50: #fff9e6;
+  --color-yellow-100: #fff0b3;
+  --color-yellow-400: #FFB703;
+  --color-yellow-500: #FB8500;
 }
 
-
-/* Base custom styles */
 body {
   font-family: var(--font-sans);
   background-color: var(--bg);
@@ -71,55 +77,53 @@ code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Samsung-style sleek rounded buttons: Let Tailwind utility classes (rounded-lg, rounded-xl, etc.) work perfectly instead of forcing clumsy pills */
-button,
-.btn,
-input[type="button"],
-input[type="submit"],
-[role="button"] {
-  border-radius: 0.5rem; /* default to 8px, but can be customized with Tailwind */
+button, .btn, input[type="button"], input[type="submit"], [role="button"] {
+  border-radius: 0.75rem;
 }
 
-/* Premium unicolor elegant iconography that scales naturally with text color */
 svg {
   color: currentColor;
-  stroke-width: 1.5px; /* Thinner, ultra-premium stroke width like Apple/Samsung/modern tech design */
+  stroke-width: 1.5px;
   display: inline-block;
   vertical-align: middle;
 }
 
-/* Custom Scrollbars and Hiding scrollbar */
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Glassmorphism Classes with Sophisticated Light variables */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
 .glass-panel-heavy {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
   border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-/* Custom premium-gradient definition */
 .premium-gradient {
-  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-red) 100%);
 }
 
-.rounded-premium {
-  border-radius: 50px;
+.pop-gradient {
+  background: linear-gradient(135deg, #FF6B35 0%, #FFB703 50%, #E63946 100%);
 }
+
+.vibrant-gradient {
+  background: linear-gradient(135deg, #FF6B35 0%, #E63946 100%);
+}
+
+.fresh-gradient {
+  background: linear-gradient(135deg, #2EC4B6 0%, #20B2AA 100%);
+}
+
+.warm-gradient {
+  background: linear-gradient(135deg, #FFB703 0%, #FF6B35 100%);
+}
+
+.rounded-premium { border-radius: 50px; }
 
 .bento-item {
   background: var(--card);
@@ -134,14 +138,13 @@ svg {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--accent-blue);
-  box-shadow: 0 0 8px var(--accent-blue);
+  background: var(--accent-orange);
+  box-shadow: 0 0 8px var(--accent-orange);
 }
 
-/* Custom Leaflet Light Style Map */
 .leaflet-container {
   background: #ffffff !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   font-family: var(--font-sans) !important;
 }
 
@@ -152,19 +155,19 @@ svg {
 
 .leaflet-bar a {
   background-color: var(--card) !important;
-  color: var(--accent-blue) !important;
+  color: var(--accent-orange) !important;
   border-bottom: 1px solid var(--border) !important;
 }
 
 .leaflet-bar a:hover {
-  background-color: #f4f4f5 !important;
-  color: #2563eb !important;
+  background-color: #fff4ed !important;
+  color: #FF6B35 !important;
 }
 
 .leaflet-popup-content-wrapper {
   background: var(--card) !important;
   color: var(--text) !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   border: 1px solid var(--border) !important;
 }
 
@@ -172,34 +175,24 @@ svg {
   background: var(--card) !important;
 }
 
-/* Neon Glow Transitions */
 .neon-glow {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.25);
 }
 
-.neon-glow-purple {
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+.neon-glow-orange {
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
 }
 
-/* Snap scrolling adjustments */
-.snap-inline {
-  scroll-snap-type: x mandatory;
+.neon-glow-red {
+  box-shadow: 0 0 20px rgba(230, 57, 70, 0.25);
 }
 
-.snap-item {
-  scroll-snap-align: start;
-}
+.snap-inline { scroll-snap-type: x mandatory; }
+.snap-item { scroll-snap-align: start; }
 
-/* Custom premium micro-animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98) translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; transform: scale(0.98) translateY(2px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .animate-fade-in {
@@ -207,14 +200,40 @@ svg {
 }
 
 @keyframes bounceSubtle {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 .animate-bounce {
   animation: bounceSubtle 1.8s ease-in-out infinite;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-pop {
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,107,53,0.1) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

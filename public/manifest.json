@@ -1,13 +1,13 @@
 {
-  "name": "Marketo - Supermercado Gourmet & Delivery Express",
-  "short_name": "Marketo",
-  "description": "Tu supermercado premium con despacho express en el Gran Valencia, Carabobo. Víveres, carnes selectas, lácteos y más.",
+  "name": "FoodApp - Delivery de Comida Premium",
+  "short_name": "FoodApp",
+  "description": "Tu restaurante favorito con delivery express. Hamburguesas, pastas, postres y más.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#FF6B35",
+  "background_color": "#FFFFFF",
   "prefer_related_applications": false,
   "icons": [
     {
@@ -23,13 +23,13 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["shopping", "food"],
+  "categories": ["food", "restaurants"],
   "shortcuts": [
     {
-      "name": "Pasillos del Súper",
-      "short_name": "Productos",
+      "name": "Menú del Día",
+      "short_name": "Menú",
       "url": "/?tab=catalog",
-      "description": "Explorar los pasillos de víveres, quesos y carnes finas."
+      "description": "Explora nuestros platos, postres y bebidas."
     }
   ]
 }

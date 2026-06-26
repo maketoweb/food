@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SCRIPT DE ESQUEMA DEFINITIVO PARA MARKETO PWA
+-- SCRIPT DE ESQUEMA DEFINITIVO PARA FOODAPP PWA
 -- ESTADO: OPTIMIZADO PARA PRODUCCIÓN (VAPID + PUSH WEBHOOK)
 -- ==========================================================================
 
@@ -13,16 +13,16 @@ CREATE EXTENSION IF NOT EXISTS pg_net;
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS store_config (
     id SERIAL PRIMARY KEY,
-    site_nombre TEXT NOT NULL DEFAULT 'Marketo',
+    site_nombre TEXT NOT NULL DEFAULT 'FoodApp',
     telefono_soporte TEXT NOT NULL DEFAULT '+584124058904',
-    direccion_fisica TEXT NOT NULL DEFAULT 'Av. Bolívar Norte con Calle 140, Sector Las Acacias, Valencia, Carabobo',
+    direccion_fisica TEXT NOT NULL DEFAULT 'Av. Principal, Local #12, Ciudad',
     tienda_lat NUMERIC(10, 6) NOT NULL DEFAULT 10.198300,
     tienda_lng NUMERIC(10, 6) NOT NULL DEFAULT -68.004400,
-    banner_url_1 TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200',
-    banner_url_2 TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1607349913338-fca6f7fc42d0?auto=format&fit=crop&q=80&w=1200',
-    banner_url_3 TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=1200',
+    banner_url_1 TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
+    banner_url_2 TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=1200',
+    banner_url_3 TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&q=80&w=1200',
     zelle_enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    zelle_data TEXT NOT NULL DEFAULT 'pagos@marketo.com.ve',
+    zelle_data TEXT NOT NULL DEFAULT 'pagos@foodapp.com.ve',
     zelle_discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0.00,
     pagomovil_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     pagomovil_data TEXT NOT NULL DEFAULT 'Banesco (0134) - RIF J-50123456-7 - Tel: 0412-4976451',
@@ -31,19 +31,19 @@ CREATE TABLE IF NOT EXISTS store_config (
     efectivo_data TEXT NOT NULL DEFAULT 'Paga al motorizado en efectivo (USD/Bs) al recibir tu delivery',
     efectivo_discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0.00,
     transferencia_enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    transferencia_data TEXT NOT NULL DEFAULT 'Banesco Cuenta Corriente - 0134-1122-33-4455667788 - Marketo C.A. - RIF J-50123456-7',
+    transferencia_data TEXT NOT NULL DEFAULT 'Banesco Cuenta Corriente - 0134-1122-33-4455667788 - FoodApp C.A. - RIF J-50123456-7',
     transferencia_discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0.00,
     tasa_cambio NUMERIC(10,2) NOT NULL DEFAULT 612.43,
     logo_url TEXT DEFAULT '',
     theme_color VARCHAR(10) NOT NULL DEFAULT '#ffffff',
     favicon_url TEXT DEFAULT '',
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    categories TEXT[] DEFAULT ARRAY['Lácteos y Quesos', 'Carnes y Aves', 'Charcutería', 'Frutas y Verduras', 'Víveres y Despensa', 'Panadería y Pastelería', 'Bebidas y Jugos', 'Snacks y Dulces']::TEXT[],
+    categories TEXT[] DEFAULT ARRAY['Hamburguesas', 'Pastas', 'Pizzas', 'Postres', 'Bebidas', 'Entradas', 'Ensaladas', 'Combos']::TEXT[],
     esta_abierta BOOLEAN NOT NULL DEFAULT TRUE,
-    mensaje_cierre TEXT DEFAULT 'Hoy no trabajamos. Volveremos pronto.',
-    mensaje_bienvenida TEXT DEFAULT 'Encuentra los mejores cortes de carne, quesos madurados y viveres frescos con delivery express en Valencia.',
-    push_webhook_url TEXT DEFAULT 'https://market-cbh.pages.dev/api/push-notify',
-    push_webhook_secret TEXT DEFAULT '5fca5a4d8825d4de66811590f47af870b01d45e80f391920f4ea76a59ae3c8bf'
+    mensaje_cierre TEXT DEFAULT 'Cerrado por ahora. Volveremos pronto.',
+    mensaje_bienvenida TEXT DEFAULT 'Pide tu comida favorita con delivery express. Hamburguesas, pastas, postres y más.',
+    push_webhook_url TEXT DEFAULT '',
+    push_webhook_secret TEXT DEFAULT ''
 );
 
 INSERT INTO store_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
@@ -768,6 +768,6 @@ CREATE EXTENSION IF NOT EXISTS pg_net;
 -- 2. Actualizar configuración en la tabla
 UPDATE public.store_config 
 SET 
-  push_webhook_url = 'https://market-cbh.pages.dev/api/push-notify',
-  push_webhook_secret = '5fca5a4d8825d4de66811590f47af870b01d45e80f391920f4ea76a59ae3c8bf'
+  push_webhook_url = '',
+  push_webhook_secret = ''
 WHERE id = 1;
