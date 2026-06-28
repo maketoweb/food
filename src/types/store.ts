@@ -50,6 +50,7 @@ export interface Producto {
   es_mas_vendido: boolean;
   delivery_gratis?: boolean;
   detalle_adicional?: string;
+  ingredientes?: string[];
   activo?: boolean;
   option_groups?: ProductOptionGroup[];
 }

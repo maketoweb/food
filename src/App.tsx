@@ -14,9 +14,10 @@ import {
   X, ShoppingCart, Landmark, ShieldCheck, Tag, Info, AlertOctagon, 
   HelpCircle, Eye, Share2, ClipboardCheck, ChevronLeft, ChevronRight,
   Menu, Sparkles, Bell, User, Cpu, ShoppingBag, MapPin, ShieldAlert, RefreshCw,
-  Search, ArrowRight, Download
+  Search, ArrowRight, Download, Check
 } from 'lucide-react';
 import { SEOHead } from './components/SEOHead';
+import { getCategoryColor } from './utils/categoryColors';
 
 function AppContent() {
   const { cart, config, addToCart, isAdminAuthenticated, authenticateAdmin, logoutAdmin, currentUser, notifications, displayCurrency, toggleCurrency, isGlobalLoading } = useApp();
@@ -73,6 +74,7 @@ function AppContent() {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [selectedProductOptions, setSelectedProductOptions] = useState<SelectedOption[]>([]);
   const [optionsTotal, setOptionsTotal] = useState(0);
+  const [removedIngredients, setRemovedIngredients] = useState<Set<number>>(new Set());
 
   const resetAllFilters = () => {
     setSelectedCategory('');
@@ -89,6 +91,7 @@ function AppContent() {
     setMicroModalQuantity(1);
     setSelectedProductOptions([]);
     setOptionsTotal(0);
+    setRemovedIngredients(new Set());
   }, [selectedProductDetails]);
   
   // Authentication trigger helper
@@ -197,8 +200,8 @@ function AppContent() {
       <SEOHead />
       <PushNotificationModal />
 
-      {/* Main Grid Wrapper: Full screen width on PC and mobile viewports */}
-      <div className="w-full bg-white flex flex-col lg:flex-row min-h-screen relative">
+      {/* Main Grid Wrapper */}
+      <div className="w-full bg-white flex flex-col min-h-screen relative">
          {/* A. COLLAPSIBLE LEFT SIDEBAR - Dynamic on Desktop/PC and Mobile */}
         {drawerOpen && (
           <aside className="hidden lg:flex w-[290px] bg-zinc-50 border-r border-zinc-200 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto no-scrollbar select-none animate-fade-in">
@@ -542,7 +545,7 @@ function AppContent() {
           </div>
 
       {/* 2. BODY PAGES VIEW DELEGATOR */}
-      <main className="flex-1 px-4 pt-4 overflow-y-auto">
+      <main className="flex-1 px-4 lg:px-8 pt-4 lg:pt-6 overflow-y-auto max-w-7xl mx-auto w-full">
         {tab === 'home' && (
           <Home
             setTab={setTab}
@@ -621,178 +624,151 @@ function AppContent() {
       />
 
       {/* --------------------------------------------------------------------------------
-      A. MICRO-MODAL DETALLES DEL PRODUCTO (PREMIUM TRANSITIONAL WINDOW)
+      A. PRODUCT MODAL - Professional Food Delivery Style
       -------------------------------------------------------------------------------- */}
       {selectedProductDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
-          {/* SEO Head dynamic inject during detail open */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 lg:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto">
           <SEOHead 
             type="product" 
             product={selectedProductDetails} 
           />
           
-          <div 
-            className="w-full max-w-sm lg:max-w-3xl bg-white border border-zinc-200 rounded-xl p-5 relative shadow-2xl flex flex-col lg:flex-row gap-5 max-h-[90vh] lg:max-h-[85vh] overflow-y-auto lg:overflow-hidden no-scrollbar text-zinc-900"
-          >
-            {/* Slide Close Button */}
+          <div className="w-full max-w-4xl bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl relative max-h-[95vh] lg:max-h-[90vh] overflow-y-auto no-scrollbar text-zinc-900 animate-slide-up">
+            {/* Close Button */}
             <button
               type="button"
-              onClick={() => { setSelectedProductDetails(null); setMicroModalQuantity(1); }}
-              className="absolute top-3.5 right-3.5 text-zinc-500 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 p-1.5 rounded-lg transition-all z-10"
+              onClick={() => { setSelectedProductDetails(null); setMicroModalQuantity(1); setSelectedProductOptions([]); setOptionsTotal(0); }}
+              className="absolute top-4 right-4 z-20 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer"
             >
-              <X size={15} />
+              <X size={16} className="text-zinc-600" />
             </button>
 
-            {/* COLUMN 1: Visual representation Media Slider (Left Side on Desktop) */}
-            <div className="flex flex-col gap-3.5 w-full lg:w-[45%] shrink-0 justify-center">
-              {/* Product Banner Slide image */}
-              <div className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 bg-zinc-100 shrink-0 select-none group">
-                <img 
-                  src={selectedProductDetails.imagen_urls[activeImageIdx] || selectedProductDetails.imagen_urls[0]} 
-                  alt={selectedProductDetails.nombre} 
-                  className="w-full h-full object-cover transition-all duration-300" 
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute top-2 left-2 flex gap-1 text-[8px] font-bold font-mono z-10">
-                  {selectedProductDetails.stock === 0 ? (
-                    <span className="bg-red-500 text-white px-2 py-0.5 rounded-md uppercase shadow-md">
-                      Agotado
-                    </span>
-                  ) : selectedProductDetails.stock < 5 ? (
-                    <span className="bg-orange-500 text-white px-2 py-0.5 rounded-md uppercase shadow-md animate-pulse">
-                      Stock Bajo ({selectedProductDetails.stock})
-                    </span>
-                  ) : (
-                    <span className="bg-emerald-500/10 border border-emerald-400 text-emerald-600 px-2 py-0.5 rounded-md uppercase">
-                      Disponible
-                    </span>
-                  )}
-                </div>
-
-                {/* Pagination Indicator / Count */}
-                {selectedProductDetails.imagen_urls && selectedProductDetails.imagen_urls.length > 1 && (
-                  <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-mono px-2 py-0.5 rounded-full z-10">
-                    {activeImageIdx + 1} / {selectedProductDetails.imagen_urls.length}
+            {/* IMAGE SECTION */}
+            <div className="relative w-full aspect-[16/7] lg:aspect-[16/6] overflow-hidden bg-zinc-100">
+              <img 
+                src={selectedProductDetails.imagen_urls[activeImageIdx] || selectedProductDetails.imagen_urls[0]} 
+                alt={selectedProductDetails.nombre} 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+              
+              {/* Image Navigation */}
+              {selectedProductDetails.imagen_urls.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImageIdx(prev => (prev === 0 ? selectedProductDetails.imagen_urls.length - 1 : prev - 1))}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-all cursor-pointer"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImageIdx(prev => (prev === selectedProductDetails.imagen_urls.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-all cursor-pointer"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {selectedProductDetails.imagen_urls.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setActiveImageIdx(idx)}
+                        className={`w-2 h-2 rounded-full transition-all ${activeImageIdx === idx ? 'bg-white w-5' : 'bg-white/50'}`}
+                      />
+                    ))}
                   </div>
-                )}
+                </>
+              )}
 
-                {/* Navigation Arrows */}
-                {selectedProductDetails.imagen_urls && selectedProductDetails.imagen_urls.length > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setActiveImageIdx(prev => (prev === 0 ? selectedProductDetails.imagen_urls.length - 1 : prev - 1))}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/85 hover:bg-white text-zinc-800 p-1.5 rounded-full shadow-md z-10 transition-transform active:scale-95 cursor-pointer flex items-center justify-center border border-zinc-200"
-                      title="Imagen anterior"
-                    >
-                      <ChevronLeft size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveImageIdx(prev => (prev === selectedProductDetails.imagen_urls.length - 1 ? 0 : prev + 1))}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/85 hover:bg-white text-zinc-800 p-1.5 rounded-full shadow-md z-10 transition-transform active:scale-95 cursor-pointer flex items-center justify-center border border-zinc-200"
-                      title="Siguiente imagen"
-                    >
-                      <ChevronRight size={13} />
-                    </button>
-                  </>
+              {/* Badges */}
+              <div className="absolute top-4 left-4 flex gap-2">
+                {selectedProductDetails.es_promo && (
+                  <span className="px-3 py-1 bg-red-500 text-white text-[11px] font-black uppercase rounded-full shadow">Promo</span>
+                )}
+                {selectedProductDetails.es_nuevo && (
+                  <span className="px-3 py-1 bg-emerald-500 text-white text-[11px] font-black uppercase rounded-full shadow">Nuevo</span>
+                )}
+                {selectedProductDetails.es_mas_vendido && !selectedProductDetails.es_promo && (
+                  <span className="px-3 py-1 bg-orange-500 text-white text-[11px] font-black uppercase rounded-full shadow">Top</span>
                 )}
               </div>
-
-              {/* Thumbnail selectors for multiple images */}
-              {selectedProductDetails.imagen_urls && selectedProductDetails.imagen_urls.length > 1 && (
-                <div className="flex gap-1.5 overflow-x-auto py-0.5 max-w-full justify-center shrink-0 no-scrollbar">
-                  {selectedProductDetails.imagen_urls.map((url, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onMouseEnter={() => setActiveImageIdx(idx)}
-                      onClick={() => setActiveImageIdx(idx)}
-                      className={`w-10 h-10 rounded-md overflow-hidden bg-zinc-100 border transition-all cursor-pointer shrink-0 ${
-                        activeImageIdx === idx ? 'border-[#3b82f6] scale-105 ring-2 ring-[#3b82f6]/20' : 'border-zinc-200 opacity-60 hover:opacity-100 hover:border-zinc-300'
-                      }`}
-                    >
-                      <img src={url} alt={`${selectedProductDetails.nombre} - ${idx}`} className="w-full h-full object-cover pointer-events-none" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* COLUMN 2: Descriptive Information (Right Side on Desktop/PC) */}
-            <div className="flex flex-col gap-3.5 flex-1 lg:max-h-[75vh] lg:overflow-y-auto lg:no-scrollbar lg:pr-1.5 pt-4 lg:pt-0">
-              {/* Ficha Information Details */}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex gap-2">
-                    <span className="text-[10px] text-blue-600 font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-blue-50 border border-blue-100">
-                      {selectedProductDetails.marca}
-                    </span>
-                    <span className={`text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full border ${
-                      selectedProductDetails.condicion === 'Nacional'
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                        : 'bg-amber-50 text-amber-600 border-amber-100'
-                    }`}>
-                      {selectedProductDetails.condicion}
+            {/* CONTENT SECTION */}
+            <div className="p-5 lg:p-8">
+              {/* Header */}
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full" style={{ backgroundColor: getCategoryColor(selectedProductDetails.categoria).light, color: getCategoryColor(selectedProductDetails.categoria).textColor }}>
+                      {selectedProductDetails.categoria}
                     </span>
                     {selectedProductDetails.delivery_gratis && (
-                      <span className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 animate-pulse">
-                        Delivery Gratis
-                      </span>
-                    )}
-                    {selectedProductDetails.stock > 0 && selectedProductDetails.stock < 5 && (
-                      <span className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100 animate-pulse">
-                        Stock Bajo
-                      </span>
-                    )}
-                    {selectedProductDetails.stock === 0 && (
-                      <span className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
-                        Agotado
-                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Delivery Gratis</span>
                     )}
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">
-                    {selectedProductDetails.categoria}
-                  </span>
+                  <h2 className="text-2xl lg:text-3xl font-black text-zinc-900 leading-tight">{selectedProductDetails.nombre}</h2>
+                  <p className="text-sm text-zinc-500 mt-1 leading-relaxed">{selectedProductDetails.descripcion}</p>
                 </div>
-                <h3 className="text-sm font-bold font-display text-zinc-900 leading-snug">{selectedProductDetails.nombre}</h3>
-                <div className="text-[10px] text-emerald-600 font-mono">Código: <strong>{selectedProductDetails.codigo}</strong></div>
-              </div>
-
-              {/* Vehicle Ranges Compatibilities */}
-              <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50 text-xs flex flex-col gap-1 font-mono">
-                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Detalles del Plato</span>
-                <div className="text-zinc-900 mt-1 font-sans">
-                  📍 {selectedProductDetails.seccion} ➔ {selectedProductDetails.subseccion}
-                </div>
-                {selectedProductDetails.detalle_adicional && (
-                  <div className="text-[10px] text-zinc-500 leading-tight border-t border-zinc-200 pt-1.5 mt-1">
-                    💡 <strong>Detalles:</strong> {selectedProductDetails.detalle_adicional}
-                  </div>
-                )}
-              </div>
-
-              {/* Description Details text */}
-              <div className="text-xs text-zinc-650 leading-relaxed max-w-sm">
-                {selectedProductDetails.descripcion}
-              </div>
-
-              {/* Price Calculations Multicurrency */}
-              <div className="p-3.5 border border-emerald-250 bg-emerald-50/30 rounded-lg flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Precio Unitario:</span>
-                <div className="text-right">
-                  <div className="text-md font-bold font-mono text-emerald-600">
+                <div className="lg:text-right shrink-0">
+                  <div className="text-3xl font-black" style={{ color: getCategoryColor(selectedProductDetails.categoria).primary }}>
                     ${(selectedProductDetails.precio_usd + optionsTotal).toFixed(2)}
                   </div>
-                  <div className="text-xs font-mono text-emerald-700 font-bold">
+                  <div className="text-sm text-zinc-400 font-mono">
                     {((selectedProductDetails.precio_usd + optionsTotal) * config.tasa_cambio).toFixed(2)} Bs
                   </div>
+                  {optionsTotal > 0 && (
+                    <div className="text-xs text-orange-500 font-semibold mt-1">+${optionsTotal.toFixed(2)} en extras</div>
+                  )}
                 </div>
               </div>
 
-              {/* Product Options / Extras */}
+              {/* INGREDIENTS SECTION */}
+              {selectedProductDetails.ingredientes && selectedProductDetails.ingredientes.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-zinc-800 mb-3 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-[10px]">🧀</span>
+                    Ingredientes
+                    <span className="text-[10px] font-normal text-zinc-400 ml-1">(quita los que no quieras)</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProductDetails.ingredientes.map((ing, idx) => {
+                      const isRemoved = removedIngredients.has(idx);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            const newSet = new Set(removedIngredients);
+                            if (newSet.has(idx)) newSet.delete(idx);
+                            else newSet.add(idx);
+                            setRemovedIngredients(newSet);
+                          }}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border cursor-pointer ${
+                            isRemoved 
+                              ? 'bg-red-50 text-red-500 border-red-200 line-through opacity-60' 
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          }`}
+                        >
+                          {isRemoved ? <X size={12} /> : <Check size={12} />}
+                          {ing}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* EXTRAS / OPTIONS SECTION */}
               {selectedProductDetails.option_groups && selectedProductDetails.option_groups.length > 0 && (
-                <div className="border-t border-zinc-100 pt-3">
+                <div className="mb-6 pt-5 border-t border-zinc-100">
+                  <h3 className="text-sm font-bold text-zinc-800 mb-3 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-[10px]">+</span>
+                    Personaliza tu pedido
+                  </h3>
                   <ProductOptionsEditor
                     optionGroups={selectedProductDetails.option_groups}
                     selectedOptions={selectedProductOptions}
@@ -802,65 +778,46 @@ function AppContent() {
                     }}
                     themeColor={config.theme_color || '#FF6B35'}
                   />
-                  {optionsTotal > 0 && (
-                    <div className="mt-2 px-3 py-1.5 rounded-lg text-xs font-mono text-right" style={{ color: config.theme_color || '#FF6B35', backgroundColor: `${config.theme_color || '#FF6B35'}10` }}>
-                      Extras: +${optionsTotal.toFixed(2)}
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Cart add section with local stepper quantity selector */}
-              {selectedProductDetails.stock > 0 && (
-                <div className="flex items-center gap-3 mt-1 justify-between shrink-0">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] text-zinc-500 block">Cantidad</span>
-                    <div className="flex items-center border border-zinc-200 rounded-lg bg-zinc-50 h-9">
-                      <button
-                        type="button"
-                        onClick={() => setMicroModalQuantity(prev => Math.max(1, prev - 1))}
-                        className="w-8 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 transition-all text-xs outline-none"
-                      >
-                        -
-                      </button>
-                      <span className="text-xs px-2.5 text-zinc-900 font-mono font-semibold">{microModalQuantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => setMicroModalQuantity(prev => Math.min(selectedProductDetails.stock, prev + 1))}
-                        className="w-8 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 transition-all text-xs outline-none"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Add triggering button */}
+              {/* QUANTITY + ADD TO CART */}
+              <div className="flex items-center gap-4 pt-5 border-t border-zinc-100">
+                <div className="flex items-center border-2 border-zinc-200 rounded-xl overflow-hidden">
                   <button
                     type="button"
-                    onClick={() => {
-                      addToCart(selectedProductDetails, microModalQuantity, selectedProductOptions, optionsTotal);
-                      setSelectedProductDetails(null);
-                      setMicroModalQuantity(1);
-                      setSelectedProductOptions([]);
-                      setOptionsTotal(0);
-                    }}
-                    className="flex-1 h-12 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all self-end cursor-pointer shadow-[0_4px_16px_rgba(244,114,182,0.35)] active:scale-95 hover:opacity-90"
-                    style={{ background: 'linear-gradient(135deg, #F472B6, #A855F7)' }}
+                    onClick={() => setMicroModalQuantity(prev => Math.max(1, prev - 1))}
+                    className="w-11 h-11 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all text-lg font-bold cursor-pointer"
                   >
-                    <ShoppingCart size={13} />
-                    Añadir al Carrito
+                    −
+                  </button>
+                  <span className="w-11 h-11 flex items-center justify-center text-base font-bold text-zinc-900 border-x-2 border-zinc-200">{microModalQuantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setMicroModalQuantity(prev => prev + 1)}
+                    className="w-11 h-11 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all text-lg font-bold cursor-pointer"
+                  >
+                    +
                   </button>
                 </div>
-              )}
 
-              {/* Technical share trigger icon */}
-              <button
-                type="button"
-                onClick={() => handleShareProduct(selectedProductDetails)}
-                className="text-[10px] font-mono text-zinc-500 hover:text-emerald-600 flex items-center justify-center gap-1 mt-2.5 transition-colors cursor-pointer"
-              >
-                <Share2 size={11} /> Compartir producto por WhatsApp
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart(selectedProductDetails, microModalQuantity, selectedProductOptions, optionsTotal);
+                    setSelectedProductDetails(null);
+                    setMicroModalQuantity(1);
+                    setSelectedProductOptions([]);
+                    setOptionsTotal(0);
+                    setRemovedIngredients(new Set());
+                  }}
+                  className="flex-1 h-12 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98] hover:opacity-90 shadow-lg"
+                  style={{ background: getCategoryColor(selectedProductDetails.categoria).gradient, boxShadow: `0 4px 20px ${getCategoryColor(selectedProductDetails.categoria).primary}33` }}
+                >
+                  <ShoppingCart size={16} />
+                  Agregar al Carrito · ${(selectedProductDetails.precio_usd * microModalQuantity + optionsTotal * microModalQuantity).toFixed(2)}
+                </button>
+              </div>
             </div>
           </div>
         </div>

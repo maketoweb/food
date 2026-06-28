@@ -73,11 +73,19 @@
   --color-yellow-500: #FB8500;
 }
 
+/* ========================
+   BASE STYLES
+   ======================== */
+
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg);
+  background-color: #ffffff;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
 }
 
 h1, h2, h3, h4, .font-display {
@@ -103,96 +111,351 @@ svg {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ========================
-   VIBRANT POP COMPONENTS
+   APP CONTAINER
    ======================== */
 
-.card-vibrant {
-  background: var(--card);
-  border: 1px solid var(--border-soft);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-}
-.card-vibrant:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.app-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
-.btn-vibrant {
-  color: white;
+@media (min-width: 640px) {
+  .app-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* ========================
+   FOOD CARD
+   ======================== */
+
+.food-card {
+  background: var(--card);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-soft);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.food-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.food-card-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 1rem 1rem 0 0;
+  display: block;
+}
+
+.food-card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.food-card-ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.food-card-ingredients span {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: #f8fafc;
+  border: 1px solid var(--border-soft);
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.food-card-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent-orange);
+  line-height: 1.2;
+  margin-top: auto;
+}
+
+.food-card-btn {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8F5E 100%);
+  color: #ffffff;
   border: none;
   border-radius: 0.75rem;
   font-weight: 700;
-  box-shadow: var(--shadow-color-orange);
-  transition: all 0.2s ease;
+  font-size: 0.875rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-color-orange);
 }
-.btn-vibrant:hover {
+
+.food-card-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 25px rgba(255, 107, 53, 0.35);
+  background: linear-gradient(135deg, #FF5722 0%, #FF6B35 100%);
 }
-.btn-vibrant:active {
+
+.food-card-btn:active {
   transform: translateY(0);
   box-shadow: var(--shadow-sm);
 }
 
-.badge-pop {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
+/* ========================
+   CATEGORY PILLS
+   ======================== */
 
-.chip-category {
+.category-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 9999px;
-  border: 2px solid;
+  border: 2px solid var(--border-soft);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   transition: all 0.2s ease;
   cursor: pointer;
-  background: white;
-}
-.chip-category:hover {
-  transform: scale(1.05);
+  background: #ffffff;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
 }
 
-.input-pop {
-  border: 2px solid var(--border-soft);
-  border-radius: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  background: white;
-  outline: none;
-  width: 100%;
-}
-.input-pop:focus {
+.category-pill:hover {
   border-color: var(--accent-orange);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  color: var(--accent-orange);
+  background: #fff4ed;
 }
 
-.header-vibrant {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8F5E 50%, #FFB703 100%);
-  color: white;
+.category-pill.active {
+  background: var(--accent-orange);
+  color: #ffffff;
+  border-color: var(--accent-orange);
+  box-shadow: var(--shadow-color-orange);
 }
+
+/* ========================
+   FOOD MODAL
+   ======================== */
 
 .modal-overlay {
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Glass effect */
+.modal-food {
+  background: var(--card);
+  border-radius: 1rem;
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-soft);
+}
+
+@media (min-width: 1024px) {
+  .modal-food {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-height: 85vh;
+  }
+
+  .modal-food > *:first-child {
+    border-radius: 1rem 0 0 1rem;
+  }
+
+  .modal-food > *:last-child {
+    border-radius: 0 1rem 1rem 0;
+  }
+}
+
+/* ========================
+   INGREDIENT TOGGLE
+   ======================== */
+
+.ingredient-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  border: 2px solid var(--border-soft);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  color: var(--text);
+  user-select: none;
+}
+
+.ingredient-toggle::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  transition: background 0.2s ease;
+}
+
+.ingredient-toggle.removed {
+  border-color: var(--accent-red);
+  background: #fff0f0;
+  color: var(--accent-red);
+}
+
+.ingredient-toggle.removed::before {
+  background: var(--accent-red);
+}
+
+.ingredient-toggle:hover {
+  transform: scale(1.03);
+}
+
+/* ========================
+   EXTRAS SECTION
+   ======================== */
+
+.extras-section {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid var(--border-soft);
+}
+
+.extras-section label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: color 0.15s ease;
+}
+
+.extras-section label:hover {
+  color: var(--accent-orange);
+}
+
+.extras-section input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent-orange);
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+/* ========================
+   DESKTOP HEADER
+   ======================== */
+
+.desktop-header {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 1024px) {
+  .desktop-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 64px;
+  }
+}
+
+.desktop-header .logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--accent-orange);
+}
+
+.desktop-header nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.desktop-header nav a {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.desktop-header nav a:hover {
+  color: var(--accent-orange);
+}
+
+.desktop-header .cart-icon {
+  position: relative;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.desktop-header .cart-icon:hover {
+  background: #f8fafc;
+}
+
+.desktop-header .cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  background: var(--accent-red);
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* ========================
+   GLASS PANEL
+   ======================== */
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border);
@@ -205,7 +468,10 @@ svg {
   box-shadow: var(--shadow-md);
 }
 
-/* Gradients */
+/* ========================
+   GRADIENTS
+   ======================== */
+
 .premium-gradient {
   background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-red) 100%);
 }

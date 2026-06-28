@@ -200,7 +200,7 @@ export const Home: React.FC<HomeProps> = ({
       </div>
 
       {/* PREMIUM BANNER */}
-      <div className="relative h-[200px] md:h-[280px] w-full bg-zinc-200 rounded-2xl overflow-hidden border-2 border-orange-300 shadow-xl select-none">
+      <div className="relative h-[200px] md:h-[280px] lg:h-[350px] w-full bg-zinc-200 rounded-2xl overflow-hidden border-2 border-orange-300 shadow-xl select-none">
         {config.banners.map((url, index) => (
           <div
             key={url}
@@ -247,7 +247,7 @@ export const Home: React.FC<HomeProps> = ({
       </div>
 
       {/* SEARCH BAR */}
-      <div className="relative mx-1">
+      <div className="relative mx-auto max-w-2xl w-full">
         <div className="flex items-center bg-white border border-zinc-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-all">
           <span className="mr-2 text-base">🍔</span>
           <Search size={18} className="text-orange-500 mr-3" />
@@ -263,7 +263,7 @@ export const Home: React.FC<HomeProps> = ({
           )}
         </div>
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 bg-white border border-zinc-200 rounded-xl mt-2 shadow-xl z-30 overflow-hidden">
+          <div className="absolute top-full left-0 right-0 bg-white border border-zinc-200 rounded-xl mt-2 shadow-xl z-30 overflow-hidden max-w-2xl mx-auto">
             {suggestions.map(p => (
               <button
                 key={p.id}
@@ -284,7 +284,7 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* CATEGORIES CAROUSEL */}
       <div className="w-full flex flex-col gap-2.5 mt-1 px-1">
-        <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth no-scrollbar select-none">
+        <div className="flex flex-wrap gap-2 pb-2 snap-x snap-mandatory scroll-smooth no-scrollbar select-none lg:justify-center">
           {CATEGORIES.map((cat) => {
             const IconComponent = cat.icon;
             const catColor = getCategoryColor(cat.name);
@@ -345,7 +345,7 @@ export const Home: React.FC<HomeProps> = ({
               Ver todo
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar">
+          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:px-0 lg:mx-0 lg:snap-none lg:grid-cols-3 xl:grid-cols-4">
             {promoParts.map((part) => (
               <ProductCard key={part.id} part={part} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} isOffer={true} />
             ))}
@@ -364,7 +364,7 @@ export const Home: React.FC<HomeProps> = ({
               Ver todo
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar">
+          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:px-0 lg:mx-0 lg:snap-none lg:grid-cols-3 xl:grid-cols-4">
             {newParts.map((part) => (
               <ProductCard key={part.id} part={part} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} />
             ))}
@@ -383,7 +383,7 @@ export const Home: React.FC<HomeProps> = ({
               Ver todo
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar">
+          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:px-0 lg:mx-0 lg:snap-none lg:grid-cols-3 xl:grid-cols-4">
             {bestsellerParts.map((part) => (
               <ProductCard key={part.id} part={part} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} />
             ))}
@@ -392,7 +392,7 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* PEDIDO ESPECIAL / EVENTOS */}
-      <div className="flex flex-col gap-4 p-5 border border-orange-100 rounded-2xl bg-orange-50/50 shadow-sm relative overflow-hidden mx-1">
+      <div className="flex flex-col gap-4 p-5 border border-orange-100 rounded-2xl bg-orange-50/50 shadow-sm relative overflow-hidden mx-auto max-w-2xl w-full">
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <h3 className="text-lg font-bold text-orange-900 flex items-center gap-2">
           <MessageSquare size={20} className="text-orange-500" /> 🍔 ¿Pedido para Evento o Fiesta?
@@ -447,7 +447,7 @@ export const Home: React.FC<HomeProps> = ({
       <BentoGrid />
 
       {/* PWA INSTALL BANNER */}
-      <div className="w-full bg-zinc-900 text-white rounded-2xl p-6 shadow-2xl relative overflow-hidden min-h-[240px] flex flex-col justify-center border border-zinc-800 select-none bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center mx-1">
+      <div className="w-full bg-zinc-900 text-white rounded-2xl p-6 shadow-2xl relative overflow-hidden min-h-[240px] flex flex-col justify-center border border-zinc-800 select-none bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center mx-auto max-w-4xl">
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent z-0"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col text-center md:text-left">
@@ -491,7 +491,7 @@ export const Home: React.FC<HomeProps> = ({
       </div>
 
       {/* FOOTER */}
-      <footer className="mt-8 border-t border-zinc-200 pt-8 pb-4 px-1 text-zinc-600">
+      <footer className="mt-8 border-t border-zinc-200 pt-8 pb-4 px-1 text-zinc-600 mx-auto max-w-4xl w-full">
         <h2 className="text-sm font-black font-display text-zinc-900 uppercase tracking-widest mb-3">
           🍔 La Mejor Hamburguesería de Valencia
         </h2>
@@ -501,7 +501,7 @@ export const Home: React.FC<HomeProps> = ({
         <p className="text-xs leading-relaxed text-zinc-500 mb-4 font-sans">
           Delivery rápido en minutos. Seguimiento en tiempo real de tu pedido. Aceptamos pagos en dólares, Zelle, Pago Móvil y efectivo. Tu smash burger caliente y fresca en la puerta de tu casa.
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[10px] font-mono border-t border-zinc-100 pt-4 text-zinc-400">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-[10px] font-mono border-t border-zinc-100 pt-4 text-zinc-400">
           <div>
             <h3 className="font-bold text-zinc-700 uppercase mb-1">Smash Burgers</h3>
             <p>Carne smash a la plancha, vegetales frescos, salsas artesanales.</p>

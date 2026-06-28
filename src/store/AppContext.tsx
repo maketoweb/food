@@ -105,6 +105,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'Doble carne smash 160g total.',
+    ingredientes: ['Pan brioche', 'Carne smash 120g', 'Queso cheddar', 'Lechuga', 'Tomate', 'Cebolla', 'Salsa especial'],
     option_groups: [
       { id: 'og-size-001', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
         { id: 'opt-sm-001', nombre: 'Single (120g)', precio_usd: 0 },
@@ -146,6 +147,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'Doble carne 240g. Bacon included.',
+    ingredientes: ['Pan brioche', 'Doble carne smash', 'Bacon crujiente', 'Queso pepper jack', 'Cebolla crispy', 'Salsa BBQ'],
     option_groups: [
       { id: 'og-size-002', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
         { id: 'opt-sm-002', nombre: 'Single', precio_usd: 0 },
@@ -178,6 +180,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Champiñones frescos trufados.',
+    ingredientes: ['Pan brioche', 'Carne smash 160g', 'Queso gruyère', 'Champiñones trufados', 'Cebolla caramelizada', 'Aceite de oliva'],
     option_groups: [
       { id: 'og-size-003', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
         { id: 'opt-sm-003', nombre: 'Single', precio_usd: 0 },
@@ -205,6 +208,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'La favorita de la casa.',
+    ingredientes: ['Pan brioche', 'Carne smash 120g', 'Queso Americano', 'Lechuga', 'Tomate', 'Pepinillos', 'Kétchup', 'Mostaza'],
     option_groups: [
       { id: 'og-size-004', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
         { id: 'opt-sm-004', nombre: 'Single', precio_usd: 0 },
@@ -237,6 +241,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: '100% vegetal. Sin carne.',
+    ingredientes: ['Pan integral', 'Medallón vegetal', 'Queso vegano', 'Lechuga', 'Tomate', 'Palta', 'Salsa de yogur'],
     option_groups: [
       { id: 'og-top-005', nombre: 'Extras', min_select: 0, max_select: 3, options: [
         { id: 'opt-cho-005', nombre: 'Extra Queso', precio_usd: 0.75 },
@@ -264,6 +269,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'Porción individual.',
+    ingredientes: ['Papas fritas crocantes', 'Sal'],
     option_groups: [
       { id: 'og-sz-ccp', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
         { id: 'opt-ind', nombre: 'Individual', precio_usd: 0 },
@@ -296,6 +302,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Crujientes y dorados.',
+    ingredientes: ['Papas fritas', 'Queso cheddar derretido', 'Bacon bits'],
     option_groups: []
   },
   {
@@ -318,6 +325,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: '6 unidades.',
+    ingredientes: ['Papas fritas gruesas', 'Sal', 'Pimienta'],
     option_groups: [
       { id: 'og-sau-003', nombre: 'Salsa', min_select: 1, max_select: 1, options: [
         { id: 'opt-bbq-003', nombre: 'BBQ', precio_usd: 0 },
@@ -346,6 +354,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'Ahorra $2.00 vs compra separada.',
+    ingredientes: ['Hamburguesa a elegir', 'Papas fritas', 'Bebida 500ml'],
     option_groups: [
       { id: 'og-hmb-cmb', nombre: 'Tu Burger', min_select: 1, max_select: 1, options: [
         { id: 'opt-cla', nombre: 'Smash Clásica', precio_usd: 0 },
@@ -380,6 +389,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Para los que tienen hambre real.',
+    ingredientes: ['2 Hamburguesas a elegir', 'Papas Grandes', '2 Bebidas 500ml'],
     option_groups: [
       { id: 'og-dri-cmb2', nombre: 'Bebida', min_select: 1, max_select: 1, options: [
         { id: 'opt-col2', nombre: 'Coca-Cola 500ml', precio_usd: 0 },
@@ -409,6 +419,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: true,
     detalle_adicional: 'Ahorra $8.00 vs compra separada.',
+    ingredientes: ['Hamburguesa Doble', 'Papas Grandes', 'Nuggets x6', 'Bebida 1L'],
     option_groups: [
       { id: 'og-beb-fam', nombre: 'Bebidas', min_select: 1, max_select: 1, options: [
         { id: 'opt-col-f', nombre: '4x Coca-Cola', precio_usd: 0 },
@@ -437,6 +448,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'Bien fría.',
+    ingredientes: ['Coca-Cola 500ml'],
     option_groups: []
   },
   {
@@ -459,6 +471,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Cremosa y deliciosa.',
+    ingredientes: ['Agua sin gas 500ml'],
     option_groups: [
       { id: 'og-shk', nombre: 'Sabor', min_select: 1, max_select: 1, options: [
         { id: 'opt-van', nombre: 'Vainilla', precio_usd: 0 },
@@ -488,6 +501,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Fresca y natural.',
+    ingredientes: ['Limón', 'Agua', 'Azúcar', 'Hielo'],
     option_groups: [
       { id: 'og-lim', nombre: 'Extra', min_select: 0, max_select: 1, options: [
         { id: 'opt-lev', nombre: 'Leche (Limonada con Leche)', precio_usd: 0.50 }
@@ -514,6 +528,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: true,
     delivery_gratis: false,
     detalle_adicional: 'Caliente y derretido.',
+    ingredientes: ['Brownie de chocolate', 'Helado de vainilla', 'Salsa de chocolate'],
     option_groups: [
       { id: 'og-hel', nombre: 'Sabor Helado', min_select: 1, max_select: 1, options: [
         { id: 'opt-van-p', nombre: 'Vainilla', precio_usd: 0 },
@@ -542,6 +557,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Cremoso y fresco.',
+    ingredientes: ['Cheesecake de fresa', 'Salsa de fresa'],
     option_groups: []
   },
   {
@@ -564,6 +580,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_mas_vendido: false,
     delivery_gratis: false,
     detalle_adicional: 'Compartir o disfrutar solo.',
+    ingredientes: ['Totopos de maíz', 'Queso cheddar', 'Jalapeños', 'Guacamole', 'Crema agria'],
     option_groups: [
       { id: 'og-meat-n', nombre: 'Proteína Extra', min_select: 0, max_select: 1, options: [
         { id: 'opt-chk-n', nombre: 'Pollo Desmenuzado', precio_usd: 2.00 },
