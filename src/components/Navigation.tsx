@@ -242,7 +242,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             )}
             <div className="text-[9px] text-zinc-400 font-mono text-center mt-2">
-              {config.site_nombre || 'FoodApp'} v2.0.0
+              {config.site_nombre || 'BurgerPop'} v2.0.0
             </div>
           </div>
         </aside>

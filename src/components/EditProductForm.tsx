@@ -218,7 +218,7 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
               type="text"
               value={formMarca}
               onChange={(e) => setFormMarca(e.target.value)}
-              placeholder="Ej. FoodApp, Artesanal, Premium..."
+              placeholder="Ej. BurgerPop, Artesanal, Premium..."
               className={`bg-[#09090b] border ${validationErrors.marca ? 'border-red-500/60 focus:border-red-500' : 'border-[#27272a] focus:border-emerald-500'} rounded-lg px-2.5 py-2 outline-none transition-colors`}
             />
             {validationErrors.marca && (

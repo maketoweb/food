@@ -260,7 +260,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
       : '';
 
     const whatsappMessage =
-`*Nuevo Pedido en ${config.site_nombre || 'FoodApp'}*${sedeInfo}
+`*Nuevo Pedido en ${config.site_nombre || 'BurgerPop'}*${sedeInfo}
 ----------------------------------
 *Pedido ID:* ${preOrderId}
 *Cliente:* ${finalClientName}
@@ -351,7 +351,7 @@ ${productosDetailText}
               processedOrder.items.forEach((it: any) => {
                 details += `- ${it.quantity || it.cantidad}x ${it.nombre} (SKU: ${it.codigo}) - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`;
               });
-              const msg = `*Nuevo Pedido en ${config.site_nombre || 'FoodApp'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion de Entrega:* ${processedOrder.direccion_envio}\n*Ubicacion Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n*Metodo Despacho:* Delivery Express - Costo: $${processedOrder.costo_envio_usd.toFixed(2)}\n\n*Productos:*\n${details}\n*Total Neto a Pagar:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Metodo de Pago:* ${processedOrder.metodo_pago}\n----------------------------------`;
+              const msg = `*Nuevo Pedido en ${config.site_nombre || 'BurgerPop'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion de Entrega:* ${processedOrder.direccion_envio}\n*Ubicacion Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n*Metodo Despacho:* Delivery Express - Costo: $${processedOrder.costo_envio_usd.toFixed(2)}\n\n*Productos:*\n${details}\n*Total Neto a Pagar:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Metodo de Pago:* ${processedOrder.metodo_pago}\n----------------------------------`;
               let cleanPhone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
               if (cleanPhone.startsWith('0')) cleanPhone = '58' + cleanPhone.substring(1);
               const retryUrlMobile = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;

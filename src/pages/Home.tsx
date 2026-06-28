@@ -82,9 +82,9 @@ export const Home: React.FC<HomeProps> = ({
         const res = await Notification.requestPermission();
         if (res === 'granted') {
           new Notification('Notificaciones Habilitadas', {
-            body: 'Recibe alertas de tus pedidos y promociones de ' + (config.site_nombre || 'FoodApp') + '.',
+            body: 'Recibe alertas de tus pedidos y promociones de BurgerPop.',
             icon: '/icon.png',
-            tag: 'welcome-foodapp'
+            tag: 'welcome-burgerpop'
           });
         }
         setShowNotificationPrompt(false);
@@ -101,9 +101,19 @@ export const Home: React.FC<HomeProps> = ({
     return () => clearInterval(interval);
   }, [config.banners.length]);
 
+  const CATEGORY_EMOJIS: Record<string, string> = {
+    'hamburguesas': '🍔',
+    'papas & sides': '🍟',
+    'combos': '🎁',
+    'bebidas': '🥤',
+    'postres': '🍰',
+    'nuggets & tenders': '🍗',
+  };
+
   const CATEGORIES = useMemo(() => {
     return (config.categories || []).map(catName => {
       const nameLower = catName.toLowerCase();
+      const emoji = CATEGORY_EMOJIS[nameLower] || '🍽️';
       let icon = Utensils;
       if (nameLower.includes('hamburguesa') || nameLower.includes('burger')) icon = Utensils;
       else if (nameLower.includes('pasta') || nameLower.includes('espagueti')) icon = Utensils;
@@ -115,7 +125,7 @@ export const Home: React.FC<HomeProps> = ({
       else if (nameLower.includes('ensalada') || nameLower.includes('verdura')) icon = Salad;
       else if (nameLower.includes('helado') || nameLower.includes('nieve')) icon = IceCreamCone;
       else if (nameLower.includes('entrada') || nameLower.includes('aperitivo')) icon = Sparkles;
-      return { name: catName, label: catName, icon, color: 'border-orange-100 bg-white hover:bg-orange-50' };
+      return { name: catName, label: catName, icon, emoji, color: 'border-orange-100 bg-white hover:bg-orange-50' };
     });
   }, [config.categories]);
 
@@ -179,8 +189,8 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       )}
-      <SEOHead title={`Restaurante Delivery ${config.site_nombre || ''}`} type="home" />
-      <h1 className="sr-only">Tu Restaurante Favorito con Hamburguesas, Pastas y Postres</h1>
+      <SEOHead title="BurgerPop - Hamburguesería Valencia" type="home" />
+      <h1 className="sr-only">BurgerPop - Las Mejores Smash Burgers de Valencia</h1>
 
       {/* Tasa de Cambio */}
       <div className="flex justify-end px-1 -mb-4">
@@ -190,7 +200,7 @@ export const Home: React.FC<HomeProps> = ({
       </div>
 
       {/* PREMIUM BANNER */}
-      <div className="relative h-[200px] md:h-[280px] w-full bg-zinc-200 rounded-2xl overflow-hidden border border-zinc-200 shadow-lg select-none">
+      <div className="relative h-[200px] md:h-[280px] w-full bg-zinc-200 rounded-2xl overflow-hidden border-2 border-orange-300 shadow-xl select-none">
         {config.banners.map((url, index) => (
           <div
             key={url}
@@ -207,18 +217,18 @@ export const Home: React.FC<HomeProps> = ({
 
             <div className="absolute left-6 bottom-6 z-20 flex flex-col items-start gap-1.5">
               <span className="text-[11px] uppercase font-bold tracking-wider text-white border px-2.5 py-1 rounded-lg bg-orange-500 border-orange-400">
-                {config.site_nombre}
+                🍔 {config.site_nombre || 'BurgerPop'}
               </span>
               <h2 className="text-xl md:text-3xl font-bold font-display text-white mt-1.5 max-w-sm drop-shadow-lg leading-tight">
-                {config.banner_texts?.[index] || (index === 0 ? 'Platos Especiales del Día' : index === 1 ? 'Menú Premium Delivery' : 'Postres Artesanales')}
+                {config.banner_texts?.[index] || (index === 0 ? 'Las Mejores Smash de Valencia 🔥' : index === 1 ? 'Combos que Enloquecen 🔥' : 'Promos Exclusivas Solo en BurgerPop')}
               </h2>
               <button
                 type="button"
                 onClick={() => setTab('catalog')}
                 className="mt-3 text-white text-[12px] font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg uppercase tracking-wider flex items-center gap-1.5 cursor-pointer active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB703, #E63946)' }}
+                style={{ background: 'linear-gradient(135deg, #FF6B35, #E63946, #FFB703)' }}
               >
-                Ver Menú <ArrowRight size={14} />
+                Ordenar Ahora 🔥 <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -239,10 +249,11 @@ export const Home: React.FC<HomeProps> = ({
       {/* SEARCH BAR */}
       <div className="relative mx-1">
         <div className="flex items-center bg-white border border-zinc-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-all">
+          <span className="mr-2 text-base">🍔</span>
           <Search size={18} className="text-orange-500 mr-3" />
           <input
             type="text"
-            placeholder="Buscar hamburguesas, pastas, pizzas..."
+            placeholder="Buscar burgers, papas, combos..."
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
             className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400"
@@ -276,6 +287,7 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth no-scrollbar select-none">
           {CATEGORIES.map((cat) => {
             const IconComponent = cat.icon;
+            const catColor = getCategoryColor(cat.name);
             return (
               <button
                 key={cat.name}
@@ -286,12 +298,12 @@ export const Home: React.FC<HomeProps> = ({
                 }}
                 className="shrink-0 snap-start flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
                 style={{
-                  borderColor: getCategoryColor(cat.name).primary + '30',
-                  backgroundColor: 'white',
-                  color: getCategoryColor(cat.name).primary,
+                  borderColor: catColor.primary + '40',
+                  backgroundColor: catColor.light,
+                  color: catColor.textColor,
                 }}
               >
-                <IconComponent size={14} className="shrink-0" />
+                <span className="text-sm shrink-0">{cat.emoji}</span>
                 <span>{cat.label}</span>
               </button>
             );
@@ -301,14 +313,14 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* NOTIFICATION PROMPT */}
       {showNotificationPrompt && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-orange-200 rounded-2xl bg-orange-50 text-xs gap-3 animate-fade-in shadow-sm mx-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-orange-200 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 text-xs gap-3 animate-fade-in shadow-sm mx-1">
           <div className="flex gap-2.5 items-start sm:items-center">
             <span className="p-2 rounded-xl shrink-0 bg-orange-500 text-white">
               <Bell size={16} />
             </span>
             <div className="flex flex-col gap-0.5">
               <span className="font-bold text-zinc-900 text-xs">Activar Notificaciones</span>
-              <span className="text-[11px] text-zinc-500 leading-normal">Recibe alertas de tus pedidos y promociones exclusivas.</span>
+              <span className="text-[11px] text-zinc-500 leading-normal">Recibe alertas de tus pedidos y promociones de BurgerPop.</span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 md:justify-end">
@@ -327,7 +339,7 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB703)' }}><Zap size={16} className="text-white" /></span> Promos del Día
+              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB703)' }}><Zap size={16} className="text-white" /></span> 🔥 Promos del Día
             </h3>
             <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#FF6B35' }}>
               Ver todo
@@ -346,7 +358,7 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}><Sparkles size={16} className="text-white" /></span> Nuevos en el Menú
+              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}><Sparkles size={16} className="text-white" /></span> ✨ Nuevos en el Menú
             </h3>
             <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#F59E0B' }}>
               Ver todo
@@ -365,7 +377,7 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #E63946, #FF6B6B)' }}><Flame size={16} className="text-white" /></span> Lo Más Pedido
+              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #E63946, #FF6B6B)' }}><Flame size={16} className="text-white" /></span> 🏆 Lo Más Pedido
             </h3>
             <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#E63946' }}>
               Ver todo
@@ -383,9 +395,9 @@ export const Home: React.FC<HomeProps> = ({
       <div className="flex flex-col gap-4 p-5 border border-orange-100 rounded-2xl bg-orange-50/50 shadow-sm relative overflow-hidden mx-1">
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <h3 className="text-lg font-bold text-orange-900 flex items-center gap-2">
-          <MessageSquare size={20} className="text-orange-500" /> ¿Pedido Especial o Evento?
+          <MessageSquare size={20} className="text-orange-500" /> 🍔 ¿Pedido para Evento o Fiesta?
         </h3>
-        <p className="text-[13px] text-orange-800/80 leading-relaxed font-medium">¿Necesitas algo que no está en el menú? Cuéntanos y nuestro chef lo prepara para ti.</p>
+        <p className="text-[13px] text-orange-800/80 leading-relaxed font-medium">Cuéntanos cuántas burgers necesitas y las preparamos para ti.</p>
         <div className="flex flex-col gap-3 z-10">
           <input 
             type="text"
@@ -396,7 +408,7 @@ export const Home: React.FC<HomeProps> = ({
           />
           <textarea 
             className="w-full text-xs p-3.5 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-[13px]" 
-            placeholder="Ej: 20 hamburguesas para evento, pastel personalizado, etc..."
+            placeholder="Ej: 30 smash burgers, papas para evento, combo familiar..."
             id="req-desc"
             rows={3}
           />
@@ -440,12 +452,12 @@ export const Home: React.FC<HomeProps> = ({
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col text-center md:text-left">
             <div className="flex items-center gap-2 justify-center md:justify-start">
-              <span className="text-[10px] uppercase font-black tracking-widest text-white px-2.5 py-1 rounded-lg bg-orange-500">{config.site_nombre || 'FoodApp'} App</span>
+              <span className="text-[10px] uppercase font-black tracking-widest text-white px-2.5 py-1 rounded-lg bg-orange-500">{config.site_nombre || 'BurgerPop'} App</span>
               <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-300">Instalación Express</span>
             </div>
-            <h3 className="text-2xl font-black font-display mt-2 leading-tight max-w-xs">Tu restaurante favorito siempre contigo</h3>
+            <h3 className="text-2xl font-black font-display mt-2 leading-tight max-w-xs">Tu BurgerPop favorita siempre contigo</h3>
             <p className="text-[12px] text-zinc-200 leading-relaxed mt-2 max-w-sm font-medium">
-              Instala la app y recibe notificaciones en tiempo real, seguimiento de delivery y ofertas exclusivas.
+              Instala la app y recibe notificaciones en tiempo real, seguimiento de delivery y ofertas exclusivas en burgers, combos y más.
             </p>
           </div>
           
@@ -481,30 +493,30 @@ export const Home: React.FC<HomeProps> = ({
       {/* FOOTER */}
       <footer className="mt-8 border-t border-zinc-200 pt-8 pb-4 px-1 text-zinc-600">
         <h2 className="text-sm font-black font-display text-zinc-900 uppercase tracking-widest mb-3">
-          Tu Restaurante Favorito
+          🍔 La Mejor Hamburguesería de Valencia
         </h2>
         <p className="text-xs leading-relaxed text-zinc-500 mb-3 font-sans">
-          ¿Buscas la mejor comida para delivery? <strong>{config.site_nombre || 'FoodApp'}</strong> es tu restaurante favorito. Hamburguesas artesanales, pastas frescas, pizzas, postres y más. Ingredientes frescos del día y recetas originales del chef.
+          ¿Buscas la mejor smash burger de Valencia? <strong>{config.site_nombre || 'BurgerPop'}</strong> es tu hamburguesería favorita. Smash burgers artesanales, papas & wings, combos, nuggets y más. Ingredientes frescos del día y recetas originales.
         </p>
         <p className="text-xs leading-relaxed text-zinc-500 mb-4 font-sans">
-          Delivery rápido en minutos. Seguimiento en tiempo real de tu pedido. Aceptamos pagos en dólares, Zelle, Pago Móvil y efectivo. Tu comida caliente y fresca en la puerta de tu casa.
+          Delivery rápido en minutos. Seguimiento en tiempo real de tu pedido. Aceptamos pagos en dólares, Zelle, Pago Móvil y efectivo. Tu smash burger caliente y fresca en la puerta de tu casa.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[10px] font-mono border-t border-zinc-100 pt-4 text-zinc-400">
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Hamburguesas Premium</h3>
-            <p>Carne Angus 100%, vegetales frescas, salsas artesanales.</p>
+            <h3 className="font-bold text-zinc-700 uppercase mb-1">Smash Burgers</h3>
+            <p>Carne smash a la plancha, vegetales frescos, salsas artesanales.</p>
           </div>
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Pastas Frescas</h3>
-            <p>Elaboradas artesanalmente con ingredientes importados.</p>
+            <h3 className="font-bold text-zinc-700 uppercase mb-1">Papas & Wings</h3>
+            <p>Papas crocantes, alitas BBQ, wings de buffalo.</p>
           </div>
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Postres Artesanales</h3>
-            <p>Tortas, helados, cheesecakes y creaciones del chef.</p>
+            <h3 className="font-bold text-zinc-700 uppercase mb-1">Combos</h3>
+            <p>Combos individuales, familiares y para evento.</p>
           </div>
           <div>
             <h3 className="font-bold text-zinc-700 uppercase mb-1">Delivery Express</h3>
-            <p>Tu pedido caliente en minutos. Seguimiento en vivo.</p>
+            <p>Tu smash burger caliente en minutos. Seguimiento en vivo.</p>
           </div>
         </div>
       </footer>

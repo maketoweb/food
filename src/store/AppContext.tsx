@@ -83,395 +83,371 @@ interface AppContextProps {
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
-// INITIAL PRODUCTS DATA - Food Delivery
+// INITIAL PRODUCTS DATA - Hamburguesería
 const DEFAULT_PRODUCTS: Producto[] = [
   {
-    id: 'food-001',
+    id: 'hmb-001',
     codigo: 'HMB-001',
-    nombre: 'Hamburguesa Clásica Angus',
-    descripcion: 'Hamburguesa de carne Angus 100% a la parrilla, con lechuga, tomate, cebolla y salsa especial de la casa.',
+    nombre: 'Smash Clásica',
+    descripcion: 'Doble smash de carne 100% res, queso cheddar derretido, cebolla caramelizada, pickle y salsa especial de la casa.',
     categoria: 'Hamburguesas',
     seccion: 'Hamburguesas',
     subseccion: 'Clásicas',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 8.50,
-    stock: 50,
-    imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
-    es_promo: true,
-    es_nuevo: false,
-    es_mas_vendido: true,
-    delivery_gratis: false,
-    detalle_adicional: 'Carne Angus 200g. Incluye papas fritas.',
-    option_groups: [
-      {
-        id: 'og-size-001', nombre: 'Tamaño', min_select: 1, max_select: 1,
-        options: [
-          { id: 'opt-personal-001', nombre: 'Personal (200g)', precio_usd: 0 },
-          { id: 'opt-doble-001', nombre: 'Doble (400g)', precio_usd: 3.50 },
-          { id: 'opt-familiar-001', nombre: 'Familiar (600g)', precio_usd: 6.00 }
-        ]
-      },
-      {
-        id: 'og-toppings-001', nombre: 'Toppings Extra', min_select: 0, max_select: 5,
-        options: [
-          { id: 'opt-queso-001', nombre: 'Extra Queso', precio_usd: 1.00 },
-          { id: 'opt-tocino-001', nombre: 'Tocino', precio_usd: 1.50 },
-          { id: 'opt-jalapenos-001', nombre: 'Jalapeños', precio_usd: 0.75 },
-          { id: 'opt-huevo-001', nombre: 'Huevo Frito', precio_usd: 1.00 },
-          { id: 'opt-cebolla-001', nombre: 'Cebolla Caramelizada', precio_usd: 1.25 }
-        ]
-      },
-      {
-        id: 'og-salsas-001', nombre: 'Salsas', min_select: 0, max_select: 3,
-        options: [
-          { id: 'opt-ketchup-001', nombre: 'Ketchup', precio_usd: 0 },
-          { id: 'opt-mostaza-001', nombre: 'Mostaza', precio_usd: 0 },
-          { id: 'opt-bbq-001', nombre: 'BBQ', precio_usd: 0.50 },
-          { id: 'opt-mayo-001', nombre: 'Mayonesa', precio_usd: 0 },
-          { id: 'opt-picante-001', nombre: 'Salsa Picante', precio_usd: 0.50 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'food-002',
-    codigo: 'HMB-002',
-    nombre: 'Hamburguesa BBQ Bacon',
-    descripcion: 'Doble carne Angus con bacon crujiente, queso cheddar derretido y salsa BBQ ahumada.',
-    categoria: 'Hamburguesas',
-    seccion: 'Hamburguesas',
-    subseccion: 'Especiales',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 11.90,
-    stock: 40,
-    imagen_urls: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: true,
-    es_mas_vendido: true,
-    delivery_gratis: false,
-    detalle_adicional: 'Doble carne 400g total. Incluye papas fritas.',
-    option_groups: [
-      {
-        id: 'og-size-002', nombre: 'Tamaño', min_select: 1, max_select: 1,
-        options: [
-          { id: 'opt-personal-002', nombre: 'Personal (400g)', precio_usd: 0 },
-          { id: 'opt-doble-002', nombre: 'Doble (800g)', precio_usd: 5.00 }
-        ]
-      },
-      {
-        id: 'og-toppings-002', nombre: 'Toppings Extra', min_select: 0, max_select: 5,
-        options: [
-          { id: 'opt-queso-002', nombre: 'Extra Queso Cheddar', precio_usd: 1.50 },
-          { id: 'opt-tocino-002', nombre: 'Bacon Extra', precio_usd: 2.00 },
-          { id: 'opt-jalapenos-002', nombre: 'Jalapeños', precio_usd: 0.75 },
-          { id: 'opt-huevo-002', nombre: 'Huevo Frito', precio_usd: 1.00 }
-        ]
-      },
-      {
-        id: 'og-salsas-002', nombre: 'Salsas', min_select: 0, max_select: 3,
-        options: [
-          { id: 'opt-bbq-002', nombre: 'BBQ Extra', precio_usd: 0.50 },
-          { id: 'opt-ketchup-002', nombre: 'Ketchup', precio_usd: 0 },
-          { id: 'opt-mostaza-002', nombre: 'Mostaza', precio_usd: 0 },
-          { id: 'opt-mayo-002', nombre: 'Mayonesa', precio_usd: 0 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'food-003',
-    codigo: 'PST-001',
-    nombre: 'Pasta Alfredo con Pollo',
-    descripcion: 'Fettuccine al dente en salsa cremosa alfredo con pechuga de pollo a la plancha y parmesano.',
-    categoria: 'Pastas',
-    seccion: 'Pastas',
-    subseccion: 'Cremas',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 9.90,
-    stock: 35,
-    imagen_urls: ['https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: false,
-    es_mas_vendido: true,
-    delivery_gratis: false,
-    detalle_adicional: 'Porción generosa. Pasta fresca del día.'
-  },
-  {
-    id: 'food-004',
-    codigo: 'PST-002',
-    nombre: 'Spaghetti Boloñesa Artesanal',
-    descripcion: 'Espagueti con salsa boloñesa casera de carne molida, tomate natural, albahaca y ajo.',
-    categoria: 'Pastas',
-    seccion: 'Pastas',
-    subseccion: 'Salsas',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 8.90,
-    stock: 40,
-    imagen_urls: ['https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&q=80&w=500'],
-    es_promo: true,
-    es_nuevo: false,
-    es_mas_vendido: false,
-    delivery_gratis: false,
-    detalle_adicional: 'Salsa cocida por 4 horas. Receta de la abuela.'
-  },
-  {
-    id: 'food-005',
-        codigo: 'PZZ-001',
-    nombre: 'Pizza Pepperoni Clásica',
-    descripcion: 'Pizza artesanal con masa crujiente, salsa de tomate San Marzano, mozzarella fresca y pepperoni importado.',
-    categoria: 'Pizzas',
-    seccion: 'Pizzas',
-    subseccion: 'Clásicas',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 10.50,
-    stock: 30,
-    imagen_urls: ['https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: false,
-    es_mas_vendido: true,
-    delivery_gratis: false,
-    detalle_adicional: 'Tamaño familiar. Masa artesanal fermentada 24h.',
-    option_groups: [
-      {
-        id: 'og-size-pzz', nombre: 'Tamaño', min_select: 1, max_select: 1,
-        options: [
-          { id: 'opt-personal-pzz', nombre: 'Personal (25cm)', precio_usd: 0 },
-          { id: 'opt-mediana-pzz', nombre: 'Mediana (30cm)', precio_usd: 3.00 },
-          { id: 'opt-familiar-pzz', nombre: 'Familiar (40cm)', precio_usd: 6.00 }
-        ]
-      },
-      {
-        id: 'og-masa-pzz', nombre: 'Tipo de Masa', min_select: 1, max_select: 1,
-        options: [
-          { id: 'opt-tradicional-pzz', nombre: 'Tradicional', precio_usd: 0 },
-          { id: 'opt-fina-pzz', nombre: 'Fina y Crujiente', precio_usd: 0 },
-          { id: 'opt-gruesa-pzz', nombre: 'Gruesa y Esponjosa', precio_usd: 0.75 }
-        ]
-      },
-      {
-        id: 'og-extras-pzz', nombre: 'Extras', min_select: 0, max_select: 5,
-        options: [
-          { id: 'opt-queso-extra-pzz', nombre: 'Extra Queso', precio_usd: 1.50 },
-          { id: 'opt-jamon-pzz', nombre: 'Jamón', precio_usd: 1.25 },
-          { id: 'opt-champ-pzz', nombre: 'Champiñones', precio_usd: 1.00 },
-          { id: 'opt-aceitunas-pzz', nombre: 'Aceitunas', precio_usd: 0.75 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'food-006',
-    codigo: 'PST-003',
-    nombre: 'Penne a la Arrabiata',
-    descripcion: 'Penne rigatoni en salsa picante arrabiata con tomate, ajo, chile rojo y albahaca fresca.',
-    categoria: 'Pastas',
-    seccion: 'Pastas',
-    subseccion: 'Salsas',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 7.90,
-    stock: 45,
-    imagen_urls: ['https://images.unsplash.com/photo-1563379926898-05f4575a45d8?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: true,
-    es_mas_vendido: false,
-    delivery_gratis: false,
-    detalle_adicional: 'Picante nivel medio. Sin lácteos.'
-  },
-  {
-    id: 'food-007',
-    codigo: 'PST-004',
-    nombre: 'Tallarines Verdes con Res',
-    descripcion: 'Tallarines caseros en salsa de espinaca y cilantro con tiras de res salteada al wok.',
-    categoria: 'Pastas',
-    seccion: 'Pastas',
-    subseccion: 'Especiales',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 10.90,
-    stock: 25,
-    imagen_urls: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: false,
-    es_mas_vendido: false,
-    delivery_gratis: false,
-    detalle_adicional: 'Pasta fresca hecha en casa. Res premium.'
-  },
-  {
-    id: 'food-008',
-    codigo: 'PZZ-002',
-    nombre: 'Pizza 4 Quesos',
-    descripcion: 'Pizza con mezcla de mozzarella, gorgonzola, parmesano y provolone sobre base de tomate.',
-    categoria: 'Pizzas',
-    seccion: 'Pizzas',
-    subseccion: 'Especiales',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 12.50,
-    stock: 20,
-    imagen_urls: ['https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: false,
-    es_mas_vendido: false,
-    delivery_gratis: false,
-    detalle_adicional: 'Quesos importados de Italia.'
-  },
-  {
-    id: 'food-009',
-    codigo: 'POS-001',
-    nombre: 'Cheesecake de Fresa',
-    descripcion: 'Cheesecake cremoso con base de galleta, cobertura de fresa fresca natural y glaseado.',
-    categoria: 'Postres',
-    seccion: 'Postres',
-    subseccion: 'Tortas',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 5.50,
-    stock: 30,
-    imagen_urls: ['https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=500'],
-    es_promo: true,
-    es_nuevo: false,
-    es_mas_vendido: true,
-    delivery_gratis: false,
-    detalle_adicional: 'Porción individual. Elaborado artesanalmente.'
-  },
-  {
-    id: 'food-010',
-    codigo: 'BEB-001',
-    nombre: 'Limonada Natural Fresca',
-    descripcion: 'Limonada recién exprimida con hielo y un toque de menta fresca. Refrescante y natural.',
-    categoria: 'Bebidas',
-    seccion: 'Bebidas',
-    subseccion: 'Sin Alcohol',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 2.50,
-    stock: 100,
-    imagen_urls: ['https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: false,
-    es_mas_vendido: true,
-    delivery_gratis: false,
-    detalle_adicional: 'Sin azúcar agregada. 100% natural.'
-  },
-  {
-    id: 'food-011',
-    codigo: 'ENT-001',
-    nombre: 'Alitas BBQ x12 unidades',
-    descripcion: 'Alitas de pollo crujientes bañadas en salsa BBQ ahumada de la casa, con aderezo blue cheese.',
-    categoria: 'Entradas',
-    seccion: 'Entradas',
-    subseccion: 'Para Compartir',
-    marca: 'FoodApp',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 7.90,
-    stock: 35,
-    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
-    es_promo: false,
-    es_nuevo: true,
-    es_mas_vendido: false,
-    delivery_gratis: false,
-    detalle_adicional: 'Crujientes por fuera, jugosas por dentro.'
-  },
-  {
-    id: 'food-012',
-    codigo: 'ENS-001',
-    nombre: 'Ensalada César con Pollo',
-    descripcion: 'Lechuga romana fresca, pollo a la parrilla, crutones, parmesano y aderezo César casero.',
-    categoria: 'Ensaladas',
-    seccion: 'Ensaladas',
-    subseccion: 'Con Proteína',
-    marca: 'FoodApp',
+    marca: 'BurgerPop',
     condicion: 'Nacional',
     anio_inicio: 0,
     anio_fin: 0,
     precio_usd: 7.50,
+    stock: 60,
+    imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: 'Doble carne smash 160g total.',
+    option_groups: [
+      { id: 'og-size-001', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-sm-001', nombre: 'Single (120g)', precio_usd: 0 },
+        { id: 'opt-dbl-001', nombre: 'Double (240g)', precio_usd: 2.50 },
+        { id: 'opt-xl-001', nombre: 'Triple (360g)', precio_usd: 4.50 }
+      ]},
+      { id: 'og-top-001', nombre: 'Extras', min_select: 0, max_select: 5, options: [
+        { id: 'opt-cho-001', nombre: 'Extra Queso', precio_usd: 0.75 },
+        { id: 'opt-bac-001', nombre: 'Tocino', precio_usd: 1.00 },
+        { id: 'opt-eg-001', nombre: 'Huevo Frito', precio_usd: 0.75 },
+        { id: 'opt-jal-001', nombre: 'Jalapeños', precio_usd: 0.50 },
+        { id: 'opt-avo-001', nombre: 'Aguacate', precio_usd: 1.25 }
+      ]},
+      { id: 'og-sal-001', nombre: 'Salsas', min_select: 0, max_select: 2, options: [
+        { id: 'opt-sp-001', nombre: 'Salsa Especial', precio_usd: 0 },
+        { id: 'opt-bbq-001', nombre: 'BBQ', precio_usd: 0 },
+        { id: 'opt-hny-001', nombre: 'Mostaza Miel', precio_usd: 0 },
+        { id: 'opt-pic-001', nombre: 'Salsa Picante', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-002',
+    codigo: 'HMB-002',
+    nombre: 'Bacon Explosion',
+    descripcion: 'Doble carne smash, bacon crujiente, queso pepper jack, cebolla crispy y salsa BBQ ahumada.',
+    categoria: 'Hamburguesas',
+    seccion: 'Hamburguesas',
+    subseccion: 'Especiales',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 9.50,
+    stock: 50,
+    imagen_urls: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=500'],
+    es_promo: true,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: 'Doble carne 240g. Bacon included.',
+    option_groups: [
+      { id: 'og-size-002', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-sm-002', nombre: 'Single', precio_usd: 0 },
+        { id: 'opt-dbl-002', nombre: 'Double', precio_usd: 3.00 }
+      ]},
+      { id: 'og-top-002', nombre: 'Extras', min_select: 0, max_select: 5, options: [
+        { id: 'opt-cho-002', nombre: 'Extra Queso', precio_usd: 0.75 },
+        { id: 'opt-bac-002', nombre: 'Bacon Extra', precio_usd: 1.50 },
+        { id: 'opt-rng-002', nombre: 'Onion Rings', precio_usd: 1.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-003',
+    codigo: 'HMB-003',
+    nombre: 'Mushroom Swiss',
+    descripcion: 'Carne smash jugosa, champiñones salteados, queso suizo derretido y mayonesa de trufa.',
+    categoria: 'Hamburguesas',
+    seccion: 'Hamburguesas',
+    subseccion: 'Especiales',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 10.00,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    detalle_adicional: 'Champiñones frescos trufados.',
+    option_groups: [
+      { id: 'og-size-003', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-sm-003', nombre: 'Single', precio_usd: 0 },
+        { id: 'opt-dbl-003', nombre: 'Double', precio_usd: 3.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-004',
+    codigo: 'HMB-004',
+    nombre: 'BBQ Bacon Cheddar',
+    descripcion: 'Carne smash, bacon, cheddar derretido, aros de cebolla y salsa BBQ de la casa.',
+    categoria: 'Hamburguesas',
+    seccion: 'Hamburguesas',
+    subseccion: 'Clásicas',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 8.90,
+    stock: 55,
+    imagen_urls: ['https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: 'La favorita de la casa.',
+    option_groups: [
+      { id: 'og-size-004', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-sm-004', nombre: 'Single', precio_usd: 0 },
+        { id: 'opt-dbl-004', nombre: 'Double', precio_usd: 3.00 }
+      ]},
+      { id: 'og-top-004', nombre: 'Extras', min_select: 0, max_select: 5, options: [
+        { id: 'opt-cho-004', nombre: 'Extra Queso', precio_usd: 0.75 },
+        { id: 'opt-bac-004', nombre: 'Tocino Extra', precio_usd: 1.50 },
+        { id: 'opt-eg-004', nombre: 'Huevo Frito', precio_usd: 0.75 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-005',
+    codigo: 'HMB-005',
+    nombre: 'Veggie Burger',
+    descripcion: 'Burger de lentejas y champiñones, lechuga, tomate, aguacate y salsa de yogurt.',
+    categoria: 'Hamburguesas',
+    seccion: 'Hamburguesas',
+    subseccion: 'Veganas',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 8.50,
     stock: 30,
-    imagen_urls: ['https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&q=80&w=500'],
+    imagen_urls: ['https://images.unsplash.com/photo-1520072959219-c595dc870360?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    detalle_adicional: '100% vegetal. Sin carne.',
+    option_groups: [
+      { id: 'og-top-005', nombre: 'Extras', min_select: 0, max_select: 3, options: [
+        { id: 'opt-cho-005', nombre: 'Extra Queso', precio_usd: 0.75 },
+        { id: 'opt-avo-005', nombre: 'Aguacate', precio_usd: 1.25 }
+      ]}
+    ]
+  },
+  {
+    id: 'ccp-001',
+    codigo: 'CCP-001',
+    nombre: 'Papas Fritas Clásicas',
+    descripcion: 'Papas fritas crocantes con sal marina y salsa ketchup de la casa.',
+    categoria: 'Papas & Sides',
+    seccion: 'Papas & Sides',
+    subseccion: 'Papas',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 3.50,
+    stock: 100,
+    imagen_urls: ['https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: 'Porción individual.',
+    option_groups: [
+      { id: 'og-sz-ccp', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-ind', nombre: 'Individual', precio_usd: 0 },
+        { id: 'opt-fam', nombre: 'Familiar (+2 personas)', precio_usd: 2.50 }
+      ]},
+      { id: 'og-dip-ccp', nombre: 'Salsa Extra', min_select: 0, max_select: 2, options: [
+        { id: 'opt-chz', nombre: 'Queso Cheddar', precio_usd: 1.00 },
+        { id: 'opt-bbq', nombre: 'BBQ', precio_usd: 0.75 },
+        { id: 'opt-gar', nombre: 'Ajo', precio_usd: 0.50 }
+      ]}
+    ]
+  },
+  {
+    id: 'ccp-002',
+    codigo: 'CCP-002',
+    nombre: 'Onion Rings',
+    descripcion: 'Aros de cebolla empanizados y fritos hasta quedar dorados y crujientes.',
+    categoria: 'Papas & Sides',
+    seccion: 'Papas & Sides',
+    subseccion: 'Aros',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 4.00,
+    stock: 50,
+    imagen_urls: ['https://images.unsplash.com/photo-1639024471283-03518883512d?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Opción saludable y deliciosa.'
+    detalle_adicional: 'Crujientes y dorados.',
+    option_groups: []
   },
   {
-    id: 'food-013',
-    codigo: 'CMB-001',
-    nombre: 'Combo Burger + Papas + Bebida',
-    descripcion: 'Hamburguesa clásica Angus + papas fritas crujientes + limonada natural. El combo perfecto.',
-    categoria: 'Combos',
-    seccion: 'Combos',
-    subseccion: 'Especiales',
-    marca: 'FoodApp',
+    id: 'ccp-003',
+    codigo: 'CCP-003',
+    nombre: 'Chicken Wings x6',
+    descripcion: '6 alitas de pollo fritas con tu salsa favorita: BBQ, buffalo o miel mostaza.',
+    categoria: 'Papas & Sides',
+    seccion: 'Papas & Sides',
+    subseccion: 'Alitas',
+    marca: 'BurgerPop',
     condicion: 'Nacional',
     anio_inicio: 0,
     anio_fin: 0,
-    precio_usd: 12.90,
+    precio_usd: 6.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: '6 unidades.',
+    option_groups: [
+      { id: 'og-sau-003', nombre: 'Salsa', min_select: 1, max_select: 1, options: [
+        { id: 'opt-bbq-003', nombre: 'BBQ', precio_usd: 0 },
+        { id: 'opt-buf-003', nombre: 'Buffalo Picante', precio_usd: 0 },
+        { id: 'opt-hny-003', nombre: 'Miel Mostaza', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'cmb-001',
+    codigo: 'CMB-001',
+    nombre: 'Combo Smash + Papas',
+    descripcion: 'Hamburguesa Smash Clásica + Papas Fritas Clásicas + Bebida 500ml.',
+    categoria: 'Combos',
+    seccion: 'Combos',
+    subseccion: 'Combos Individuales',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 11.90,
     stock: 50,
     imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
     es_promo: true,
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Ahorra $2.50 con el combo. Incluye todo.'
+    detalle_adicional: 'Ahorra $2.00 vs compra separada.',
+    option_groups: [
+      { id: 'og-hmb-cmb', nombre: 'Tu Burger', min_select: 1, max_select: 1, options: [
+        { id: 'opt-cla', nombre: 'Smash Clásica', precio_usd: 0 },
+        { id: 'opt-bbq', nombre: 'BBQ Bacon', precio_usd: 1.00 },
+        { id: 'opt-mus', nombre: 'Mushroom Swiss', precio_usd: 1.50 }
+      ]},
+      { id: 'og-dri-cmb', nombre: 'Bebida', min_select: 1, max_select: 1, options: [
+        { id: 'opt-col', nombre: 'Coca-Cola 500ml', precio_usd: 0 },
+        { id: 'opt-fan', nombre: 'Fanta 500ml', precio_usd: 0 },
+        { id: 'opt-wat', nombre: 'Agua 500ml', precio_usd: 0 },
+        { id: 'opt-jui', nombre: 'Jugo Natural', precio_usd: 0.75 }
+      ]}
+    ]
   },
   {
-    id: 'food-014',
-    codigo: 'POS-002',
-    nombre: 'Brownie con Helado de Vainilla',
-    descripcion: 'Brownie de chocolate oscuro tibio con bola de helado de vainilla artesanal y salsa de chocolate.',
-    categoria: 'Postres',
-    seccion: 'Postres',
-    subseccion: 'Con Helado',
-    marca: 'FoodApp',
+    id: 'cmb-002',
+    codigo: 'CMB-002',
+    nombre: 'Combo Doble + Papas Grandes',
+    descripcion: 'Doble Hamburguesa BBQ Bacon + Papas Grandes + Bebida 500ml.',
+    categoria: 'Combos',
+    seccion: 'Combos',
+    subseccion: 'Combos Individuales',
+    marca: 'BurgerPop',
     condicion: 'Nacional',
     anio_inicio: 0,
     anio_fin: 0,
-    precio_usd: 6.50,
-    stock: 25,
-    imagen_urls: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=500'],
+    precio_usd: 15.90,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
-    es_nuevo: true,
+    es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Chocolate 70% cacao. Helado artesanal.'
+    detalle_adicional: 'Para los que tienen hambre real.',
+    option_groups: [
+      { id: 'og-dri-cmb2', nombre: 'Bebida', min_select: 1, max_select: 1, options: [
+        { id: 'opt-col2', nombre: 'Coca-Cola 500ml', precio_usd: 0 },
+        { id: 'opt-fan2', nombre: 'Fanta 500ml', precio_usd: 0 },
+        { id: 'opt-spr2', nombre: 'Sprite 500ml', precio_usd: 0 },
+        { id: 'opt-jui2', nombre: 'Jugo Natural', precio_usd: 0.75 }
+      ]}
+    ]
   },
   {
-    id: 'food-015',
+    id: 'cmb-003',
+    codigo: 'CMB-003',
+    nombre: 'Combo Familiar (4 personas)',
+    descripcion: '4 Hamburguesas Clásicas + Papas Familiares + 4 Bebidas 500ml + Onion Rings.',
+    categoria: 'Combos',
+    seccion: 'Combos',
+    subseccion: 'Combos Familiares',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 34.90,
+    stock: 20,
+    imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
+    es_promo: true,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: true,
+    detalle_adicional: 'Ahorra $8.00 vs compra separada.',
+    option_groups: [
+      { id: 'og-beb-fam', nombre: 'Bebidas', min_select: 1, max_select: 1, options: [
+        { id: 'opt-col-f', nombre: '4x Coca-Cola', precio_usd: 0 },
+        { id: 'opt-var-f', nombre: '4x Mixtas', precio_usd: 0 },
+        { id: 'opt-wat-f', nombre: '4x Agua', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'beb-001',
+    codigo: 'BEB-001',
+    nombre: 'Coca-Cola 500ml',
+    descripcion: 'Refresco de cola 500ml bien frío.',
+    categoria: 'Bebidas',
+    seccion: 'Bebidas',
+    subseccion: 'Refrescos',
+    marca: 'Coca-Cola',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 1.50,
+    stock: 100,
+    imagen_urls: ['https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: 'Bien fría.',
+    option_groups: []
+  },
+  {
+    id: 'beb-002',
     codigo: 'BEB-002',
-    nombre: 'Malteada de Fresa',
-    descripcion: 'Malteada cremosa de fresa natural con crema batida y fresa fresca decorativa.',
+    nombre: 'Milkshake de Vainilla',
+    descripcion: 'Malteada cremosa de vainilla con crema batida y chips de chocolate.',
     categoria: 'Bebidas',
     seccion: 'Bebidas',
     subseccion: 'Malteadas',
-    marca: 'FoodApp',
+    marca: 'BurgerPop',
     condicion: 'Nacional',
     anio_inicio: 0,
     anio_fin: 0,
@@ -479,25 +455,136 @@ const DEFAULT_PRODUCTS: Producto[] = [
     stock: 40,
     imagen_urls: ['https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    detalle_adicional: 'Cremosa y deliciosa.',
+    option_groups: [
+      { id: 'og-shk', nombre: 'Sabor', min_select: 1, max_select: 1, options: [
+        { id: 'opt-van', nombre: 'Vainilla', precio_usd: 0 },
+        { id: 'opt-chc', nombre: 'Chocolate', precio_usd: 0 },
+        { id: 'opt-stb', nombre: 'Fresa', precio_usd: 0 },
+        { id: 'opt-oreo', nombre: 'Oreo', precio_usd: 0.50 }
+      ]}
+    ]
+  },
+  {
+    id: 'beb-003',
+    codigo: 'BEB-003',
+    nombre: 'Limonada Natural',
+    descripcion: 'Limonada fresca preparada al momento con hielo.',
+    categoria: 'Bebidas',
+    seccion: 'Bebidas',
+    subseccion: 'Frescos',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 2.00,
+    stock: 60,
+    imagen_urls: ['https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Helado artesanal de fresa natural.'
+    detalle_adicional: 'Fresca y natural.',
+    option_groups: [
+      { id: 'og-lim', nombre: 'Extra', min_select: 0, max_select: 1, options: [
+        { id: 'opt-lev', nombre: 'Leche (Limonada con Leche)', precio_usd: 0.50 }
+      ]}
+    ]
+  },
+  {
+    id: 'pst-001',
+    codigo: 'PST-001',
+    nombre: 'Brownie con Helado',
+    descripcion: 'Brownie de chocolate caliente con una bola de helado de vainilla y salsa de chocolate.',
+    categoria: 'Postres',
+    seccion: 'Postres',
+    subseccion: 'Calientes',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 5.50,
+    stock: 30,
+    imagen_urls: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    detalle_adicional: 'Caliente y derretido.',
+    option_groups: [
+      { id: 'og-hel', nombre: 'Sabor Helado', min_select: 1, max_select: 1, options: [
+        { id: 'opt-van-p', nombre: 'Vainilla', precio_usd: 0 },
+        { id: 'opt-chc-p', nombre: 'Chocolate', precio_usd: 0 },
+        { id: 'opt-fres-p', nombre: 'Fresa', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'pst-002',
+    codigo: 'PST-002',
+    nombre: 'Cheesecake Fresa',
+    descripcion: 'Tajada de cheesecake cremoso con coulis de fresa fresca.',
+    categoria: 'Postres',
+    seccion: 'Postres',
+    subseccion: 'Fríos',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 4.50,
+    stock: 25,
+    imagen_urls: ['https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    detalle_adicional: 'Cremoso y fresco.',
+    option_groups: []
+  },
+  {
+    id: 'ntc-001',
+    codigo: 'NTC-001',
+    nombre: 'Nachos Supreme',
+    descripcion: 'Totopos de maíz con queso cheddar derretido, guacamole, crema, jalapeños y pico de gallo.',
+    categoria: 'Nuggets & Tenders',
+    seccion: 'Nuggets & Tenders',
+    subseccion: 'Nachos',
+    marca: 'BurgerPop',
+    condicion: 'Nacional',
+    anio_inicio: 0,
+    anio_fin: 0,
+    precio_usd: 6.50,
+    stock: 35,
+    imagen_urls: ['https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    detalle_adicional: 'Compartir o disfrutar solo.',
+    option_groups: [
+      { id: 'og-meat-n', nombre: 'Proteína Extra', min_select: 0, max_select: 1, options: [
+        { id: 'opt-chk-n', nombre: 'Pollo Desmenuzado', precio_usd: 2.00 },
+        { id: 'opt-beef-n', nombre: 'Carne Molida', precio_usd: 2.00 }
+      ]}
+    ]
   }
 ];
 
 const DEFAULT_CONFIG: StoreConfig = {
-  site_nombre: 'FoodApp',
+  site_nombre: 'BurgerPop',
   telefono_soporte: '+584124976451',
-  direccion_fisica: 'Av. Principal, Local #12, Ciudad',
+  direccion_fisica: 'Av. Principal, Local #12, Valencia',
   coordenadas_tienda: { lat: 10.198300, lng: -68.004400 },
   banners: [
-    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
-    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=1200',
-    'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&q=80&w=1200'
+    'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=1200',
+    'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=1200',
+    'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=1200'
   ],
   zelle_enabled: true,
-  zelle_data: 'pagos@foodapp.com.ve',
+  zelle_data: 'pagos@burgerpop.com.ve',
   zelle_discount_percent: 0,
   pagomovil_enabled: true,
   pagomovil_data: 'Banesco (0134) - RIF J-50123456-7 - Tel: 0412-4976451',
@@ -506,12 +593,12 @@ const DEFAULT_CONFIG: StoreConfig = {
   efectivo_data: 'Paga al motorizado en efectivo (USD/Bs) al recibir tu delivery',
   efectivo_discount_percent: 0,
   transferencia_enabled: true,
-  transferencia_data: 'Banesco Cuenta Corriente - 0134-1122-33-4455667788 - FoodApp C.A. - RIF J-50123456-7',
+  transferencia_data: 'Banesco Cuenta Corriente - 0134-1122-33-4455667788 - BurgerPop C.A. - RIF J-50123456-7',
   transferencia_discount_percent: 0,
   tasa_cambio: 612.43,
   logo_url: '',
   theme_color: '#FF6B35',
-  mensaje_bienvenida: 'Pide tu comida favorita con delivery express. Hamburguesas, pastas, postres y más.',
+  mensaje_bienvenida: 'Pide tu smash favorita con delivery express. Combos, papas, bebidas y más.',
   delivery_gratis: false,
   costo_delivery_km: 1.5,
   envio_nacional: true,
@@ -525,19 +612,17 @@ const DEFAULT_CONFIG: StoreConfig = {
   ],
   favicon_url: '',
   banner_texts: [
-    'Platos Especiales del Día',
-    'Menú Premium Delivery',
-    'Postres Artesanales'
+    'La Mejor Smash de Valencia',
+    'Combos que Enamoran',
+    'Postres que Enloquecen'
   ],
   categories: [
     'Hamburguesas',
-    'Pastas',
-    'Pizzas',
-    'Postres',
+    'Papas & Sides',
+    'Combos',
     'Bebidas',
-    'Entradas',
-    'Ensaladas',
-    'Combos'
+    'Postres',
+    'Nuggets & Tenders'
   ],
   push_webhook_url: import.meta.env.VITE_PUSH_WEBHOOK_URL || '',
   push_webhook_secret: import.meta.env.VITE_WEBHOOK_SECRET || '',

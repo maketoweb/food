@@ -179,7 +179,7 @@ function AppContent() {
             className="text-3xl font-extrabold font-display tracking-tight"
             style={{ animation: 'nameSlideUp 0.6s ease-out 0.4s both' }}
           >
-            {config.site_nombre || 'FoodApp'}
+            {config.site_nombre || 'BurgerPop'}
           </h1>
           <p
             className="text-violet-200 font-mono text-xs uppercase tracking-widest mt-2"

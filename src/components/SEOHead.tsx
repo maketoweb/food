@@ -36,7 +36,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     let seoKeywords = defaultKeywords;
 
     if (type === 'product' && product) {
-      seoTitle = `${product.nombre} | ${config.site_nombre || 'FoodApp'}`;
+      seoTitle = `${product.nombre} | ${config.site_nombre || 'BurgerPop'}`;
       seoDesc = `Pide ${product.nombre} ${product.condicion.toLowerCase()} de la mejor calidad. Delivery express en minutos. Código: ${product.codigo}.`;
       seoKeywords = `${product.nombre}, ${product.seccion}, ${product.subseccion}, ${product.categoria}, foodapp, restaurante, delivery, ${product.marca}`;
     }
@@ -52,7 +52,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
 
       const filterText = parts.length > 0 ? parts.join(' ') : 'Menú Completo';
       
-      seoTitle = `Comprar ${filterText} | Catálogo ${config.site_nombre || 'FoodApp'}`;
+      seoTitle = `Comprar ${filterText} | Catálogo ${config.site_nombre || 'BurgerPop'}`;
       seoDesc = `Menú de ${filterText}. Hamburguesas, pastas, pizzas, postres y más con delivery express. Pide online en ${config.site_nombre || 'nuestro restaurante'}.`;
       
       const kwParts = ['foodapp', 'restaurante', 'delivery', 'comida online'];
@@ -166,7 +166,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       appleTitleMeta.setAttribute('name', 'apple-mobile-web-app-title');
       document.head.appendChild(appleTitleMeta);
     }
-    appleTitleMeta.setAttribute('content', config.site_nombre || 'FoodApp');
+    appleTitleMeta.setAttribute('content', config.site_nombre || 'BurgerPop');
 
     // JSON-LD Schema
     const existingScript = document.getElementById('foodapp-jsonld-schema');
@@ -178,7 +178,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       schemaObj = {
         '@context': 'https://schema.org',
         '@type': 'Restaurant',
-        'name': config.site_nombre || 'FoodApp',
+        'name': config.site_nombre || 'BurgerPop',
         'image': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
         '@id': 'https://foodapp.com.ve',
         'url': 'https://foodapp.com.ve',
@@ -209,7 +209,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
           'price': product.precio_usd.toFixed(2),
           'itemCondition': 'https://schema.org/NewCondition',
           'availability': product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-          'seller': { '@type': 'Restaurant', 'name': config.site_nombre || 'FoodApp' }
+          'seller': { '@type': 'Restaurant', 'name': config.site_nombre || 'BurgerPop' }
         },
         'category': product.categoria
       };
@@ -217,7 +217,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       schemaObj = {
         '@context': 'https://schema.org',
         '@type': 'SearchResultsPage',
-        'name': `Menú ${config.site_nombre || 'FoodApp'}`,
+        'name': `Menú ${config.site_nombre || 'BurgerPop'}`,
         'description': 'Busca y pide tu plato favorito con delivery express.'
       };
     }

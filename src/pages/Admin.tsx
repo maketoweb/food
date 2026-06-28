@@ -1047,7 +1047,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
         if (confirm("🗓️ Han pasado 15 días desde su último respaldo. ¿Desea descargar una copia de seguridad de sus datos ahora?")) {
           handleManualBackup(true);
           localStorage.setItem('foodapp_last_backup_date', String(now));
-          console.log("💾 FoodApp: Respaldo manual solicitado por periodo quincenal.");
+          console.log("🍔 BurgerPop: Respaldo manual solicitado por periodo quincenal.");
         }
       }
     }
@@ -2649,7 +2649,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{config.site_nombre || 'FoodApp'}</span>
+                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{config.site_nombre || 'BurgerPop'}</span>
                       <span className="text-[9px] text-slate-400 font-medium">ahora</span>
                     </div>
                     <h5 className="text-[12px] font-bold text-slate-800 leading-tight">¡Bienvenido a {config.site_nombre || 'nuestra tienda'}!</h5>
@@ -3229,7 +3229,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                         {config.site_nombre?.[0] || 'F'}
                       </div>
                     )}
-                    <span className="text-white font-bold text-sm">{config.site_nombre || 'FoodApp'}</span>
+                    <span className="text-white font-bold text-sm">{config.site_nombre || 'BurgerPop'}</span>
                   </div>
                   <div className="flex gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: config.accent_color || '#f59e0b' }}>🛒</div>
