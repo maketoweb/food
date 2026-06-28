@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Producto, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption } from '../types/store';
+import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
-  products: Producto[];
+  foodItems: FoodItem[];
   orders: Order[];
   config: StoreConfig;
   coupons: Coupon[];
@@ -11,8 +11,8 @@ interface AppContextProps {
   cart: CartItem[];
   isAdminAuthenticated: boolean;
   favorites: string[];
-  toggleFavorite: (partId: string) => void;
-  isFavorite: (partId: string) => boolean;
+  toggleFavorite: (itemId: string) => void;
+  isFavorite: (itemId: string) => boolean;
   
   // Haptic Feedback
   hapticEnabled: boolean;
@@ -32,15 +32,15 @@ interface AppContextProps {
   requestPart: (nombre: string, telefono: string, descripcion: string, imagenUrl?: string) => Promise<boolean>;
   
   // Catalog actions
-  addProduct: (product: Omit<Producto, 'id'>) => void;
-  updateProduct: (id: string, updated: Partial<Producto>) => void;
-  deleteProduct: (id: string) => void;
-  searchPartsSemantically: (query: string, includeInactive?: boolean) => Producto[];
+  addFoodItem: (product: Omit<FoodItem, 'id'>) => void;
+  updateFoodItem: (id: string, updated: Partial<FoodItem>) => void;
+  deleteFoodItem: (id: string) => void;
+  searchItems: (query: string, includeInactive?: boolean) => FoodItem[];
   
   // Cart Actions
-  addToCart: (part: Producto, qty?: number, selectedOptions?: SelectedOption[], optionsTotal?: number) => void;
-  removeFromCart: (partId: string) => void;
-  updateCartQuantity: (partId: string, quantity: number) => void;
+  addToCart: (item: FoodItem, qty?: number, selectedOptions?: SelectedOption[], optionsTotal?: number, removedIngredients?: string[]) => void;
+  removeFromCart: (itemId: string) => void;
+  updateCartQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   
   // Checkout & Order Actions
@@ -56,7 +56,7 @@ interface AppContextProps {
   // Config Actions
   updateConfig: (newConfig: Partial<StoreConfig>) => void;
   updateExchangeRate: (rate: number) => void;
-  fetchExchangeRate: () => Promise<void>;
+  fetchExchangeRate: () => Promise<boolean>;
   addCategory: (categoryName: string) => void;
   deleteCategory: (categoryName: string) => void;
   updateCategory: (oldCategory: string, newCategory: string) => void;
@@ -83,20 +83,14 @@ interface AppContextProps {
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
-// INITIAL PRODUCTS DATA - Hamburguesería
-const DEFAULT_PRODUCTS: Producto[] = [
+// INITIAL PRODUCTS DATA - Hamburguesería (50 productos)
+const DEFAULT_PRODUCTS: FoodItem[] = [
+  // HAMBURGUESAS (10)
   {
     id: 'hmb-001',
-    codigo: 'HMB-001',
     nombre: 'Smash Clásica',
     descripcion: 'Doble smash de carne 100% res, queso cheddar derretido, cebolla caramelizada, pickle y salsa especial de la casa.',
     categoria: 'Hamburguesas',
-    seccion: 'Hamburguesas',
-    subseccion: 'Clásicas',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 7.50,
     stock: 60,
     imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
@@ -104,7 +98,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Doble carne smash 160g total.',
     ingredientes: ['Pan brioche', 'Carne smash 120g', 'Queso cheddar', 'Lechuga', 'Tomate', 'Cebolla', 'Salsa especial'],
     option_groups: [
       { id: 'og-size-001', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
@@ -129,16 +122,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'hmb-002',
-    codigo: 'HMB-002',
     nombre: 'Bacon Explosion',
     descripcion: 'Doble carne smash, bacon crujiente, queso pepper jack, cebolla crispy y salsa BBQ ahumada.',
     categoria: 'Hamburguesas',
-    seccion: 'Hamburguesas',
-    subseccion: 'Especiales',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 9.50,
     stock: 50,
     imagen_urls: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=500'],
@@ -146,7 +132,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Doble carne 240g. Bacon included.',
     ingredientes: ['Pan brioche', 'Doble carne smash', 'Bacon crujiente', 'Queso pepper jack', 'Cebolla crispy', 'Salsa BBQ'],
     option_groups: [
       { id: 'og-size-002', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
@@ -162,16 +147,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'hmb-003',
-    codigo: 'HMB-003',
     nombre: 'Mushroom Swiss',
     descripcion: 'Carne smash jugosa, champiñones salteados, queso suizo derretido y mayonesa de trufa.',
     categoria: 'Hamburguesas',
-    seccion: 'Hamburguesas',
-    subseccion: 'Especiales',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 10.00,
     stock: 40,
     imagen_urls: ['https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&q=80&w=500'],
@@ -179,7 +157,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: true,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Champiñones frescos trufados.',
     ingredientes: ['Pan brioche', 'Carne smash 160g', 'Queso gruyère', 'Champiñones trufados', 'Cebolla caramelizada', 'Aceite de oliva'],
     option_groups: [
       { id: 'og-size-003', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
@@ -190,16 +167,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'hmb-004',
-    codigo: 'HMB-004',
     nombre: 'BBQ Bacon Cheddar',
     descripcion: 'Carne smash, bacon, cheddar derretido, aros de cebolla y salsa BBQ de la casa.',
     categoria: 'Hamburguesas',
-    seccion: 'Hamburguesas',
-    subseccion: 'Clásicas',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 8.90,
     stock: 55,
     imagen_urls: ['https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=500'],
@@ -207,7 +177,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'La favorita de la casa.',
     ingredientes: ['Pan brioche', 'Carne smash 120g', 'Queso Americano', 'Lechuga', 'Tomate', 'Pepinillos', 'Kétchup', 'Mostaza'],
     option_groups: [
       { id: 'og-size-004', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
@@ -223,16 +192,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'hmb-005',
-    codigo: 'HMB-005',
     nombre: 'Veggie Burger',
     descripcion: 'Burger de lentejas y champiñones, lechuga, tomate, aguacate y salsa de yogurt.',
     categoria: 'Hamburguesas',
-    seccion: 'Hamburguesas',
-    subseccion: 'Veganas',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 8.50,
     stock: 30,
     imagen_urls: ['https://images.unsplash.com/photo-1520072959219-c595dc870360?auto=format&fit=crop&q=80&w=500'],
@@ -240,7 +202,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: true,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: '100% vegetal. Sin carne.',
     ingredientes: ['Pan integral', 'Medallón vegetal', 'Queso vegano', 'Lechuga', 'Tomate', 'Palta', 'Salsa de yogur'],
     option_groups: [
       { id: 'og-top-005', nombre: 'Extras', min_select: 0, max_select: 3, options: [
@@ -250,17 +211,320 @@ const DEFAULT_PRODUCTS: Producto[] = [
     ]
   },
   {
+    id: 'hmb-006',
+    nombre: 'Smash Doble Queso',
+    descripcion: 'Doble carne smash, doble queso americano derretido, pepinillos y mostaza.',
+    categoria: 'Hamburguesas',
+    precio_usd: 8.50,
+    stock: 45,
+    imagen_urls: ['https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    ingredientes: ['Pan brioche', 'Doble carne smash', 'Doble queso americano', 'Pepinillos', 'Mostaza'],
+    option_groups: [
+      { id: 'og-size-006', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-sm-006', nombre: 'Single', precio_usd: 0 },
+        { id: 'opt-dbl-006', nombre: 'Double', precio_usd: 2.50 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-007',
+    nombre: 'Crispy Chicken Burger',
+    descripcion: 'Pechuga de pollo empanizada crujiente, lechuga, tomate, mayonesa y pan tostado.',
+    categoria: 'Hamburguesas',
+    precio_usd: 8.00,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Pan brioche', 'Pechuga empanizada', 'Lechuga', 'Tomate', 'Mayonesa'],
+    option_groups: [
+      { id: 'og-top-007', nombre: 'Extras', min_select: 0, max_select: 3, options: [
+        { id: 'opt-cho-007', nombre: 'Extra Queso', precio_usd: 0.75 },
+        { id: 'opt-bac-007', nombre: 'Tocino', precio_usd: 1.00 },
+        { id: 'opt-avo-007', nombre: 'Aguacate', precio_usd: 1.25 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-008',
+    nombre: 'Hawaiian Burger',
+    descripcion: 'Carne smash, piña asada, jamón, queso suizo derretido y salsa teriyaki.',
+    categoria: 'Hamburguesas',
+    precio_usd: 9.00,
+    stock: 35,
+    imagen_urls: ['https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Pan brioche', 'Carne smash', 'Piña asada', 'Jamón', 'Queso suizo', 'Salsa teriyaki'],
+    option_groups: []
+  },
+  {
+    id: 'hmb-009',
+    nombre: 'Texas BBQ Burger',
+    descripcion: 'Triple carne smash, bacon, cheddar, onion rings, jalapeños y salsa BBQ ahumada.',
+    categoria: 'Hamburguesas',
+    precio_usd: 11.00,
+    stock: 25,
+    imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
+    es_promo: true,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Pan brioche', 'Triple carne smash', 'Bacon', 'Queso cheddar', 'Onion rings', 'Jalapeños', 'Salsa BBQ'],
+    option_groups: [
+      { id: 'og-top-009', nombre: 'Extras', min_select: 0, max_select: 3, options: [
+        { id: 'opt-bac-009', nombre: 'Bacon Extra', precio_usd: 1.50 },
+        { id: 'opt-eg-009', nombre: 'Huevo Frito', precio_usd: 0.75 }
+      ]}
+    ]
+  },
+  {
+    id: 'hmb-010',
+    nombre: 'Burger Infantil',
+    descripcion: 'Carne smash pequeña, queso americano, papas fritas incluidas y salsa de tomate.',
+    categoria: 'Hamburguesas',
+    precio_usd: 5.50,
+    stock: 50,
+    imagen_urls: ['https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Pan suave', 'Carne smash 80g', 'Queso americano', 'Papas fritas'],
+    option_groups: []
+  },
+  // PIZZAS (6)
+  {
+    id: 'pzz-001',
+    nombre: 'Pizza Pepperoni',
+    descripcion: 'Pizza clásica con pepperoni, queso mozzarella y salsa de tomate casera.',
+    categoria: 'Pizzas',
+    precio_usd: 9.00,
+    stock: 30,
+    imagen_urls: ['https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    ingredientes: ['Masa artesanal', 'Pepperoni', 'Queso mozzarella', 'Salsa de tomate'],
+    option_groups: [
+      { id: 'og-sz-pzz-001', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-pers-001', nombre: 'Personal (8")', precio_usd: 0 },
+        { id: 'opt-med-001', nombre: 'Mediana (12")', precio_usd: 3.00 },
+        { id: 'opt-fam-001', nombre: 'Familiar (16")', precio_usd: 6.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'pzz-002',
+    nombre: 'Pizza Margherita',
+    descripcion: 'Pizza tradicional con mozzarella fresca, albahaca, salsa de tomate y aceite de oliva.',
+    categoria: 'Pizzas',
+    precio_usd: 8.50,
+    stock: 30,
+    imagen_urls: ['https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    ingredientes: ['Masa artesanal', 'Mozzarella fresca', 'Albahaca', 'Salsa de tomate', 'Aceite de oliva'],
+    option_groups: [
+      { id: 'og-sz-pzz-002', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-pers-002', nombre: 'Personal (8")', precio_usd: 0 },
+        { id: 'opt-med-002', nombre: 'Mediana (12")', precio_usd: 3.00 },
+        { id: 'opt-fam-002', nombre: 'Familiar (16")', precio_usd: 6.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'pzz-003',
+    nombre: 'Pizza BBQ Chicken',
+    descripcion: 'Pizza con pollo BBQ, cebolla morada, queso mozzarella y salsa BBQ ahumada.',
+    categoria: 'Pizzas',
+    precio_usd: 10.50,
+    stock: 25,
+    imagen_urls: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Masa artesanal', 'Pollo BBQ', 'Cebolla morada', 'Queso mozzarella', 'Salsa BBQ'],
+    option_groups: [
+      { id: 'og-sz-pzz-003', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-pers-003', nombre: 'Personal (8")', precio_usd: 0 },
+        { id: 'opt-med-003', nombre: 'Mediana (12")', precio_usd: 3.50 },
+        { id: 'opt-fam-003', nombre: 'Familiar (16")', precio_usd: 7.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'pzz-004',
+    nombre: 'Pizza Mexicana',
+    descripcion: 'Pizza con carne molida, jalapeños, pimientos, cebolla, nachos y queso picante.',
+    categoria: 'Pizzas',
+    precio_usd: 11.00,
+    stock: 20,
+    imagen_urls: ['https://images.unsplash.com/photo-1593504049359-74330189a345?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Masa artesanal', 'Carne molida', 'Jalapeños', 'Pimientos', 'Cebolla', 'Nachos'],
+    option_groups: [
+      { id: 'og-sz-pzz-004', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-pers-004', nombre: 'Personal (8")', precio_usd: 0 },
+        { id: 'opt-med-004', nombre: 'Mediana (12")', precio_usd: 3.50 },
+        { id: 'opt-fam-004', nombre: 'Familiar (16")', precio_usd: 7.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'pzz-005',
+    nombre: 'Pizza Hawaiana',
+    descripcion: 'Pizza con jamón, piña, mozzarella y salsa de tomate. Dulce y salada.',
+    categoria: 'Pizzas',
+    precio_usd: 9.50,
+    stock: 30,
+    imagen_urls: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Masa artesanal', 'Jamón', 'Piña', 'Queso mozzarella', 'Salsa de tomate'],
+    option_groups: [
+      { id: 'og-sz-pzz-005', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-pers-005', nombre: 'Personal (8")', precio_usd: 0 },
+        { id: 'opt-med-005', nombre: 'Mediana (12")', precio_usd: 3.00 },
+        { id: 'opt-fam-005', nombre: 'Familiar (16")', precio_usd: 6.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'pzz-006',
+    nombre: 'Pizza Vegetariana',
+    descripcion: 'Pizza con champiñones, pimientos, aceitunas, cebolla, maíz y mozzarella.',
+    categoria: 'Pizzas',
+    precio_usd: 10.00,
+    stock: 25,
+    imagen_urls: ['https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Masa artesanal', 'Champiñones', 'Pimientos', 'Aceitunas', 'Cebolla', 'Maíz'],
+    option_groups: [
+      { id: 'og-sz-pzz-006', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-pers-006', nombre: 'Personal (8")', precio_usd: 0 },
+        { id: 'opt-med-006', nombre: 'Mediana (12")', precio_usd: 3.00 },
+        { id: 'opt-fam-006', nombre: 'Familiar (16")', precio_usd: 6.00 }
+      ]}
+    ]
+  },
+  // POLLO (5)
+  {
+    id: 'pol-001',
+    nombre: 'Alitas BBQ x6',
+    descripcion: '6 alitas de pollo bañadas en salsa BBQ ahumada, acompañadas de papas fritas.',
+    categoria: 'Pollo',
+    precio_usd: 6.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    ingredientes: ['Alitas de pollo', 'Salsa BBQ', 'Papas fritas'],
+    option_groups: [
+      { id: 'og-sau-pol-001', nombre: 'Salsa Extra', min_select: 0, max_select: 2, options: [
+        { id: 'opt-bbq-pol-001', nombre: 'BBQ Extra', precio_usd: 0.50 },
+        { id: 'opt-ran-pol-001', nombre: 'Ranch', precio_usd: 0.50 }
+      ]}
+    ]
+  },
+  {
+    id: 'pol-002',
+    nombre: 'Alitas Buffalo x6',
+    descripcion: '6 alitas de pollo con salsa buffalo picante, aderezo blue cheese y papas.',
+    categoria: 'Pollo',
+    precio_usd: 6.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Alitas de pollo', 'Salsa buffalo', 'Aderezo blue cheese', 'Papas fritas'],
+    option_groups: [
+      { id: 'og-sau-pol-002', nombre: 'Salsa Extra', min_select: 0, max_select: 2, options: [
+        { id: 'opt-buf-pol-002', nombre: 'Buffalo Extra', precio_usd: 0.50 }
+      ]}
+    ]
+  },
+  {
+    id: 'pol-003',
+    nombre: 'Alitas Miel Mostaza x6',
+    descripcion: '6 alitas de pollo glaseadas con salsa miel mostaza y ajonjolí.',
+    categoria: 'Pollo',
+    precio_usd: 6.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Alitas de pollo', 'Salsa miel mostaza', 'Ajonjolí'],
+    option_groups: []
+  },
+  {
+    id: 'pol-004',
+    nombre: 'Chicken Tenders x4',
+    descripcion: '4 tiras de pechuga empanizadas, crujientes por fuera y jugosas por dentro, con salsa de la casa.',
+    categoria: 'Pollo',
+    precio_usd: 7.00,
+    stock: 35,
+    imagen_urls: ['https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    ingredientes: ['Pechuga de pollo', 'Empanizado crujiente', 'Salsa de la casa'],
+    option_groups: [
+      { id: 'og-dip-pol-004', nombre: 'Salsa', min_select: 1, max_select: 1, options: [
+        { id: 'opt-hny-pol-004', nombre: 'Miel Mostaza', precio_usd: 0 },
+        { id: 'opt-bbq-pol-004', nombre: 'BBQ', precio_usd: 0 },
+        { id: 'opt-rch-pol-004', nombre: 'Ranch', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'pol-005',
+    nombre: 'Pollo BBQ Asado',
+    descripcion: 'Mitad de pollo asado con salsa BBQ, acompañado de papas y ensalada fresca.',
+    categoria: 'Pollo',
+    precio_usd: 8.50,
+    stock: 20,
+    imagen_urls: ['https://images.unsplash.com/photo-1598103442097-8b7c2fbaa3b1?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Pollo BBQ', 'Papas', 'Ensalada fresca'],
+    option_groups: []
+  },
+  // PAPAS & SIDES (6)
+  {
     id: 'ccp-001',
-    codigo: 'CCP-001',
     nombre: 'Papas Fritas Clásicas',
     descripcion: 'Papas fritas crocantes con sal marina y salsa ketchup de la casa.',
     categoria: 'Papas & Sides',
-    seccion: 'Papas & Sides',
-    subseccion: 'Papas',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 3.50,
     stock: 100,
     imagen_urls: ['https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&q=80&w=500'],
@@ -268,7 +532,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Porción individual.',
     ingredientes: ['Papas fritas crocantes', 'Sal'],
     option_groups: [
       { id: 'og-sz-ccp', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
@@ -284,16 +547,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'ccp-002',
-    codigo: 'CCP-002',
     nombre: 'Onion Rings',
     descripcion: 'Aros de cebolla empanizados y fritos hasta quedar dorados y crujientes.',
     categoria: 'Papas & Sides',
-    seccion: 'Papas & Sides',
-    subseccion: 'Aros',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 4.00,
     stock: 50,
     imagen_urls: ['https://images.unsplash.com/photo-1639024471283-03518883512d?auto=format&fit=crop&q=80&w=500'],
@@ -301,51 +557,131 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Crujientes y dorados.',
-    ingredientes: ['Papas fritas', 'Queso cheddar derretido', 'Bacon bits'],
+    ingredientes: ['Cebolla', 'Empanizado', 'Salsa ranch'],
     option_groups: []
   },
   {
-    id: 'ccp-003',
-    codigo: 'CCP-003',
-    nombre: 'Chicken Wings x6',
-    descripcion: '6 alitas de pollo fritas con tu salsa favorita: BBQ, buffalo o miel mostaza.',
+    id: 'pps-001',
+    nombre: 'Papas Cheddar & Bacon',
+    descripcion: 'Papas fritas cubiertas con queso cheddar derretido y bacon bits crujientes.',
     categoria: 'Papas & Sides',
-    seccion: 'Papas & Sides',
-    subseccion: 'Alitas',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 6.50,
-    stock: 40,
-    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
+    precio_usd: 5.00,
+    stock: 60,
+    imagen_urls: ['https://images.unsplash.com/photo-1617127365659-c47c8646ef44?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
     es_nuevo: false,
-    es_mas_vendido: true,
+    es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: '6 unidades.',
-    ingredientes: ['Papas fritas gruesas', 'Sal', 'Pimienta'],
+    ingredientes: ['Papas', 'Queso cheddar', 'Bacon bits'],
     option_groups: [
-      { id: 'og-sau-003', nombre: 'Salsa', min_select: 1, max_select: 1, options: [
-        { id: 'opt-bbq-003', nombre: 'BBQ', precio_usd: 0 },
-        { id: 'opt-buf-003', nombre: 'Buffalo Picante', precio_usd: 0 },
-        { id: 'opt-hny-003', nombre: 'Miel Mostaza', precio_usd: 0 }
+      { id: 'og-sz-pps-001', nombre: 'Tamaño', min_select: 1, max_select: 1, options: [
+        { id: 'opt-ind-pps', nombre: 'Individual', precio_usd: 0 },
+        { id: 'opt-fam-pps', nombre: 'Familiar', precio_usd: 2.50 }
       ]}
     ]
   },
   {
+    id: 'pps-002',
+    nombre: 'Papas Cajún',
+    descripcion: 'Papas fritas sazonadas con especias cajún, servidas con crema agria.',
+    categoria: 'Papas & Sides',
+    precio_usd: 4.50,
+    stock: 50,
+    imagen_urls: ['https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Papas', 'Especias cajún', 'Crema agria'],
+    option_groups: []
+  },
+  {
+    id: 'pps-003',
+    nombre: 'Papas Locas',
+    descripcion: 'Papas fritas con queso cheddar, bacon, jalapeños, crema agria y pico de gallo.',
+    categoria: 'Papas & Sides',
+    precio_usd: 6.00,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1617127365659-c47c8646ef44?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Papas', 'Queso cheddar', 'Bacon', 'Jalapeños', 'Crema agria', 'Pico de gallo'],
+    option_groups: []
+  },
+  // ENTRADAS (4)
+  {
+    id: 'ent-001',
+    nombre: 'Nachos Supreme',
+    descripcion: 'Totopos de maíz con queso cheddar derretido, guacamole, crema agria, jalapeños y pico de gallo.',
+    categoria: 'Entradas',
+    precio_usd: 6.50,
+    stock: 35,
+    imagen_urls: ['https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: true,
+    delivery_gratis: false,
+    ingredientes: ['Totopos de maíz', 'Queso cheddar', 'Jalapeños', 'Guacamole', 'Crema agria'],
+    option_groups: [
+      { id: 'og-meat-ent', nombre: 'Proteína Extra', min_select: 0, max_select: 1, options: [
+        { id: 'opt-chk-ent', nombre: 'Pollo Desmenuzado', precio_usd: 2.00 },
+        { id: 'opt-beef-ent', nombre: 'Carne Molida', precio_usd: 2.00 }
+      ]}
+    ]
+  },
+  {
+    id: 'ent-002',
+    nombre: 'Tequeños x6',
+    descripcion: '6 palitos de queso envueltos en masa hojaldrada, fritos hasta dorar, servidos con salsa de ajo.',
+    categoria: 'Entradas',
+    precio_usd: 4.50,
+    stock: 50,
+    imagen_urls: ['https://images.unsplash.com/photo-1625220194771-7ebdea0b70b7?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Queso blanco', 'Masa hojaldrada', 'Salsa de ajo'],
+    option_groups: []
+  },
+  {
+    id: 'ent-003',
+    nombre: 'Empanadas de Queso x3',
+    descripcion: '3 empanadas fritas rellenas de queso, doradas y crujientes.',
+    categoria: 'Entradas',
+    precio_usd: 4.00,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1625220194771-7ebdea0b70b7?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Masa de maíz', 'Queso blanco', 'Aceite vegetal'],
+    option_groups: []
+  },
+  {
+    id: 'ent-004',
+    nombre: 'Mozzarella Sticks x6',
+    descripcion: '6 palitos de mozzarella empanizados con salsa marinara y crema de ajo.',
+    categoria: 'Entradas',
+    precio_usd: 5.50,
+    stock: 35,
+    imagen_urls: ['https://images.unsplash.com/photo-1625220194771-7ebdea0b70b7?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Mozzarella', 'Empanizado', 'Salsa marinara', 'Crema de ajo'],
+    option_groups: []
+  },
+  // COMBOS (6)
+  {
     id: 'cmb-001',
-    codigo: 'CMB-001',
     nombre: 'Combo Smash + Papas',
-    descripcion: 'Hamburguesa Smash Clásica + Papas Fritas Clásicas + Bebida 500ml.',
+    descripcion: 'Hamburguesa Smash Clásica + Papas Fritas + Bebida 500ml.',
     categoria: 'Combos',
-    seccion: 'Combos',
-    subseccion: 'Combos Individuales',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 11.90,
     stock: 50,
     imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
@@ -353,7 +689,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Ahorra $2.00 vs compra separada.',
     ingredientes: ['Hamburguesa a elegir', 'Papas fritas', 'Bebida 500ml'],
     option_groups: [
       { id: 'og-hmb-cmb', nombre: 'Tu Burger', min_select: 1, max_select: 1, options: [
@@ -371,16 +706,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'cmb-002',
-    codigo: 'CMB-002',
     nombre: 'Combo Doble + Papas Grandes',
-    descripcion: 'Doble Hamburguesa BBQ Bacon + Papas Grandes + Bebida 500ml.',
+    descripcion: 'Doble BBQ Bacon Cheddar + Papas Grandes + Bebida 500ml.',
     categoria: 'Combos',
-    seccion: 'Combos',
-    subseccion: 'Combos Individuales',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 15.90,
     stock: 40,
     imagen_urls: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=500'],
@@ -388,7 +716,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Para los que tienen hambre real.',
     ingredientes: ['2 Hamburguesas a elegir', 'Papas Grandes', '2 Bebidas 500ml'],
     option_groups: [
       { id: 'og-dri-cmb2', nombre: 'Bebida', min_select: 1, max_select: 1, options: [
@@ -401,16 +728,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'cmb-003',
-    codigo: 'CMB-003',
     nombre: 'Combo Familiar (4 personas)',
-    descripcion: '4 Hamburguesas Clásicas + Papas Familiares + 4 Bebidas 500ml + Onion Rings.',
+    descripcion: '4 Smash Clásicas + Papas Familiares + 4 Bebidas 500ml + Onion Rings.',
     categoria: 'Combos',
-    seccion: 'Combos',
-    subseccion: 'Combos Familiares',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 34.90,
     stock: 20,
     imagen_urls: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500'],
@@ -418,8 +738,7 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: true,
-    detalle_adicional: 'Ahorra $8.00 vs compra separada.',
-    ingredientes: ['Hamburguesa Doble', 'Papas Grandes', 'Nuggets x6', 'Bebida 1L'],
+    ingredientes: ['4 Smash Clásicas', 'Papas familiares', '4 Bebidas', 'Onion Rings'],
     option_groups: [
       { id: 'og-beb-fam', nombre: 'Bebidas', min_select: 1, max_select: 1, options: [
         { id: 'opt-col-f', nombre: '4x Coca-Cola', precio_usd: 0 },
@@ -429,49 +748,135 @@ const DEFAULT_PRODUCTS: Producto[] = [
     ]
   },
   {
+    id: 'cmb-004',
+    nombre: 'Combo Pizza + Papas',
+    descripcion: 'Pizza Pepperoni Personal + Papas Fritas + Bebida 500ml.',
+    categoria: 'Combos',
+    precio_usd: 14.90,
+    stock: 25,
+    imagen_urls: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Pizza Pepperoni', 'Papas fritas', 'Bebida 500ml'],
+    option_groups: [
+      { id: 'og-dri-cmb4', nombre: 'Bebida', min_select: 1, max_select: 1, options: [
+        { id: 'opt-col4', nombre: 'Coca-Cola 500ml', precio_usd: 0 },
+        { id: 'opt-spr4', nombre: 'Sprite 500ml', precio_usd: 0 },
+        { id: 'opt-jui4', nombre: 'Jugo Natural', precio_usd: 0.75 }
+      ]}
+    ]
+  },
+  {
+    id: 'cmb-005',
+    nombre: 'Combo Alitas + Papas',
+    descripcion: '6 Alitas BBQ + Papas Fritas + Bebida 500ml + Aderezo.',
+    categoria: 'Combos',
+    precio_usd: 12.50,
+    stock: 30,
+    imagen_urls: ['https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['6 Alitas BBQ', 'Papas fritas', 'Bebida 500ml', 'Aderezo'],
+    option_groups: [
+      { id: 'og-dri-cmb5', nombre: 'Bebida', min_select: 1, max_select: 1, options: [
+        { id: 'opt-col5', nombre: 'Coca-Cola 500ml', precio_usd: 0 },
+        { id: 'opt-fan5', nombre: 'Fanta 500ml', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'cmb-006',
+    nombre: 'Combo Infantil',
+    descripcion: 'Burger Infantil + Papas pequeñas + Jugo + Juguete sorpresa.',
+    categoria: 'Combos',
+    precio_usd: 8.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Burger Infantil', 'Papas pequeñas', 'Jugo', 'Juguete sorpresa'],
+    option_groups: []
+  },
+  // BEBIDAS (7)
+  {
     id: 'beb-001',
-    codigo: 'BEB-001',
     nombre: 'Coca-Cola 500ml',
     descripcion: 'Refresco de cola 500ml bien frío.',
     categoria: 'Bebidas',
-    seccion: 'Bebidas',
-    subseccion: 'Refrescos',
-    marca: 'Coca-Cola',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 1.50,
-    stock: 100,
+    stock: 150,
     imagen_urls: ['https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Bien fría.',
     ingredientes: ['Coca-Cola 500ml'],
     option_groups: []
   },
   {
     id: 'beb-002',
-    codigo: 'BEB-002',
+    nombre: 'Sprite 500ml',
+    descripcion: 'Refresco de limón 500ml, refrescante y burbujeante.',
+    categoria: 'Bebidas',
+    precio_usd: 1.50,
+    stock: 150,
+    imagen_urls: ['https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Sprite 500ml'],
+    option_groups: []
+  },
+  {
+    id: 'beb-003',
+    nombre: 'Fanta 500ml',
+    descripcion: 'Refresco de naranja 500ml, sabor frutal y refrescante.',
+    categoria: 'Bebidas',
+    precio_usd: 1.50,
+    stock: 150,
+    imagen_urls: ['https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Fanta 500ml'],
+    option_groups: []
+  },
+  {
+    id: 'beb-004',
+    nombre: 'Agua Mineral 500ml',
+    descripcion: 'Agua mineral natural sin gas, pura y refrescante.',
+    categoria: 'Bebidas',
+    precio_usd: 1.00,
+    stock: 200,
+    imagen_urls: ['https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Agua mineral 500ml'],
+    option_groups: []
+  },
+  {
+    id: 'beb-005',
     nombre: 'Milkshake de Vainilla',
     descripcion: 'Malteada cremosa de vainilla con crema batida y chips de chocolate.',
     categoria: 'Bebidas',
-    seccion: 'Bebidas',
-    subseccion: 'Malteadas',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 4.50,
     stock: 40,
     imagen_urls: ['https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
-    es_nuevo: true,
+    es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Cremosa y deliciosa.',
-    ingredientes: ['Agua sin gas 500ml'],
+    ingredientes: ['Helado de vainilla', 'Leche', 'Crema batida', 'Chips de chocolate'],
     option_groups: [
       { id: 'og-shk', nombre: 'Sabor', min_select: 1, max_select: 1, options: [
         { id: 'opt-van', nombre: 'Vainilla', precio_usd: 0 },
@@ -482,17 +887,30 @@ const DEFAULT_PRODUCTS: Producto[] = [
     ]
   },
   {
-    id: 'beb-003',
-    codigo: 'BEB-003',
-    nombre: 'Limonada Natural',
-    descripcion: 'Limonada fresca preparada al momento con hielo.',
+    id: 'beb-006',
+    nombre: 'Milkshake de Chocolate',
+    descripcion: 'Malteada cremosa de chocolate con crema batida y salsa de chocolate.',
     categoria: 'Bebidas',
-    seccion: 'Bebidas',
-    subseccion: 'Frescos',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
+    precio_usd: 4.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: true,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Helado de chocolate', 'Leche', 'Crema batida', 'Salsa de chocolate'],
+    option_groups: [
+      { id: 'og-shk-006', nombre: 'Sabor', min_select: 1, max_select: 1, options: [
+        { id: 'opt-chc-006', nombre: 'Chocolate', precio_usd: 0 },
+        { id: 'opt-van-006', nombre: 'Vainilla', precio_usd: 0 }
+      ]}
+    ]
+  },
+  {
+    id: 'beb-007',
+    nombre: 'Limonada Natural',
+    descripcion: 'Limonada fresca preparada al momento con limón natural y hielo.',
+    categoria: 'Bebidas',
     precio_usd: 2.00,
     stock: 60,
     imagen_urls: ['https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&q=80&w=500'],
@@ -500,7 +918,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Fresca y natural.',
     ingredientes: ['Limón', 'Agua', 'Azúcar', 'Hielo'],
     option_groups: [
       { id: 'og-lim', nombre: 'Extra', min_select: 0, max_select: 1, options: [
@@ -508,18 +925,12 @@ const DEFAULT_PRODUCTS: Producto[] = [
       ]}
     ]
   },
+  // POSTRES (6)
   {
     id: 'pst-001',
-    codigo: 'PST-001',
     nombre: 'Brownie con Helado',
     descripcion: 'Brownie de chocolate caliente con una bola de helado de vainilla y salsa de chocolate.',
     categoria: 'Postres',
-    seccion: 'Postres',
-    subseccion: 'Calientes',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 5.50,
     stock: 30,
     imagen_urls: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=500'],
@@ -527,7 +938,6 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Caliente y derretido.',
     ingredientes: ['Brownie de chocolate', 'Helado de vainilla', 'Salsa de chocolate'],
     option_groups: [
       { id: 'og-hel', nombre: 'Sabor Helado', min_select: 1, max_select: 1, options: [
@@ -539,16 +949,9 @@ const DEFAULT_PRODUCTS: Producto[] = [
   },
   {
     id: 'pst-002',
-    codigo: 'PST-002',
-    nombre: 'Cheesecake Fresa',
+    nombre: 'Cheesecake de Fresa',
     descripcion: 'Tajada de cheesecake cremoso con coulis de fresa fresca.',
     categoria: 'Postres',
-    seccion: 'Postres',
-    subseccion: 'Fríos',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
     precio_usd: 4.50,
     stock: 25,
     imagen_urls: ['https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=500'],
@@ -556,35 +959,73 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: true,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Cremoso y fresco.',
     ingredientes: ['Cheesecake de fresa', 'Salsa de fresa'],
     option_groups: []
   },
   {
-    id: 'ntc-001',
-    codigo: 'NTC-001',
-    nombre: 'Nachos Supreme',
-    descripcion: 'Totopos de maíz con queso cheddar derretido, guacamole, crema, jalapeños y pico de gallo.',
-    categoria: 'Nuggets & Tenders',
-    seccion: 'Nuggets & Tenders',
-    subseccion: 'Nachos',
-    marca: 'BurgerPop',
-    condicion: 'Nacional',
-    anio_inicio: 0,
-    anio_fin: 0,
-    precio_usd: 6.50,
-    stock: 35,
-    imagen_urls: ['https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&q=80&w=500'],
+    id: 'pst-003',
+    nombre: 'Crepas con Nutella',
+    descripcion: '2 crepas suaves rellenas de Nutella, fresas y plátano, espolvoreadas con azúcar glass.',
+    categoria: 'Postres',
+    precio_usd: 5.00,
+    stock: 25,
+    imagen_urls: ['https://images.unsplash.com/photo-1519676867240-f03562e64548?auto=format&fit=crop&q=80&w=500'],
     es_promo: false,
     es_nuevo: false,
     es_mas_vendido: false,
     delivery_gratis: false,
-    detalle_adicional: 'Compartir o disfrutar solo.',
-    ingredientes: ['Totopos de maíz', 'Queso cheddar', 'Jalapeños', 'Guacamole', 'Crema agria'],
+    ingredientes: ['Crepas', 'Nutella', 'Fresas', 'Plátano', 'Azúcar glass'],
+    option_groups: []
+  },
+  {
+    id: 'pst-004',
+    nombre: 'Sundae de Chocolate',
+    descripcion: 'Helado de chocolate con crema batida, salsa de chocolate, nueces y cereza.',
+    categoria: 'Postres',
+    precio_usd: 4.00,
+    stock: 35,
+    imagen_urls: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Helado de chocolate', 'Crema batida', 'Salsa de chocolate', 'Nueces', 'Cereza'],
+    option_groups: []
+  },
+  {
+    id: 'pst-005',
+    nombre: 'Flan Casero',
+    descripcion: 'Flan de caramelo casero, suave y cremoso. Receta tradicional de la abuela.',
+    categoria: 'Postres',
+    precio_usd: 3.50,
+    stock: 30,
+    imagen_urls: ['https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Huevo', 'Leche condensada', 'Caramelo', 'Vainilla'],
+    option_groups: []
+  },
+  {
+    id: 'pst-006',
+    nombre: 'Helado Artesanal 2 bolas',
+    descripcion: '2 bolas de helado artesanal a tu elección: vainilla, chocolate, fresa o mantecado.',
+    categoria: 'Postres',
+    precio_usd: 3.50,
+    stock: 40,
+    imagen_urls: ['https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&q=80&w=500'],
+    es_promo: false,
+    es_nuevo: false,
+    es_mas_vendido: false,
+    delivery_gratis: false,
+    ingredientes: ['Helado artesanal', 'Sabor a elegir'],
     option_groups: [
-      { id: 'og-meat-n', nombre: 'Proteína Extra', min_select: 0, max_select: 1, options: [
-        { id: 'opt-chk-n', nombre: 'Pollo Desmenuzado', precio_usd: 2.00 },
-        { id: 'opt-beef-n', nombre: 'Carne Molida', precio_usd: 2.00 }
+      { id: 'og-hel-006', nombre: 'Sabores', min_select: 2, max_select: 2, options: [
+        { id: 'opt-van-006', nombre: 'Vainilla', precio_usd: 0 },
+        { id: 'opt-chc-006', nombre: 'Chocolate', precio_usd: 0 },
+        { id: 'opt-frs-006', nombre: 'Fresa', precio_usd: 0 },
+        { id: 'opt-mnt-006', nombre: 'Mantecado', precio_usd: 0 }
       ]}
     ]
   }
@@ -615,7 +1056,7 @@ const DEFAULT_CONFIG: StoreConfig = {
   tasa_cambio: 612.43,
   logo_url: '',
   theme_color: '#FF6B35',
-  mensaje_bienvenida: 'Pide tu smash favorita con delivery express. Combos, papas, bebidas y más.',
+  mensaje_bienvenida: 'La mejor hamburguesería con delivery express. Hamburguesas smash, pizzas artesanales, pollo, papas, postres y más.',
   delivery_gratis: false,
   costo_delivery_km: 1.5,
   envio_nacional: true,
@@ -629,13 +1070,16 @@ const DEFAULT_CONFIG: StoreConfig = {
   ],
   favicon_url: '',
   banner_texts: [
-    'La Mejor Smash de Valencia',
+    'Hamburguesas Smash, Pizzas y Pollo',
     'Combos que Enamoran',
     'Postres que Enloquecen'
   ],
   categories: [
     'Hamburguesas',
+    'Pizzas',
+    'Pollo',
     'Papas & Sides',
+    'Entradas',
     'Combos',
     'Bebidas',
     'Postres',
@@ -660,7 +1104,7 @@ const DEFAULT_CONFIG: StoreConfig = {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Persistence state loaders
-  const [products, setProducts] = useState<Producto[]>(() => {
+  const [products, setProducts] = useState<FoodItem[]>(() => {
     const saved = localStorage.getItem('trv_products');
     return saved ? JSON.parse(saved) : DEFAULT_PRODUCTS;
   });
@@ -692,8 +1136,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [
       {
         id: 'init-notif',
-        titulo: 'Bienvenidos a Marketo',
-        mensaje: 'Encuentra los mejores cortes de carne, quesos madurados y viveres frescos con delivery express en Valencia.',
+        titulo: 'Bienvenidos a BurgerPop',
+        mensaje: 'Las mejores hamburguesas smash, pizzas artesanales, pollo, papas y postres con delivery express en Valencia.',
         fecha: new Date().toLocaleDateString(),
         tipo: 'todos',
         leida: false,
@@ -987,7 +1431,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }
         })
-        // Escuchar cambios en Productos (CDC)
+        // Escuchar cambios en FoodItems (CDC)
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'products' },
@@ -1003,15 +1447,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 return copy;
               }
 
-              // fallback por codigo
-              const idxByCode = prev.findIndex(p => p.codigo === inserted.codigo);
-              if (idxByCode >= 0) {
-                const copy = [...prev];
-                copy[idxByCode] = { ...copy[idxByCode], ...inserted };
-                return copy;
-              }
-
-              return [inserted as Producto, ...prev];
+              return [inserted as FoodItem, ...prev];
             });
           }
         )
@@ -1031,15 +1467,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 return copy;
               }
 
-              // fallback por codigo
-              const idxByCode = prev.findIndex(p => p.codigo === updated.codigo);
-              if (idxByCode >= 0) {
-                const copy = [...prev];
-                copy[idxByCode] = { ...copy[idxByCode], ...updated };
-                return copy;
-              }
-
-              return [updated as Producto, ...prev];
+              return [updated as FoodItem, ...prev];
             });
           }
         )
@@ -1051,9 +1479,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (!deleted) return;
 
             setProducts(prev => {
-              const byId = deleted.id ? prev.filter(p => p.id !== deleted.id) : prev;
-              const byCode = deleted.codigo ? byId.filter(p => p.codigo !== deleted.codigo) : byId;
-              return byCode;
+              return deleted.id ? prev.filter(p => p.id !== deleted.id) : prev;
             });
           }
         )
@@ -1191,7 +1617,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         productsQuery = productsQuery.eq('activo', true);
       }
       const { data: dbProducts } = await productsQuery;
-      if (dbProducts) setProducts(dbProducts as Producto[]);
+      if (dbProducts) setProducts(dbProducts as FoodItem[]);
       
       // Cargar configuración COMPLETA de la tienda
       const { data: dbConfig } = await supabase.from('store_config').select('*').single();
@@ -1306,27 +1732,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => subscription?.unsubscribe?.();
   }, []);
 
-  const toggleFavorite = (partId: string) => {
+  const toggleFavorite = (itemId: string) => {
     setFavorites(prev => 
-      prev.includes(partId) ? prev.filter(id => id !== partId) : [...prev, partId]
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
     );
   };
 
-  const isFavorite = (partId: string) => {
-    return favorites.includes(partId);
+  const isFavorite = (itemId: string) => {
+    return favorites.includes(itemId);
   };
 
   const requestPart = async (nombre: string, telefono: string, descripcion: string, imagenUrl?: string): Promise<boolean> => {
     console.log('🛠️ AppContext: Procesando solicitud de producto:', descripcion);
     const adminRes = await addNotification(
-      'Nueva Solicitud de Producto Especial 🍏',
-      `Solicitud de: ${nombre} (${telefono})\n\nProducto: ${descripcion}${imagenUrl ? `\n\nImagen disponible` : ''}`,
+      'Nueva Solicitud de FoodItem Especial 🍏',
+      `Solicitud de: ${nombre} (${telefono})\n\nFoodItem: ${descripcion}${imagenUrl ? `\n\nImagen disponible` : ''}`,
       'request',
       telefono
     );
      // Also notify user that request was received
      const userRes = await addNotification(
-      'Solicitud de Producto Recibida',
+      'Solicitud de FoodItem Recibida',
       `Hola ${nombre}, hemos recibido tu solicitud para "${descripcion.substring(0, 30)}...". Un agente de ${config.site_nombre || 'nuestra tienda'} te contactará pronto.`,
       'personal',
       telefono
@@ -1336,18 +1762,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Catalog CRUD Functions
-  const addProduct = (productData: Omit<Producto, 'id'>) => {
+  const addProduct = (productData: Omit<FoodItem, 'id'>) => {
     // No generamos ID manual para productos para que Supabase use gen_random_uuid()
     addNotification('Procesando...', `Agregando ${productData.nombre} al catálogo.`);
     
     // Supabase Async Sync
     supabase.from('products').insert([{
-      codigo: productData.codigo,
       nombre: productData.nombre,
       descripcion: productData.descripcion,
       categoria: productData.categoria,
-      seccion: productData.seccion,
-      subseccion: productData.subseccion,
       precio_usd: productData.precio_usd,
       stock: productData.stock,
       imagen_urls: productData.imagen_urls || [],
@@ -1359,11 +1782,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('Add part error:', error);
         addNotification('Error al agregar producto', error.message || 'Error de base de datos');
       }
-      if (data) setProducts(prev => [data as Producto, ...prev]);
+      if (data) setProducts(prev => [data as FoodItem, ...prev]);
     });
   };
 
-  const updateProduct = (id: string, updated: Partial<Producto>) => {
+  const updateProduct = (id: string, updated: Partial<FoodItem>) => {
     setProducts(prev => prev.map(p => {
       if (p.id === id) {
         const updatedPart = { ...p, ...updated };
@@ -1371,7 +1794,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Supabase Async Sync
         const updatePayload: any = { ...updated };
         delete updatePayload.id; // avoid id conflicts
-        supabase.from('products').update(updatePayload).eq('codigo', updatedPart.codigo)
+        supabase.from('products').update(updatePayload).eq('id', updatedPart.id)
           .then(({ error }) => { if (error) {
             console.error('Update part error:', error);
             addNotification('Error al actualizar producto', error.message || 'Error de base de datos');
@@ -1386,7 +1809,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteProduct = (id: string) => {
     const targetPart = products.find(p => p.id === id);
     if (targetPart) {
-      supabase.from('products').delete().eq('codigo', targetPart.codigo)
+      supabase.from('products').delete().eq('id', targetPart.id)
         .then(({ error }) => { if (error) {
           console.error('Delete part error:', error);
           addNotification('Error al eliminar producto', error.message || 'Error de base de datos');
@@ -1395,50 +1818,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  // Buscador Inteligente de Supermercado (Lógica Semántica)
-  const searchPartsSemantically = (query: string, includeInactive = false): Producto[] => {
-    const partsToSearch = products || [];
-    if (!query || query.trim() === '') return partsToSearch.filter(p => includeInactive || p.activo !== false);
+  // Buscador Inteligente
+  const searchItems = (query: string, includeInactive = false): FoodItem[] => {
+    const itemsToSearch = products || [];
+    if (!query || query.trim() === '') return itemsToSearch.filter(p => includeInactive || p.activo !== false);
     
     const cleanQuery = query.toLowerCase().trim();
     const tokens = cleanQuery.split(/\s+/);
     
-    // Filtrado opcional por año (útil para añadas de licores o vigencia de combos)
-    let queryYear: number | null = null;
-    const remainingTokens: string[] = [];
-    
-    for (const token of tokens) {
-      const parsedNum = parseInt(token);
-      if (!isNaN(parsedNum) && parsedNum >= 1980 && parsedNum <= 2026) {
-        queryYear = parsedNum;
-      } else {
-        remainingTokens.push(token);
-      }
-    }
-    
-    return partsToSearch.filter(part => {
-      // 0. Only active parts
-      if (!includeInactive && part.activo === false) {
+    return itemsToSearch.filter(item => {
+      if (!includeInactive && item.activo === false) {
         return false;
       }
-
-      // 1. Year Match (anio_inicio <= queryYear <= anio_fin)
-      if (queryYear !== null) {
-        if (part.anio_inicio > queryYear || part.anio_fin < queryYear) {
-          return false;
-        }
-      }
       
-      // If there are no other keywords, just filter by compatible year
-      if (remainingTokens.length === 0) return true;
+      const itemSearchText = `${item.nombre} ${item.descripcion} ${item.categoria} ${(item.ingredientes || []).join(' ')} ${item.delivery_gratis ? 'delivery gratis' : ''}`.toLowerCase();
       
-      // Búsqueda por palabras clave en campos relevantes (Nombre, Marca, Sección, etc.)
-      const partSearchText = `${part.nombre} ${part.codigo} ${part.descripcion} ${part.categoria} ${part.seccion} ${part.subseccion} ${part.marca} ${part.condicion} ${part.delivery_gratis ? 'delivery gratis' : ''} ${part.detalle_adicional || ''}`.toLowerCase();
-      
-      // Enforce AND logic or highly relevant matching
-      return remainingTokens.every(tok => partSearchText.includes(tok));
+      return tokens.every(tok => itemSearchText.includes(tok));
     }).sort((a, b) => {
-      // Inteligencia Predictiva: Priorizar coincidencias al inicio del nombre
       const aName = a.nombre.toLowerCase();
       const bName = b.nombre.toLowerCase();
       
@@ -1453,48 +1849,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Cart Actions
-  const addToCart = (part: Producto, qty = 1, selectedOptions?: SelectedOption[], optionsTotal = 0) => {
+  const addToCart = (item: FoodItem, qty = 1, selectedOptions?: SelectedOption[], optionsTotal = 0, removedIngredients?: string[]) => {
     setCart(prev => {
-      // Generate composite key for same product with different options
       const optionsKey = selectedOptions && selectedOptions.length > 0
         ? JSON.stringify([...selectedOptions].sort((a, b) => a.option_name.localeCompare(b.option_name)))
         : '';
-      const cartKey = `${part.id}${optionsKey ? `_${optionsKey}` : ''}`;
+      const cartKey = `${item.id}${optionsKey ? `_${optionsKey}` : ''}`;
 
-      const idx = prev.findIndex(item => {
-        const itemOptionsKey = item.selected_options && item.selected_options.length > 0
-          ? JSON.stringify([...item.selected_options].sort((a, b) => a.option_name.localeCompare(b.option_name)))
+      const idx = prev.findIndex(ci => {
+        const itemOptionsKey = ci.selected_options && ci.selected_options.length > 0
+          ? JSON.stringify([...ci.selected_options].sort((a, b) => a.option_name.localeCompare(b.option_name)))
           : '';
-        return `${item.item.id}${itemOptionsKey ? `_${itemOptionsKey}` : ''}` === cartKey;
+        return `${ci.item.id}${itemOptionsKey ? `_${itemOptionsKey}` : ''}` === cartKey;
       });
 
       if (idx > -1) {
         const currentQty = prev[idx].quantity;
-        const targetQty = Math.min(part.stock, currentQty + qty);
+        const targetQty = Math.min(item.stock, currentQty + qty);
         const copy = [...prev];
         copy[idx] = { ...copy[idx], quantity: targetQty };
         return copy;
       } else {
         return [...prev, {
-          item: part,
-          quantity: Math.min(part.stock, qty),
+          item: item,
+          quantity: Math.min(item.stock, qty),
           selected_options: selectedOptions,
-          options_total_usd: optionsTotal
+          options_total_usd: optionsTotal,
+          ingredientes_removidos: removedIngredients || []
         }];
       }
     });
   };
 
-  const removeFromCart = (partId: string) => {
-    setCart(prev => prev.filter(item => item.item.id !== partId));
+  const removeFromCart = (itemId: string) => {
+    setCart(prev => prev.filter(ci => ci.item.id !== itemId));
   };
 
-  const updateCartQuantity = (partId: string, quantity: number) => {
+  const updateCartQuantity = (itemId: string, quantity: number) => {
     setCart(prev => {
-      const idx = prev.findIndex(item => item.item.id === partId);
+      const idx = prev.findIndex(ci => ci.item.id === itemId);
       if (idx > -1) {
-        const partStock = prev[idx].item.stock;
-        const targetQty = Math.max(1, Math.min(partStock, quantity));
+        const itemStock = prev[idx].item.stock;
+        const targetQty = Math.max(1, Math.min(itemStock, quantity));
         const copy = [...prev];
         copy[idx] = { ...copy[idx], quantity: targetQty };
         return copy;
@@ -1511,13 +1907,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const createOrder = async (orderData: Omit<Order, 'id' | 'subtotal_usd' | 'total_usd' | 'total_bs' | 'fecha' | 'status'> & { descuento_cupon_usd?: number; cupon_codigo?: string }, preGeneratedId?: string) => {
     // Recalculate Totals securely - includes extras/options pricing
     const items = cart.map(item => ({
-      part_id: item.item.id,
+      food_id: item.item.id,
       nombre: item.item.nombre,
-      codigo: item.item.codigo,
       precio_usd: item.item.precio_usd,
       cantidad: item.quantity,
       selected_options: item.selected_options,
-      options_total_usd: item.options_total_usd
+      options_total_usd: item.options_total_usd,
+      ingredientes_removidos: item.ingredientes_removidos || []
     }));
 
     const subtotal = items.reduce((acc, item) => {
@@ -1694,24 +2090,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Lógica para sincronizar stock automáticamente
     const stockChanges = new Map<string, number>();
 
-    // Restamos las cantidades viejas del balance (las devolvemos al stock teóricamente)
     oldItems.forEach(item => {
-      stockChanges.set(item.part_id, -(item.cantidad || 0));
+      stockChanges.set(item.food_id, -(item.cantidad || 0));
     });
 
-    // Sumamos las cantidades nuevas (las restamos del stock teóricamente)
     newItems.forEach(item => {
-      const current = stockChanges.get(item.part_id) || 0;
-      stockChanges.set(item.part_id, current + (item.cantidad || 0));
+      const current = stockChanges.get(item.food_id) || 0;
+      stockChanges.set(item.food_id, current + (item.cantidad || 0));
     });
 
-    // Aplicar cambios en la base de datos
-    for (const [partId, diff] of stockChanges.entries()) {
+    for (const [itemId, diff] of stockChanges.entries()) {
       if (diff === 0) continue;
-      const { data: p } = await supabase.from('products').select('stock').eq('id', partId).single();
+      const { data: p } = await supabase.from('products').select('stock').eq('id', itemId).single();
       if (p) {
         const nextStock = Math.max(0, p.stock - diff);
-        await supabase.from('products').update({ stock: nextStock }).eq('id', partId);
+        await supabase.from('products').update({ stock: nextStock }).eq('id', itemId);
       }
     }
 
@@ -1953,11 +2346,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts(prevProducts => {
       const updatedProducts = prevProducts.map(p => {
         if (p.categoria === categoryName) {
-          return { ...p, categoria: 'Víveres y Despensa' };
+          return { ...p, categoria: 'Hamburguesas' };
         }
         return p;
       });
-      localStorage.setItem('trv_parts', JSON.stringify(updatedProducts));
+      localStorage.setItem('trv_foodItems', JSON.stringify(updatedProducts));
       return updatedProducts;
     });
   };
@@ -1979,7 +2372,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return p;
       });
-      localStorage.setItem('trv_parts', JSON.stringify(updatedProducts));
+      localStorage.setItem('trv_foodItems', JSON.stringify(updatedProducts));
       return updatedProducts;
     });
   };
@@ -2239,7 +2632,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       // NOTE: the store currently uses `products` as the source of truth.
       // Keeping the exposed context API consistent with the rest of the app.
-      parts: products,
+      foodItems: products,
       orders,
       config,
       coupons,
@@ -2262,10 +2655,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCoupon,
       updateCoupon,
       deleteCoupon,
-      addPart: addProduct,
-      updatePart: updateProduct,
-      deletePart: deleteProduct,
-      searchPartsSemantically,
+      addFoodItem: addProduct,
+      updateFoodItem: updateProduct,
+      deleteFoodItem: deleteProduct,
+      searchItems,
       addToCart,
       removeFromCart,
       updateCartQuantity,

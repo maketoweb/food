@@ -8,7 +8,7 @@ interface BarcodeScannerProps {
 }
 
 export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose }) => {
-  const { parts, config } = useApp();
+  const { foodItems, config } = useApp();
   const [selectedSimulatedSKU, setSelectedSimulatedSKU] = useState<string>('');
   const [scanStatus, setScanStatus] = useState<string>('Listo para búsqueda rápida...');
 
@@ -61,9 +61,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, o
                 className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-[#f5f5f7] focus:outline-none focus:border-[#45f3ff] transition-all"
               >
                 <option value="">-- Elige un producto del stock --</option>
-                {parts.map((p) => (
-                  <option key={p.id} value={p.codigo}>
-                     [{p.codigo}] - {p.nombre} (Stock: {p.stock} unid)
+                {foodItems.map((p) => (
+                  <option key={p.id} value={p.id}>
+                     [{p.id}] - {p.nombre} (Stock: {p.stock} unid)
                   </option>
                 ))}
               </select>

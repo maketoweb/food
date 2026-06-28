@@ -494,7 +494,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     Estado actual
                   </span>
                   <span className="mt-1 text-sm font-black">
-                    {modalOrder.status === 'Enviado' ? 'Enviado / Despachado' : modalOrder.status}
+                    {modalOrder.status === 'En camino' ? 'En camino / Despachado' : modalOrder.status}
                   </span>
                 </div>
 
@@ -504,11 +504,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     modalOrder.status === 'Procesando' ? 'bg-blue-100 text-blue-800 border-blue-300' :
                     modalOrder.status === 'En preparación' ? 'bg-indigo-100 text-indigo-800 border-indigo-300' :
                     modalOrder.status === 'En camino' ? 'bg-violet-100 text-violet-800 border-violet-400 animate-pulse' :
-                    modalOrder.status === 'Enviado' ? 'bg-violet-100 text-violet-800 border-violet-300' :
                     'bg-zinc-100 text-zinc-850 border border-zinc-300'
                   }`}
                 >
-                  {modalOrder.status === 'Enviado' ? 'Enviado / Despachado' : modalOrder.status}
+                  {modalOrder.status === 'En camino' ? 'En camino / Despachado' : modalOrder.status}
                 </span>
               </div>
 
@@ -527,10 +526,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                   {[
                     { label: 'Pendiente', target: ['Pendiente'] },
                     { label: 'Preparación', target: ['En preparación', 'Procesando'] },
-                    { label: 'En Camino', target: ['En camino', 'Enviado'] },
+                    { label: 'En Camino', target: ['En camino'] },
                     { label: 'Entregado', target: ['Entregado'] },
                   ].map((stepObj, idx) => {
-                    const statusOrder = ['Pendiente', 'Procesando', 'En preparación', 'En camino', 'Enviado', 'Entregado'];
+                    const statusOrder = ['Pendiente', 'Procesando', 'En preparación', 'En camino', 'Entregado'];
                     const currentPower = statusOrder.indexOf(modalOrder.status);
                     let isStepPassed = false;
                     if (stepObj.label === 'Pendiente') isStepPassed = currentPower >= 0;
@@ -1004,10 +1003,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                             order.status === 'Procesando' ? 'bg-blue-100 text-blue-800 border-blue-300 border' :
                             order.status === 'En preparación' ? 'bg-indigo-100 text-indigo-800 border-indigo-300 border' :
                             order.status === 'En camino' ? 'bg-violet-100 text-violet-800 border-violet-400 border animate-pulse' :
-                            order.status === 'Enviado' ? 'bg-violet-100 text-violet-800 border-violet-300 border' :
                             'bg-zinc-100 text-zinc-850 border border-zinc-300' // 'Entregado'
                           }`}>
-                            {order.status === 'Enviado' ? 'Enviado / Despachado' : order.status}
+                            {order.status === 'En camino' ? 'En camino / Despachado' : order.status}
                           </span>
                         </div>
                       </div>
@@ -1045,18 +1043,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                             {[
                               { label: 'Pendiente', target: ['Pendiente'] },
                               { label: 'Preparación', target: ['En preparación', 'Procesando'] },
-                              { label: 'En Camino', target: ['En camino', 'Enviado'] },
+                              { label: 'En Camino', target: ['En camino'] },
                               { label: 'Entregado', target: ['Entregado'] },
                             ].map((stepObj, idx, arr) => {
                               // evaluate if this step has been completed in order status sequence
-                              const statusOrder = ['Pendiente', 'Procesando', 'En preparación', 'En camino', 'Enviado', 'Entregado'];
+                              const statusOrder = ['Pendiente', 'Procesando', 'En preparación', 'En camino', 'Entregado'];
                               const currentPower = statusOrder.indexOf(order.status);
                               
                               let isStepPassed = false;
                               if (stepObj.label === 'Pendiente') isStepPassed = currentPower >= 0;
                               if (stepObj.label === 'Preparación') isStepPassed = currentPower >= 1; // Procesando = preparacion index wise
                               if (stepObj.label === 'En Camino') isStepPassed = currentPower >= 3; // En camino / Enviado
-                              if (stepObj.label === 'Entregado') isStepPassed = currentPower >= 5;
+                              if (stepObj.label === 'Entregado') isStepPassed = currentPower >= 4;
 
                               const isCurrent = stepObj.target.includes(order.status);
 
@@ -1506,7 +1504,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
                 {showReminderModal.is_update 
                   ? 'Has modificado tus datos de acceso. Guarda o anota tus nuevas credenciales para evitar inconvenientes en tus inicios de sesión futuros:'
-                  : 'Para asegurar la seguridad de tu cuenta y el rastreo de tus pedidos de supermercado, toma nota y guarda tus credenciales ahora.'}
+                  : 'Para asegurar la seguridad de tu cuenta y el rastreo de tus pedidos, toma nota y guarda tus credenciales ahora.'}
               </p>
             </div>
 

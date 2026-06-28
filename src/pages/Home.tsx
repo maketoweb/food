@@ -1,149 +1,81 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../store/AppContext';
-import { Producto } from '../types/store';
-import { Utensils, Coffee, IceCreamCone, Pizza, Cake, Wine, Beer, Salad, ShieldCheck, Zap, ArrowRight, ShoppingCart, Bell, Sparkles, Flame, MessageSquare, Search, Smartphone, AlertTriangle, ChefHat, Clock, Star } from 'lucide-react';
-import { motion } from 'motion/react';
+import { FoodItem } from '../types/store';
+import { ArrowRight, ShoppingCart, Search, Sparkles, Flame, Zap, Bell, Smartphone, Clock, Star, X, ChefHat, MessageSquare } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
-import { BentoGrid } from '../components/BentoGrid';
 import { ProductCard } from '../components/ProductCard';
 import { getCategoryColor } from '../utils/categoryColors';
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+  'hamburguesas': '🍔',
+  'pizzas': '🍕',
+  'pollo': '🍗',
+  'papas & sides': '🍟',
+  'bebidas': '🥤',
+  'postres': '🍰',
+  'combos': '🎁',
+  'entradas': '🥗',
+};
+
+const CATEGORY_HERO_BG: Record<string, string> = {
+  'hamburguesas': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800',
+  'pizzas': 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800',
+  'pollo': 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&q=80&w=800',
+  'bebidas': 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800',
+  'postres': 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=800',
+};
 
 interface HomeProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
   setSelectedCategory: (category: string) => void;
-  selectedBrand: string;
-  setSelectedBrand: (brand: string) => void;
-  selectedModel: string;
-  setSelectedModel: (model: string) => void;
-  selectedYear: string;
-  setSelectedYear: (year: string) => void;
-  selectedEngine: string;
-  setSelectedEngine: (engine: string) => void;
-  onViewProductDetails: (part: Producto) => void;
+  onViewProductDetails: (food: FoodItem) => void;
   globalSearch: string;
   setGlobalSearch: (term: string) => void;
-  navigateToCatalog: (filters?: { category?: string; brand?: string; model?: string; year?: string; engine?: string }) => void;
+  navigateToCatalog: (filters?: { category?: string }) => void;
   deferredPrompt?: any;
   onInstallClick?: () => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ 
-  setTab, setSelectedCategory, 
-  selectedBrand, setSelectedBrand, 
-  selectedModel, setSelectedModel, 
-  selectedYear, setSelectedYear,
-  selectedEngine, setSelectedEngine,
+export const Home: React.FC<HomeProps> = ({
+  setTab, setSelectedCategory,
   onViewProductDetails, globalSearch, setGlobalSearch,
   navigateToCatalog,
-  deferredPrompt,
-  onInstallClick
+  deferredPrompt, onInstallClick
 }) => {
-  const { parts, config, addToCart, currentUser, requestPart } = useApp();
-
-  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
+  const { foodItems, config, addToCart } = useApp();
   const [activeBanner, setActiveBanner] = useState(0);
-  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
-  const [suggestions, setSuggestions] = useState<Producto[]>([]);
+  const [suggestions, setSuggestions] = useState<FoodItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const activeItems = useMemo(() => foodItems.filter(p => p.activo !== false), [foodItems]);
+  const promoItems = useMemo(() => activeItems.filter(p => p.es_promo), [activeItems]);
+  const newItems = useMemo(() => activeItems.filter(p => p.es_nuevo), [activeItems]);
+  const bestsellerItems = useMemo(() => activeItems.filter(p => p.es_mas_vendido), [activeItems]);
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
-      const diff = endOfDay.getTime() - now.getTime();
-      if (diff > 0) {
-        setTimeLeft({
-          hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((diff / 1000 / 60) % 60),
-          seconds: Math.floor((diff / 1000) % 60)
-        });
-      }
-    };
-    const timer = setInterval(calculateTimeLeft, 1000);
-    calculateTimeLeft();
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'default') {
-        const timer = setTimeout(() => setShowNotificationPrompt(true), 1500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, []);
-
-  const handleRequestPermissionHome = async () => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      try {
-        const res = await Notification.requestPermission();
-        if (res === 'granted') {
-          new Notification('Notificaciones Habilitadas', {
-            body: 'Recibe alertas de tus pedidos y promociones de BurgerPop.',
-            icon: '/icon.png',
-            tag: 'welcome-burgerpop'
-          });
-        }
-        setShowNotificationPrompt(false);
-      } catch (error) {
-        console.error('Error requesting notification permission:', error);
-      }
-    }
-  };
+  // Category sections (for display, skip empty ones)
+  const categorySections = useMemo(() => {
+    return (config.categories || []).map(catName => {
+      const items = activeItems.filter(p => p.categoria.toLowerCase() === catName.toLowerCase());
+      return { name: catName, items };
+    }).filter(s => s.items.length > 0);
+  }, [activeItems, config.categories]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveBanner(prev => (prev + 1) % config.banners.length);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [config.banners.length]);
 
-  const CATEGORY_EMOJIS: Record<string, string> = {
-    'hamburguesas': '🍔',
-    'papas & sides': '🍟',
-    'combos': '🎁',
-    'bebidas': '🥤',
-    'postres': '🍰',
-    'nuggets & tenders': '🍗',
-  };
-
-  const CATEGORIES = useMemo(() => {
-    return (config.categories || []).map(catName => {
-      const nameLower = catName.toLowerCase();
-      const emoji = CATEGORY_EMOJIS[nameLower] || '🍽️';
-      let icon = Utensils;
-      if (nameLower.includes('hamburguesa') || nameLower.includes('burger')) icon = Utensils;
-      else if (nameLower.includes('pasta') || nameLower.includes('espagueti')) icon = Utensils;
-      else if (nameLower.includes('pizza')) icon = Pizza;
-      else if (nameLower.includes('postre') || nameLower.includes('pastel') || nameLower.includes('torta')) icon = Cake;
-      else if (nameLower.includes('bebida') || nameLower.includes('jugo') || nameLower.includes('refresco')) icon = Coffee;
-      else if (nameLower.includes('cerveza') || nameLower.includes('birra')) icon = Beer;
-      else if (nameLower.includes('cocktail') || nameLower.includes('coctel') || nameLower.includes('licor')) icon = Wine;
-      else if (nameLower.includes('ensalada') || nameLower.includes('verdura')) icon = Salad;
-      else if (nameLower.includes('helado') || nameLower.includes('nieve')) icon = IceCreamCone;
-      else if (nameLower.includes('entrada') || nameLower.includes('aperitivo')) icon = Sparkles;
-      return { name: catName, label: catName, icon, emoji, color: 'border-orange-100 bg-white hover:bg-orange-50' };
-    });
-  }, [config.categories]);
-
-  const activeParts = useMemo(() => parts.filter(p => p.activo !== false), [parts]);
-  const promoParts = parts.filter(p => p.es_promo && p.stock > 0 && p.activo !== false);
-  const newParts = parts.filter(p => p.es_nuevo && p.stock > 0 && p.activo !== false);
-  const bestsellerParts = parts.filter(p => p.es_mas_vendido && p.stock > 0 && p.activo !== false);
-  const dailyDeal = useMemo(() => promoParts[0], [promoParts]);
-
   useEffect(() => {
     if (globalSearch.trim().length > 1) {
-      const filtered = parts
-        .filter(p => 
-          p.activo !== false && 
-          (p.nombre.toLowerCase().includes(globalSearch.toLowerCase()) || 
-           p.descripcion.toLowerCase().includes(globalSearch.toLowerCase()) ||
-           p.categoria.toLowerCase().includes(globalSearch.toLowerCase()) ||
-           p.seccion.toLowerCase().includes(globalSearch.toLowerCase()))
+      const filtered = activeItems
+        .filter(p =>
+          p.nombre.toLowerCase().includes(globalSearch.toLowerCase()) ||
+          p.descripcion.toLowerCase().includes(globalSearch.toLowerCase()) ||
+          p.categoria.toLowerCase().includes(globalSearch.toLowerCase()) ||
+          (p.ingredientes || []).some(i => i.toLowerCase().includes(globalSearch.toLowerCase()))
         )
         .slice(0, 6);
       setSuggestions(filtered);
@@ -152,374 +84,344 @@ export const Home: React.FC<HomeProps> = ({
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [globalSearch, parts]);
-
-  const handleCategoryClick = (catName: string) => {
-    navigateToCatalog({ category: catName });
-  };
-
-  const handleAddDailyDeal = () => {
-    if (dailyDeal) {
-      addToCart(dailyDeal);
-      if (typeof (window as any).confetti === 'function') {
-        (window as any).confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#FF6B35', '#FFB703', '#E63946', '#2EC4B6'],
-          shapes: ['star', 'circle']
-        });
-      }
-    }
-  };
+  }, [globalSearch, activeItems]);
 
   return (
-    <div className="flex flex-col gap-6 pb-24">
-      {/* AVISO CERRADO */}
+    <div className="flex flex-col gap-0 pb-28 max-w-7xl mx-auto">
+      <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
+
+      {/* CLOSED BANNER */}
       {!config.esta_abierta && (
-        <div className="sticky top-4 z-[60] mx-1">
-          <div className="bg-red-500 text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 border border-red-400 animate-in slide-in-from-top-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-              <AlertTriangle size={24} />
-            </div>
+        <div className="sticky top-4 z-50 mx-4 mb-4">
+          <div className="bg-pop-red text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3">
+            <ChefHat size={20} />
             <div>
-              <h4 className="font-bold text-sm uppercase">Cerrado por ahora</h4>
-              <p className="text-xs text-white/90">Estamos descansando. Puedes ver el menú, pero los pedidos están pausados.</p>
+              <p className="font-bold text-sm">Cerrado por ahora</p>
+              <p className="text-xs text-white/80">Estamos descansando. Vuelve pronto.</p>
             </div>
           </div>
         </div>
       )}
-      <SEOHead title="BurgerPop - Hamburguesería Valencia" type="home" />
-      <h1 className="sr-only">BurgerPop - Las Mejores Smash Burgers de Valencia</h1>
 
-      {/* Tasa de Cambio */}
-      <div className="flex justify-end px-1 -mb-4">
-        <div className="border border-orange-200 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-tighter shadow-sm bg-orange-50 text-orange-600 animate-pulse">
-          Tasa BCV: {config.tasa_cambio.toFixed(2)} Bs.
-        </div>
-      </div>
-
-      {/* PREMIUM BANNER */}
-      <div className="relative h-[200px] md:h-[280px] lg:h-[350px] w-full bg-zinc-200 rounded-2xl overflow-hidden border-2 border-orange-300 shadow-xl select-none">
-        {config.banners.map((url, index) => (
+      {/* HERO BANNER */}
+      <div className="relative h-[280px] md:h-[380px] w-full overflow-hidden">
+        {config.banners.length > 0 ? config.banners.map((url, index) => (
           <div
             key={url}
-            className={`absolute inset-0 transition-opacity duration-800 ${index === activeBanner ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+            className={`absolute inset-0 transition-all duration-700 ${index === activeBanner ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
           >
-            <img
-              src={url}
-              alt={`Promoción ${index + 1}`}
-              className="w-full h-full object-cover opacity-85"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-
-            <div className="absolute left-6 bottom-6 z-20 flex flex-col items-start gap-1.5">
-              <span className="text-[11px] uppercase font-bold tracking-wider text-white border px-2.5 py-1 rounded-lg bg-orange-500 border-orange-400">
-                🍔 {config.site_nombre || 'BurgerPop'}
+            <img src={url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6 z-10">
+              <span className="text-white/80 text-xs font-bold uppercase tracking-widest bg-pop-pink px-3 py-1 rounded-full inline-block mb-2">
+                {config.site_nombre || 'FoodPop'}
               </span>
-              <h2 className="text-xl md:text-3xl font-bold font-display text-white mt-1.5 max-w-sm drop-shadow-lg leading-tight">
-                {config.banner_texts?.[index] || (index === 0 ? 'Las Mejores Smash de Valencia 🔥' : index === 1 ? 'Combos que Enloquecen 🔥' : 'Promos Exclusivas Solo en BurgerPop')}
+              <h2 className="text-white text-3xl md:text-4xl font-display font-bold leading-tight max-w-md">
+                {config.banner_texts?.[index] || 'La Comida que Te Hace Feliz 🎉'}
               </h2>
               <button
-                type="button"
                 onClick={() => setTab('catalog')}
-                className="mt-3 text-white text-[12px] font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg uppercase tracking-wider flex items-center gap-1.5 cursor-pointer active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #FF6B35, #E63946, #FFB703)' }}
+                className="mt-3 bg-white text-zinc-900 font-bold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
-                Ordenar Ahora 🔥 <ArrowRight size={14} />
+                Ordenar Ahora <ArrowRight size={16} />
               </button>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="w-full h-full bg-gradient-to-br from-pop-pink via-pop-orange to-pop-purple flex items-end p-6">
+            <div>
+              <span className="text-white/80 text-xs font-bold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full inline-block mb-2">
+                {config.site_nombre || 'FoodPop'}
+              </span>
+              <h2 className="text-white text-3xl md:text-4xl font-display font-bold leading-tight">
+                ¡La Comida que Te Hace Feliz! 🎉
+              </h2>
+              <button
+                onClick={() => setTab('catalog')}
+                className="mt-3 bg-white text-zinc-900 font-bold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                Ordenar Ahora <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
-        <div className="absolute right-4 bottom-4 z-25 flex gap-1.5">
-          {config.banners.map((_, i) => (
-            <button
-              type="button"
-              key={i}
-              onClick={() => setActiveBanner(i)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${i === activeBanner ? 'w-6 bg-orange-500' : 'w-2 bg-white/50'}`}
-            />
-          ))}
-        </div>
+        {/* Banner dots */}
+        {config.banners.length > 1 && (
+          <div className="absolute bottom-4 right-4 flex gap-1.5 z-10">
+            {config.banners.map((_, i) => (
+              <button key={i} onClick={() => setActiveBanner(i)}
+                className={`w-2 h-2 rounded-full transition-all cursor-pointer ${i === activeBanner ? 'bg-white w-6' : 'bg-white/50'}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* SEARCH BAR */}
-      <div className="relative mx-auto max-w-2xl w-full">
-        <div className="flex items-center bg-white border border-zinc-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-all">
-          <span className="mr-2 text-base">🍔</span>
-          <Search size={18} className="text-orange-500 mr-3" />
+      <div className="px-4 -mt-6 relative z-20">
+        <div className="bg-white border-2 border-zinc-100 rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3">
+          <Search size={18} className="text-pop-pink shrink-0" />
           <input
+            ref={searchRef}
             type="text"
-            placeholder="Buscar burgers, papas, combos..."
+            placeholder="Buscar hamburguesas, pizzas, pollo..."
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400"
+            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400 font-medium"
           />
           {globalSearch && (
-            <button onClick={() => setGlobalSearch('')} className="text-zinc-400 hover:text-zinc-600 text-xs">✕</button>
+            <button onClick={() => { setGlobalSearch(''); setSuggestions([]); }} className="text-zinc-400 hover:text-zinc-600">
+              <X size={16} />
+            </button>
           )}
         </div>
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 bg-white border border-zinc-200 rounded-xl mt-2 shadow-xl z-30 overflow-hidden max-w-2xl mx-auto">
+          <div className="absolute top-full left-4 right-4 bg-white border border-zinc-100 rounded-2xl mt-2 shadow-2xl z-30 overflow-hidden max-w-xl">
             {suggestions.map(p => (
-              <button
-                key={p.id}
-                type="button"
+              <button key={p.id}
                 onClick={() => { onViewProductDetails(p); setShowSuggestions(false); setGlobalSearch(''); }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-orange-50 transition-colors text-left"
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-pop-orange-50 transition-colors text-left border-b border-zinc-50 last:border-0"
               >
-                <img src={p.imagen_urls[0]} alt="" className="w-10 h-10 rounded-lg object-cover" referrerPolicy="no-referrer" />
+                <img src={p.imagen_urls[0]} alt="" className="w-12 h-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-zinc-900 truncate">{p.nombre}</p>
-                  <p className="text-[10px] text-zinc-500">{p.categoria} • ${p.precio_usd.toFixed(2)}</p>
+                  <p className="text-sm font-bold text-zinc-900 truncate">{p.nombre}</p>
+                  <p className="text-xs text-zinc-500">{p.categoria} • ${p.precio_usd.toFixed(2)}</p>
                 </div>
+                <span className="text-pop-pink font-bold text-sm">${p.precio_usd.toFixed(2)}</span>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* CATEGORIES CAROUSEL */}
-      <div className="w-full flex flex-col gap-2.5 mt-1 px-1">
-        <div className="flex flex-wrap gap-2 pb-2 snap-x snap-mandatory scroll-smooth no-scrollbar select-none lg:justify-center">
-          {CATEGORIES.map((cat) => {
-            const IconComponent = cat.icon;
-            const catColor = getCategoryColor(cat.name);
+      {/* CATEGORY PILLS */}
+      <div className="px-4 mt-6 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 pb-2">
+          {(config.categories || []).slice(0, 8).map(catName => {
+            const catColor = getCategoryColor(catName);
+            const emoji = CATEGORY_EMOJIS[catName.toLowerCase()] || '🍽️';
             return (
-              <button
-                key={cat.name}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(cat.name);
-                  setTab('catalog');
-                }}
-                className="shrink-0 snap-start flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
+              <button key={catName}
+                onClick={() => { setSelectedCategory(catName); setTab('catalog'); }}
+                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer border-2"
                 style={{
-                  borderColor: catColor.primary + '40',
+                  borderColor: catColor.primary + '30',
                   backgroundColor: catColor.light,
                   color: catColor.textColor,
                 }}
               >
-                <span className="text-sm shrink-0">{cat.emoji}</span>
-                <span>{cat.label}</span>
+                <span className="text-base">{emoji}</span>
+                <span>{catName}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* NOTIFICATION PROMPT */}
-      {showNotificationPrompt && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-orange-200 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 text-xs gap-3 animate-fade-in shadow-sm mx-1">
-          <div className="flex gap-2.5 items-start sm:items-center">
-            <span className="p-2 rounded-xl shrink-0 bg-orange-500 text-white">
-              <Bell size={16} />
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-bold text-zinc-900 text-xs">Activar Notificaciones</span>
-              <span className="text-[11px] text-zinc-500 leading-normal">Recibe alertas de tus pedidos y promociones de BurgerPop.</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 md:justify-end">
-            <button type="button" onClick={() => setShowNotificationPrompt(false)} className="text-zinc-400 hover:text-zinc-600 transition-colors uppercase font-mono font-bold text-[10px] px-2 py-1.5 cursor-pointer">
-              Cerrar
-            </button>
-            <button type="button" onClick={handleRequestPermissionHome} className="text-white font-extrabold max-sm:w-full uppercase tracking-wider px-5 py-2.5 rounded-xl text-[11px] transition-all cursor-pointer bg-orange-500 hover:bg-orange-600 active:scale-95 shadow-md">
-              Habilitar
-            </button>
-          </div>
-        </div>
+      {/* PROMOS SECTION */}
+      {promoItems.length > 0 && (
+        <CategorySection
+          title="🔥 Promos del Día"
+          icon={<Zap size={16} className="text-pop-pink" />}
+          gradient="from-pop-pink to-pop-orange"
+          items={promoItems}
+          config={config}
+          onViewProductDetails={onViewProductDetails}
+          addToCart={addToCart}
+          isOffer
+          setTab={setTab}
+        />
       )}
 
-      {/* PROMOS DEL DÍA */}
-      {promoParts.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center px-1">
-            <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB703)' }}><Zap size={16} className="text-white" /></span> 🔥 Promos del Día
-            </h3>
-            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#FF6B35' }}>
-              Ver todo
-            </button>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:px-0 lg:mx-0 lg:snap-none lg:grid-cols-3 xl:grid-cols-4">
-            {promoParts.map((part) => (
-              <ProductCard key={part.id} part={part} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} isOffer={true} />
-            ))}
-          </div>
-        </div>
+      {/* NUEVOS SECTION */}
+      {newItems.length > 0 && (
+        <CategorySection
+          title="✨ Nuevos en el Menú"
+          icon={<Sparkles size={16} className="text-pop-yellow" />}
+          gradient="from-pop-yellow to-pop-orange"
+          items={newItems}
+          config={config}
+          onViewProductDetails={onViewProductDetails}
+          addToCart={addToCart}
+          setTab={setTab}
+        />
       )}
 
-      {/* NUEVOS EN EL MENÚ */}
-      {newParts.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center px-1">
-            <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}><Sparkles size={16} className="text-white" /></span> ✨ Nuevos en el Menú
-            </h3>
-            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#F59E0B' }}>
-              Ver todo
-            </button>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:px-0 lg:mx-0 lg:snap-none lg:grid-cols-3 xl:grid-cols-4">
-            {newParts.map((part) => (
-              <ProductCard key={part.id} part={part} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} />
-            ))}
-          </div>
-        </div>
+      {/* BESTSELLERS SECTION */}
+      {bestsellerItems.length > 0 && (
+        <CategorySection
+          title="🏆 Los Más Pedidos"
+          icon={<Flame size={16} className="text-pop-red" />}
+          gradient="from-pop-red to-pop-orange"
+          items={bestsellerItems}
+          config={config}
+          onViewProductDetails={onViewProductDetails}
+          addToCart={addToCart}
+          setTab={setTab}
+        />
       )}
 
-      {/* LO MÁS PEDIDO */}
-      {bestsellerParts.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center px-1">
-            <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #E63946, #FF6B6B)' }}><Flame size={16} className="text-white" /></span> 🏆 Lo Más Pedido
-            </h3>
-            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#E63946' }}>
-              Ver todo
-            </button>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-4 -mx-4 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:px-0 lg:mx-0 lg:snap-none lg:grid-cols-3 xl:grid-cols-4">
-            {bestsellerParts.map((part) => (
-              <ProductCard key={part.id} part={part} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* PEDIDO ESPECIAL / EVENTOS */}
-      <div className="flex flex-col gap-4 p-5 border border-orange-100 rounded-2xl bg-orange-50/50 shadow-sm relative overflow-hidden mx-auto max-w-2xl w-full">
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-        <h3 className="text-lg font-bold text-orange-900 flex items-center gap-2">
-          <MessageSquare size={20} className="text-orange-500" /> 🍔 ¿Pedido para Evento o Fiesta?
-        </h3>
-        <p className="text-[13px] text-orange-800/80 leading-relaxed font-medium">Cuéntanos cuántas burgers necesitas y las preparamos para ti.</p>
-        <div className="flex flex-col gap-3 z-10">
-          <input 
-            type="text"
-            id="req-phone"
-            defaultValue={currentUser?.telefono || ''}
-            className="w-full text-xs p-3.5 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-[13px]" 
-            placeholder="Tu número (Ej: +584120001122)"
+      {/* CATEGORY SECTIONS */}
+      {categorySections.map(section => {
+        const isPromo = section.name === 'Combos';
+        return (
+          <CategorySection
+            key={section.name}
+            title={`${CATEGORY_EMOJIS[section.name.toLowerCase()] || '🍽️'} ${section.name}`}
+            icon={null}
+            gradient="from-pop-purple to-pop-pink"
+            items={section.items}
+            config={config}
+            onViewProductDetails={onViewProductDetails}
+            addToCart={addToCart}
+            setTab={setTab}
           />
-          <textarea 
-            className="w-full text-xs p-3.5 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-[13px]" 
-            placeholder="Ej: 30 smash burgers, papas para evento, combo familiar..."
-            id="req-desc"
-            rows={3}
-          />
-          <button
-            onClick={async () => {
-              const descEl = document.getElementById('req-desc') as HTMLTextAreaElement;
-              const phoneEl = document.getElementById('req-phone') as HTMLInputElement;
-              const desc = descEl?.value;
-              const phone = phoneEl?.value;
-              if (desc?.trim() && phone?.trim()) {
-                const success = await requestPart(currentUser?.nombre || 'Invitado', phone.trim(), desc.trim());
-                if (success) {
-                  descEl.value = '';
-                  alert('¡Solicitud enviada! Nuestro equipo te contactará pronto.');
-                } else {
-                  alert('Error al enviar solicitud.');
-                }
-              } else {
-                alert('Por favor, ingresa tu teléfono y tu solicitud.');
-              }
-            }}
-            className="text-white rounded-xl py-3.5 font-bold text-xs cursor-pointer shadow-md transition-all active:scale-[0.98] text-[13px] bg-orange-500 hover:bg-orange-600"
-          >
-            Enviar Solicitud
-          </button>
-        </div>
-        <a 
-          href={`https://wa.me/${getWhatsAppPhone().replace(/[^0-9]/g, '')}`}
-          target="_blank"
-          className="text-center text-xs font-semibold text-orange-600 underline mt-1 cursor-pointer hover:text-orange-700 text-[13px]"
-        >
-          O contactar vía WhatsApp
-        </a>
-      </div>
+        );
+      })}
 
-      <BentoGrid />
-
-      {/* PWA INSTALL BANNER */}
-      <div className="w-full bg-zinc-900 text-white rounded-2xl p-6 shadow-2xl relative overflow-hidden min-h-[240px] flex flex-col justify-center border border-zinc-800 select-none bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center mx-auto max-w-4xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent z-0"></div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col text-center md:text-left">
-            <div className="flex items-center gap-2 justify-center md:justify-start">
-              <span className="text-[10px] uppercase font-black tracking-widest text-white px-2.5 py-1 rounded-lg bg-orange-500">{config.site_nombre || 'BurgerPop'} App</span>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-300">Instalación Express</span>
+      {/* PWA INSTALL */}
+      <div className="px-4 mt-6">
+        <div className="rounded-2xl overflow-hidden relative bg-gradient-to-br from-zinc-900 to-zinc-800 p-6">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pop-pink/20 rounded-full blur-3xl" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-4">
+            <div className="flex-1">
+              <span className="text-pop-pink text-xs font-bold uppercase tracking-widest">App</span>
+              <h3 className="text-white text-xl font-display font-bold mt-1">Lleva {config.site_nombre || 'FoodPop'} Siempre Contigo</h3>
+              <p className="text-zinc-400 text-sm mt-1">Instala la app y recibe ofertas exclusivas.</p>
             </div>
-            <h3 className="text-2xl font-black font-display mt-2 leading-tight max-w-xs">Tu BurgerPop favorita siempre contigo</h3>
-            <p className="text-[12px] text-zinc-200 leading-relaxed mt-2 max-w-sm font-medium">
-              Instala la app y recibe notificaciones en tiempo real, seguimiento de delivery y ofertas exclusivas en burgers, combos y más.
-            </p>
-          </div>
-          
-          <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
             {deferredPrompt ? (
-              <button
-                type="button"
-                onClick={onInstallClick}
-                className="bg-white hover:bg-zinc-100 text-zinc-900 font-black font-display uppercase tracking-wider px-8 py-4 rounded-xl text-[11px] transition-all cursor-pointer shadow-xl active:scale-95 flex items-center justify-center gap-2"
+              <button onClick={onInstallClick}
+                className="bg-pop-pink hover:bg-pink-600 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-xl transition-all active:scale-95 cursor-pointer flex items-center gap-2 whitespace-nowrap"
               >
-                <Smartphone size={16} /> <span>Descargar App</span>
+                <Smartphone size={16} /> Descargar App
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                  if (isiOS) {
-                    alert("Para instalar en iPhone: 1. Abre Safari. 2. Presiona 'Compartir'. 3. Selecciona 'Agregar a inicio'.");
-                  } else {
-                    alert("Para instalar en Android: 1. Abre Chrome. 2. Presiona los 3 puntos. 3. Selecciona 'Instalar aplicación'.");
-                  }
-                }}
-                className="text-white border border-orange-400 font-bold font-display uppercase tracking-wider px-6 py-3 rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600"
+              <button onClick={() => alert('Abre esta página en Chrome y agrega a la pantalla de inicio.')}
+                className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-xl text-sm transition-all active:scale-95 cursor-pointer border border-white/20"
               >
-                <span>¿Cómo instalar?</span>
+                ¿Cómo Instalar?
               </button>
             )}
           </div>
         </div>
       </div>
 
+      {/* EVENT REQUEST */}
+      <div className="px-4 mt-6">
+        <div className="rounded-2xl bg-gradient-to-br from-pop-orange-50 to-pop-yellow-50 border border-pop-orange/20 p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <MessageSquare size={20} className="text-pop-orange" />
+            <h3 className="font-bold text-lg text-zinc-900">¿Pedido para Evento?</h3>
+          </div>
+          <p className="text-zinc-600 text-sm mb-4">Cuéntanos cuántas personas y lo preparamos para ti.</p>
+          <button onClick={() => setTab('profile')}
+            className="bg-pop-orange hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl text-sm transition-all active:scale-95 cursor-pointer w-full"
+          >
+            Solicitar Cotización
+          </button>
+        </div>
+      </div>
+
       {/* FOOTER */}
-      <footer className="mt-8 border-t border-zinc-200 pt-8 pb-4 px-1 text-zinc-600 mx-auto max-w-4xl w-full">
-        <h2 className="text-sm font-black font-display text-zinc-900 uppercase tracking-widest mb-3">
-          🍔 La Mejor Hamburguesería de Valencia
-        </h2>
-        <p className="text-xs leading-relaxed text-zinc-500 mb-3 font-sans">
-          ¿Buscas la mejor smash burger de Valencia? <strong>{config.site_nombre || 'BurgerPop'}</strong> es tu hamburguesería favorita. Smash burgers artesanales, papas & wings, combos, nuggets y más. Ingredientes frescos del día y recetas originales.
-        </p>
-        <p className="text-xs leading-relaxed text-zinc-500 mb-4 font-sans">
-          Delivery rápido en minutos. Seguimiento en tiempo real de tu pedido. Aceptamos pagos en dólares, Zelle, Pago Móvil y efectivo. Tu smash burger caliente y fresca en la puerta de tu casa.
-        </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-[10px] font-mono border-t border-zinc-100 pt-4 text-zinc-400">
+      <footer className="px-4 mt-8 pt-8 border-t border-zinc-100">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-zinc-500 mb-6">
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Smash Burgers</h3>
-            <p>Carne smash a la plancha, vegetales frescos, salsas artesanales.</p>
+            <h4 className="font-bold text-zinc-800 mb-1 uppercase tracking-wider">{config.site_nombre || 'FoodPop'}</h4>
+            <p className="leading-relaxed">{config.direccion_fisica}</p>
           </div>
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Papas & Wings</h3>
-            <p>Papas crocantes, alitas BBQ, wings de buffalo.</p>
+            <h4 className="font-bold text-zinc-800 mb-1 uppercase tracking-wider">Categorías</h4>
+            <ul className="space-y-1">
+              {(config.categories || []).slice(0, 4).map(c => (
+                <li key={c}>
+                  <button onClick={() => { setSelectedCategory(c); setTab('catalog'); }}
+                    className="hover:text-pop-pink transition-colors cursor-pointer">
+                    {c}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Combos</h3>
-            <p>Combos individuales, familiares y para evento.</p>
+            <h4 className="font-bold text-zinc-800 mb-1 uppercase tracking-wider">Horario</h4>
+            <p className="leading-relaxed">Lun - Sáb: 11am - 11pm<br />Dom: 12pm - 10pm</p>
           </div>
           <div>
-            <h3 className="font-bold text-zinc-700 uppercase mb-1">Delivery Express</h3>
-            <p>Tu smash burger caliente en minutos. Seguimiento en vivo.</p>
+            <h4 className="font-bold text-zinc-800 mb-1 uppercase tracking-wider">Contacto</h4>
+            <p className="leading-relaxed">{config.telefono_soporte}</p>
           </div>
         </div>
+        <p className="text-center text-zinc-400 text-xs pb-4 border-t border-zinc-100 pt-4">
+          © {new Date().getFullYear()} {config.site_nombre || 'FoodPop'}. Todos los derechos reservados.
+        </p>
       </footer>
+    </div>
+  );
+};
+
+// ─── Category Section Component ───────────────────────────────────────────
+interface CategorySectionProps {
+  title: string;
+  icon: React.ReactNode | null;
+  gradient: string;
+  items: FoodItem[];
+  config: any;
+  onViewProductDetails: (food: FoodItem) => void;
+  addToCart: (item: FoodItem, qty?: number, opts?: any[], total?: number, removed?: string[]) => void;
+  isOffer?: boolean;
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
+}
+
+const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient, items, config, onViewProductDetails, addToCart, isOffer, setTab }) => {
+  const scrollId = `scroll-${title.replace(/\s+/g, '-')}`;
+
+  const scroll = (dir: 'left' | 'right') => {
+    const el = document.getElementById(scrollId);
+    if (el) el.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="px-4 mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-display font-bold text-zinc-900 flex items-center gap-2">
+          {icon}
+          <span>{title}</span>
+        </h3>
+        <button onClick={() => setTab('catalog')}
+          className="text-xs font-bold text-pop-pink hover:text-pink-700 transition-colors cursor-pointer"
+        >
+          Ver todo →
+        </button>
+      </div>
+      <div className="relative">
+        <div id={scrollId}
+          className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:grid-cols-4 xl:grid-cols-5"
+        >
+          {items.map(item => (
+            <div key={item.id} className="shrink-0 w-[180px] sm:w-[200px] lg:w-auto snap-start">
+              <ProductCard
+                item={item}
+                config={config}
+                onViewProductDetails={onViewProductDetails}
+                addToCart={(food) => addToCart(food)}
+                isOffer={isOffer}
+              />
+            </div>
+          ))}
+        </div>
+        {/* Scroll arrows (desktop) */}
+        <button onClick={() => scroll('left')}
+          className="hidden lg:flex absolute -left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-zinc-200 rounded-full shadow-lg items-center justify-center hover:bg-zinc-50 transition-all cursor-pointer z-10"
+        >
+          ←
+        </button>
+        <button onClick={() => scroll('right')}
+          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-zinc-200 rounded-full shadow-lg items-center justify-center hover:bg-zinc-50 transition-all cursor-pointer z-10"
+        >
+          →
+        </button>
+      </div>
     </div>
   );
 };

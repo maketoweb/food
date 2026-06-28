@@ -19,7 +19,6 @@ import { useApp } from '../store/AppContext';
 interface NavigationProps {
   currentTab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile';
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
-  onOpenScanner: () => void;
   onTriggerAdminLogin: () => void;
   drawerOpen: boolean;
   setDrawerOpen: (value: boolean) => void;
@@ -28,7 +27,6 @@ interface NavigationProps {
 export const Navigation: React.FC<NavigationProps> = ({
   currentTab,
   setTab,
-  onOpenScanner,
   onTriggerAdminLogin,
   drawerOpen,
   setDrawerOpen,
@@ -134,80 +132,59 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       </header>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR */}
+      {/* MOBILE BOTTOM NAVIGATION BAR — Pop Vibrant */}
       <nav
         id="bottom-bar"
-        className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-white border-t border-zinc-100 px-2 flex items-center justify-around shadow-[0_-2px_12px_rgba(0,0,0,0.06)] lg:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 h-[72px] bg-white border-t border-zinc-100 px-2 pb-2 flex items-start justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden safe-area-bottom"
       >
-        {/* Home */}
-        <button
-          type="button"
-          onClick={() => setTab('home')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${
-            currentTab === 'home' ? 'text-orange-500' : 'text-zinc-400'
-          }`}
+        {/* Nav: Inicio */}
+        <button onClick={() => setTab('home')}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'home' ? 'text-pop-pink' : 'text-zinc-400'}`}
         >
-          {currentTab === 'home' && (
-            <span className="absolute top-0 w-5 h-[2.5px] rounded-full bg-orange-500" />
-          )}
+          {currentTab === 'home' && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
           <Home size={20} strokeWidth={currentTab === 'home' ? 2.5 : 1.8} />
-          <span className="text-[10px] mt-0.5 font-medium">Inicio</span>
+          <span className="text-[10px] mt-0.5 font-semibold">Inicio</span>
         </button>
 
-        {/* Menu / Hamburger */}
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${
-            drawerOpen ? 'text-orange-500' : 'text-zinc-400'
-          }`}
+        {/* Nav: Menú */}
+        <button onClick={() => setDrawerOpen(true)}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'catalog' ? 'text-pop-pink' : 'text-zinc-400'}`}
         >
-          <Menu size={20} strokeWidth={drawerOpen ? 2.5 : 1.8} />
-          <span className="text-[10px] mt-0.5 font-medium">Menú</span>
+          <Grid size={20} strokeWidth={currentTab === 'catalog' ? 2.5 : 1.8} />
+          <span className="text-[10px] mt-0.5 font-semibold">Menú</span>
         </button>
 
-        {/* Cart */}
-        <button
-          type="button"
-          onClick={() => setTab('cart')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${
-            currentTab === 'cart' ? 'text-orange-500' : 'text-zinc-400'
-          }`}
+        {/* Nav: Carrito */}
+        <button onClick={() => setTab('cart')}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'cart' ? 'text-pop-pink' : 'text-zinc-400'}`}
         >
-          {currentTab === 'cart' && (
-            <span className="absolute top-0 w-5 h-[2.5px] rounded-full bg-orange-500" />
-          )}
+          {currentTab === 'cart' && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
           <div className="relative">
             <ShoppingCart size={20} strokeWidth={currentTab === 'cart' ? 2.5 : 1.8} />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] flex items-center justify-center rounded-full bg-orange-500 text-white text-[9px] font-bold px-0.5 leading-none">
+              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-pop-pink text-white text-[9px] font-bold px-1 leading-none shadow-lg">
                 {cartCount}
               </span>
             )}
           </div>
-          <span className="text-[10px] mt-0.5 font-medium">Carrito</span>
+          <span className="text-[10px] mt-0.5 font-semibold">Carrito</span>
         </button>
 
-        {/* Profile */}
-        <button
-          type="button"
-          onClick={() => setTab('profile')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${
-            currentTab === 'profile' ? 'text-orange-500' : 'text-zinc-400'
-          }`}
+        {/* Nav: Perfil */}
+        <button onClick={() => setTab('profile')}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'profile' ? 'text-pop-pink' : 'text-zinc-400'}`}
         >
-          {currentTab === 'profile' && (
-            <span className="absolute top-0 w-5 h-[2.5px] rounded-full bg-orange-500" />
-          )}
+          {currentTab === 'profile' && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
           <div className="relative">
             <User size={20} strokeWidth={currentTab === 'profile' ? 2.5 : 1.8} />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white animate-pulse" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-pop-red border-2 border-white animate-pulse" />
             )}
           </div>
-          <span className="text-[10px] mt-0.5 font-medium">{currentUser ? 'Perfil' : 'Ingresar'}</span>
+          <span className="text-[10px] mt-0.5 font-semibold">{currentUser ? 'Perfil' : 'Ingresar'}</span>
         </button>
       </nav>
+      <div className="h-[72px] lg:hidden" />
 
       {/* MOBILE DRAWER PANEL */}
       <div
@@ -301,14 +278,6 @@ export const Navigation: React.FC<NavigationProps> = ({
                 Acciones Rápidas
               </span>
 
-              <button
-                type="button"
-                onClick={() => { onOpenScanner(); setDrawerOpen(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-zinc-600 hover:bg-zinc-50 rounded-lg font-medium transition-all cursor-pointer"
-              >
-                Escanear Código
-              </button>
-
               <a
                 href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                 target="_blank"
@@ -363,6 +332,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           </div>
         </aside>
       </div>
+
     </>
   );
 };

@@ -6,9 +6,9 @@ import { Checkout } from './pages/Checkout';
 import { Admin } from './pages/Admin';
 import { UserProfile } from './pages/UserProfile';
 import { Navigation } from './components/Navigation';
-import { BarcodeScanner } from './components/BarcodeScanner';
-import { Producto, SelectedOption } from './types/store';
+import { FoodItem, SelectedOption } from './types/store';
 import { PushNotificationModal } from './components/PushNotificationModal';
+import { CheckoutModal } from './components/CheckoutModal';
 import { ProductOptionsEditor } from './components/ProductOptionsEditor';
 import { 
   X, ShoppingCart, Landmark, ShieldCheck, Tag, Info, AlertOctagon, 
@@ -50,16 +50,11 @@ function AppContent() {
   // Route/Tab controllers
   const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('');
-  const [selectedEngine, setSelectedEngine] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Custom Overlays & Modals
-  const [selectedProductDetails, setSelectedProductDetails] = useState<Producto | null>(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [scannedCode, setScannedCode] = useState<string>('');
+  const [selectedProductDetails, setSelectedProductDetails] = useState<FoodItem | null>(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [globalSearch, setGlobalSearch] = useState<string>('');
   const [headerSearchInput, setHeaderSearchInput] = useState<string>('');
 
@@ -78,10 +73,6 @@ function AppContent() {
 
   const resetAllFilters = () => {
     setSelectedCategory('');
-    setSelectedBrand('');
-    setSelectedModel('');
-    setSelectedYear('');
-    setSelectedEngine('');
     setGlobalSearch('');
   };
 
@@ -108,17 +99,10 @@ function AppContent() {
     }
   };
 
-  // Scan Success helper transfer
-  const handleScanCompleted = (code: string) => {
-    setScannedCode(code);
-    setIsScannerOpen(false);
-    setTab('catalog'); // Navigate to catalog immediately to filter
-  };
-
   const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
 
-  const handleShareProduct = (part: Producto) => {
-    const text = `🍏 *${part.nombre}* en *${config.site_nombre || 'nuestra tienda'}* • Código: *${part.codigo}* por un precio de *$${part.precio_usd.toFixed(2)} USD*. ¡Pídelo directo al delivery express de ${config.site_nombre || 'nuestra tienda'}!`;
+  const handleShareProduct = (part: FoodItem) => {
+    const text = `🍏 *${part.nombre}* en *${config.site_nombre || 'nuestra tienda'}* por un precio de *$${part.precio_usd.toFixed(2)} USD*. ¡Pídelo directo al delivery express de ${config.site_nombre || 'nuestra tienda'}!`;
     const phone = getWhatsAppPhone().replace(/[+ ]/g, '');
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -131,14 +115,8 @@ function AppContent() {
   };
 
   // Header / Navigation helpers
-  const navigateToCatalog = (filters?: { category?: string; brand?: string; model?: string; year?: string; engine?: string }) => {
-    if (filters) {
-      if (filters.category !== undefined) setSelectedCategory(filters.category);
-      if (filters.brand !== undefined) setSelectedBrand(filters.brand);
-      if (filters.model !== undefined) setSelectedModel(filters.model);
-      if (filters.year !== undefined) setSelectedYear(filters.year);
-      if (filters.engine !== undefined) setSelectedEngine(filters.engine);
-    }
+  const navigateToCatalog = (filters?: { category?: string }) => {
+    if (filters?.category !== undefined) setSelectedCategory(filters.category);
     setTab('catalog');
   };
 
@@ -306,14 +284,6 @@ function AppContent() {
               <div className="p-3.5 border-t border-zinc-200 flex flex-col gap-1 pt-4">
                 <span className="text-[9px] uppercase font-black text-zinc-400 tracking-wider px-3 py-1 font-mono">Enlaces rápidos</span>
                 
-                <button
-                  type="button"
-                  onClick={() => setIsScannerOpen(true)}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 text-xs text-zinc-750 hover:bg-zinc-200/50 rounded-xl font-bold transition-all cursor-pointer"
-                >
-                  Escanear Código
-                </button>
-
                 <a
                   href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                   target="_blank"
@@ -550,14 +520,6 @@ function AppContent() {
           <Home
             setTab={setTab}
             setSelectedCategory={setSelectedCategory}
-            selectedBrand={selectedBrand}
-            setSelectedBrand={setSelectedBrand}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            selectedYear={selectedYear}
-            setSelectedYear={setSelectedYear}
-            selectedEngine={selectedEngine}
-            setSelectedEngine={setSelectedEngine}
             onViewProductDetails={setSelectedProductDetails}
             globalSearch={globalSearch}
             setGlobalSearch={setGlobalSearch}
@@ -571,35 +533,44 @@ function AppContent() {
           <Catalog
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
-            selectedBrand={selectedBrand}
-            setSelectedBrand={setSelectedBrand}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            selectedYear={selectedYear}
-            setSelectedYear={setSelectedYear}
-            selectedEngine={selectedEngine}
-            setSelectedEngine={setSelectedEngine}
             onViewProductDetails={setSelectedProductDetails}
-            onOpenScanner={() => setIsScannerOpen(true)}
-            passedSearchCode={scannedCode}
-            clearPassedSearchCode={() => setScannedCode('')}
             passedSearchTerm={globalSearch}
             clearPassedSearchTerm={() => setGlobalSearch('')}
             resetGlobalFilters={resetAllFilters}
           />
         )}
  
-        {tab === 'cart' && (
-          <Checkout setTab={setTab} />
+        {tab === 'cart' && !showCheckoutModal && (
+          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+            <ShoppingBag size={48} className="text-pop-pink mb-4" />
+            <h2 className="text-xl font-display font-bold text-zinc-900 mb-2">Tu Pedido</h2>
+            <p className="text-zinc-500 text-sm mb-6">
+              {cart.length === 0
+                ? 'No has agregado nada al carrito aún.'
+                : `Tienes ${cart.reduce((a, c) => a + c.quantity, 0)} artículos en tu pedido.`}
+            </p>
+            {cart.length > 0 ? (
+              <button onClick={() => setShowCheckoutModal(true)}
+                className="bg-pop-pink hover:bg-pink-600 text-white font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm cursor-pointer shadow-xl"
+              >
+                Ir al Checkout
+              </button>
+            ) : (
+              <button onClick={() => setTab('catalog')}
+                className="bg-pop-orange hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm cursor-pointer"
+              >
+                Ver Menú
+              </button>
+            )}
+          </div>
+        )}
+
+        {showCheckoutModal && (
+          <CheckoutModal onClose={() => setShowCheckoutModal(false)} />
         )}
  
         {tab === 'admin' && (
-          <Admin
-            onOpenScanner={() => setIsScannerOpen(true)}
-            scannedResultCode={scannedCode}
-            clearScannedResultCode={() => setScannedCode('')}
-            setTab={setTab}
-          />
+          <Admin setTab={setTab} />
         )}
  
         {tab === 'profile' && (
@@ -617,7 +588,6 @@ function AppContent() {
       <Navigation
         currentTab={tab}
         setTab={setTab}
-        onOpenScanner={() => setIsScannerOpen(true)}
         onTriggerAdminLogin={() => setIsAdminLoginOpen(true)}
         drawerOpen={drawerOpen}
         setDrawerOpen={setDrawerOpen}
@@ -804,7 +774,8 @@ function AppContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    addToCart(selectedProductDetails, microModalQuantity, selectedProductOptions, optionsTotal);
+                    const removedIngredientNames = Array.from(removedIngredients).map(idx => selectedProductDetails.ingredientes?.[idx]).filter(Boolean) as string[];
+                    addToCart(selectedProductDetails, microModalQuantity, selectedProductOptions, optionsTotal, removedIngredientNames);
                     setSelectedProductDetails(null);
                     setMicroModalQuantity(1);
                     setSelectedProductOptions([]);
@@ -821,16 +792,6 @@ function AppContent() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* --------------------------------------------------------------------------------
-      B. BARCODE CAMERA VIEWFINDER MODAL
-      -------------------------------------------------------------------------------- */}
-      {isScannerOpen && (
-        <BarcodeScanner
-          onScanSuccess={handleScanCompleted}
-          onClose={() => setIsScannerOpen(false)}
-        />
       )}
 
       {/* --------------------------------------------------------------------------------

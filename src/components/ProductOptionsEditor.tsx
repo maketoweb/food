@@ -1,9 +1,9 @@
 import React from 'react';
-import { ProductOptionGroup, SelectedOption } from '../types/store';
+import { FoodOptionGroup, SelectedOption } from '../types/store';
 import { Check, Circle } from 'lucide-react';
 
 interface ProductOptionsEditorProps {
-  optionGroups: ProductOptionGroup[];
+  optionGroups: FoodOptionGroup[];
   selectedOptions: SelectedOption[];
   onSelectionChange: (options: SelectedOption[], total: number) => void;
   themeColor?: string;

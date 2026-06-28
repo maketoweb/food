@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '../store/AppContext';
-import { Producto, Order, OrderItem, AppUser, DeliveryZone, Sede, ProductOptionGroup, ProductOption } from '../types/store';
+import { FoodItem, Order, OrderItem, AppUser, DeliveryZone, Sede, FoodOptionGroup, FoodOption } from '../types/store';
 import { supabase, uploadFileToStorage, compressImage, getPublicUrl } from '../store/supabaseClient';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
 import {
   Plus, Edit, Trash2, Landmark, Settings, ShoppingBag, BarChart3, Mic, FileJson,
   Search, CheckCircle, Truck, PackageCheck, AlertTriangle, Send, Bell, Ticket,
   Receipt, Printer, Check, X, MessageSquare, MessageCircle, ExternalLink, Upload, DollarSign, Package, ShoppingCart, User, Download, FileSpreadsheet, Eye, EyeOff, Calendar, AlertCircle, RefreshCcw,
-  Palette, MapPin, SlidersHorizontal
+  Palette, MapPin, SlidersHorizontal, Grid, Utensils, Menu
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { EditProductForm } from '../components/EditProductForm';
@@ -119,25 +119,25 @@ const SedeForm: React.FC<{ onSave: (sede: Sede) => void }> = ({ onSave }) => {
   );
 };
 
-const ExtrasManager: React.FC<{ parts: Producto[]; updatePart: (id: string, updated: Partial<Producto>) => void }> = ({ parts, updatePart }) => {
+const ExtrasManager: React.FC<{ foodItems: FoodItem[]; updateFoodItem: (id: string, updated: Partial<FoodItem>) => void }> = ({ foodItems, updateFoodItem }) => {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [editingGroupName, setEditingGroupName] = useState('');
   const [editingOptionName, setEditingOptionName] = useState('');
   const [editingOptionPrice, setEditingOptionPrice] = useState(0);
 
-  const selectedProduct = useMemo(() => parts.find(p => p.id === selectedProductId), [parts, selectedProductId]);
+  const selectedProduct = useMemo(() => foodItems.find(p => p.id === selectedProductId), [foodItems, selectedProductId]);
   const optionGroups = selectedProduct?.option_groups || [];
 
-  const saveGroups = (groups: ProductOptionGroup[]) => {
+  const saveGroups = (groups: FoodOptionGroup[]) => {
     if (selectedProduct) {
-      updatePart(selectedProduct.id, { option_groups: groups });
+      updateFoodItem(selectedProduct.id, { option_groups: groups });
     }
   };
 
   const addGroup = () => {
     const name = prompt('Nombre del nuevo grupo de opciones (ej: "Tamaño", "Extras", "Salsa"):');
     if (!name || !name.trim()) return;
-    const newGroup: ProductOptionGroup = {
+    const newGroup: FoodOptionGroup = {
       id: `og-${Date.now()}`,
       nombre: name.trim(),
       min_select: 0,
@@ -161,7 +161,7 @@ const ExtrasManager: React.FC<{ parts: Producto[]; updatePart: (id: string, upda
 
   const saveOption = (groupId: string) => {
     if (!editingOptionName.trim()) return;
-    const newOption: ProductOption = {
+    const newOption: FoodOption = {
       id: `opt-${Date.now()}`,
       nombre: editingOptionName.trim(),
       precio_usd: editingOptionPrice,
@@ -200,8 +200,8 @@ const ExtrasManager: React.FC<{ parts: Producto[]; updatePart: (id: string, upda
           className="bg-white border border-slate-300 rounded-lg px-2.5 py-2 outline-none focus:border-violet-500 text-xs"
         >
           <option value="">-- Selecciona un producto --</option>
-          {parts.map(p => (
-            <option key={p.id} value={p.id}>{p.nombre} ({p.codigo})</option>
+          {foodItems.map(p => (
+            <option key={p.id} value={p.id}>{p.nombre}</option>
           ))}
         </select>
       </div>
@@ -330,8 +330,8 @@ const ExtrasManager: React.FC<{ parts: Producto[]; updatePart: (id: string, upda
 
 export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const { 
-    parts, orders, config, notifications, searchPartsSemantically,
-    addPart, updatePart, deletePart, updateConfig, updateExchangeRate, currentUser, syncPushSubscription,
+    foodItems, orders, config, notifications, searchItems,
+    addFoodItem, updateFoodItem, deleteFoodItem, updateConfig, updateExchangeRate, currentUser, syncPushSubscription,
     updateOrderStatus, updateOrderItems, addNotification, toggleNotificationReadStatus, deleteNotification,
     updateAdminCredentials, adminUser, adminPass, users, updateUserByAdmin,
     addCategory, deleteCategory, updateCategory, 
@@ -346,7 +346,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const [newAdminPass, setNewAdminPass] = useState(adminPass);
 
   // Navigation within admin panel: 'inventory' | 'orders' | 'settings' | 'reports' | 'notifications' | 'customers'
-  const [adminSection, setAdminSection] = useState<'inventory' | 'orders' | 'settings' | 'reports' | 'notifications' | 'customers' | 'coupons' | 'branding' | 'sedes' | 'extras'>('reports');
+  const [adminSection, setAdminSection] = useState<'inventory' | 'orders' | 'settings' | 'reports' | 'notifications' | 'customers' | 'coupons' | 'branding' | 'sedes' | 'extras' | 'tables'>('reports');
   const [showAdminPass, setShowAdminPass] = useState(false);
   const restoreInputRef = useRef<HTMLInputElement>(null);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
@@ -368,6 +368,8 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const [replyMessage, setReplyMessage] = useState('');
   const [notifCatFilter, setNotifCatFilter] = useState<'clientes' | 'grupal' | 'sistema'>('clientes');
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // State para edición de items de pedido
   const [editingOrderItems, setEditingOrderItems] = useState<Order | null>(null);
   const [tempEditItems, setTempEditItems] = useState<OrderItem[]>([]);
@@ -388,8 +390,8 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
 
   const filteredCatalogForEdit = useMemo(() => {
     if (!orderEditSearch.trim()) return [];
-    return parts.filter(p => p.nombre.toLowerCase().includes(orderEditSearch.toLowerCase()) || p.codigo.toLowerCase().includes(orderEditSearch.toLowerCase())).slice(0, 5);
-  }, [parts, orderEditSearch]);
+    return foodItems.filter(p => p.nombre.toLowerCase().includes(orderEditSearch.toLowerCase())).slice(0, 5);
+  }, [foodItems, orderEditSearch]);
 
   useEffect(() => {
     const handleNewOrder = (e: any) => {
@@ -404,19 +406,13 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
 
   // CRUD MODAL STATE
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingPart, setEditingPart] = useState<Producto | null>(null);
+  const [editingPart, setEditingPart] = useState<FoodItem | null>(null);
 
   // Form states for adding/editing a product
-  const [formCodigo, setFormCodigo] = useState('');
   const [formNombre, setFormNombre] = useState('');
   const [formDescripcion, setFormDescripcion] = useState('');
-  const [formDetalleAdicional, setFormDetalleAdicional] = useState('');
   const [uploadFormat, setUploadFormat] = useState<'image/webp' | 'image/jpeg'>('image/webp');
-  const [formCategoria, setFormCategoria] = useState('Lácteos y Quesos');
-  const [formMarca, setFormMarca] = useState('Pasillo 1 - Lacteos');
-  const [formModelo, setFormModelo] = useState('');
-  const [formAnioInicio, setFormAnioInicio] = useState(15);
-  const [formAnioFin, setFormAnioFin] = useState(4);
+  const [formCategoria, setFormCategoria] = useState('Hamburguesas');
   const [formPrecio, setFormPrecio] = useState(0.00);
   const [formStock, setFormStock] = useState(1);
   const [formImages, setFormImages] = useState<string[]>([]);
@@ -503,7 +499,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
   // Filter state for orders
-  const [orderFilter, setOrderFilter] = useState<'Todos' | 'Pendiente' | 'Procesando' | 'Enviado'>('Todos');
+  const [orderFilter, setOrderFilter] = useState<'Todos' | 'Pendiente' | 'Procesando' | 'En preparación' | 'En camino' | 'Entregado'>('Todos');
 
   // Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -511,42 +507,30 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const [newCouponLimit, setNewCouponLimit] = useState<number | ''>('');
 
   // Open CRUD Editor Helper
-  const openEditor = (part: Producto | null = null) => {
+  const openEditor = (part: FoodItem | null = null) => {
     if (part) {
       setEditingPart(part);
-      setFormCodigo(part.codigo);
       setFormNombre(part.nombre);
       setFormDescripcion(part.descripcion);
       setFormCategoria(part.categoria);
-      setFormMarca(part.seccion);
-      setFormModelo(part.subseccion);
-      setFormAnioInicio(part.anio_inicio);
-      setFormAnioFin(part.anio_fin);
       setFormPrecio(part.precio_usd);
       setFormStock(part.stock);
       setFormImages(part.imagen_urls && part.imagen_urls.length > 0 ? [...part.imagen_urls] : ['']);
       setFormPromo(part.es_promo);
       setFormNuevo(part.es_nuevo);
       setFormVendido(part.es_mas_vendido);
-      setFormDetalleAdicional(part.detalle_adicional || '');
-      setFormDisponibilidad((part as any).disponibilidad || 'Disponible');
+      setFormDisponibilidad(part.stock <= 0 ? 'Agotado' : 'Disponible');
     } else {
       setEditingPart(null);
-      setFormCodigo('');
       setFormNombre('');
       setFormDescripcion('');
       setFormCategoria(config.categories?.[0] || 'Hamburguesas');
-      setFormMarca('Hamburguesas');
-      setFormModelo('');
-      setFormAnioInicio(15);
-      setFormAnioFin(4);
       setFormPrecio(1.00);
       setFormStock(10);
       setFormImages(['https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=500']);
       setFormPromo(false);
       setFormNuevo(true);
       setFormVendido(false);
-      setFormDetalleAdicional('');
       setFormDisponibilidad('Disponible');
     }
     setIsEditorOpen(true);
@@ -582,29 +566,23 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
       .filter(url => url !== '');
 
     const payload = {
-      codigo: formCodigo.trim(),
       nombre: formNombre.trim(),
       descripcion: formDescripcion.trim(),
       categoria: formCategoria,
-      seccion: formMarca,
-      subseccion: formModelo.trim(),
-      anio_inicio: Number(formAnioInicio),
-      anio_fin: Number(formAnioFin),
       precio_usd: Number(formPrecio),
       stock: Number(formStock),
       imagen_urls: filteredImages.length > 0 ? filteredImages : ['https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=500'],
       es_promo: formPromo,
       es_nuevo: formNuevo,
       es_mas_vendido: formVendido,
-      detalle_adicional: formDetalleAdicional.trim(),
       disponibilidad: formDisponibilidad
     };
 
     if (editingPart) {
-      updatePart(editingPart.id, payload);
+      updateFoodItem(editingPart.id, payload);
       alert(`¡Artículo ${payload.nombre} actualizado!`);
     } else {
-      addPart(payload);
+      addFoodItem(payload);
       alert(`¡Nuevo producto ${payload.nombre} creado en el catálogo!`);
     }
 
@@ -650,7 +628,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
       date: new Date().toISOString(),
       type: isAuto ? "automatic" : "manual",
       data: {
-        products: parts,
+        products: foodItems,
         orders,
         users,
         config,
@@ -663,7 +641,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `foodapp_backup_${isAuto ? 'auto_' : 'manual'}_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `${config.site_nombre?.toLowerCase().replace(/\s/g, '_') || 'backup'}_backup_${isAuto ? 'auto_' : 'manual'}_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -711,7 +689,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   };
 
   const handleStatusAdvance = (order: Order) => {
-    const statusSequence: Order['status'][] = ['Pendiente', 'Procesando', 'En preparación', 'En camino', 'Entregado'];
+    const statusSequence: Order['status'][] = ['Pendiente', 'Procesando', 'En preparación', 'Listo', 'En camino', 'Entregado'];
     const currentIndex = statusSequence.indexOf(order.status);
     const nextStatus = statusSequence[currentIndex + 1];
 
@@ -794,7 +772,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `pedidos_foodapp_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `pedidos_${config.site_nombre?.toLowerCase().replace(/\s/g, '_') || 'tienda'}_${new Date().toISOString().split('T')[0]}.csv`);
     link.click();
   };
 
@@ -849,22 +827,22 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
         });
         
         // Valores por defecto para campos obligatorios
-        if (!p.categoria) p.categoria = config.categories?.[0] || 'Lácteos y Quesos';
+        if (!p.categoria) p.categoria = config.categories?.[0] || 'Hamburguesas';
         return p;
-      }).filter(p => p.codigo && p.nombre);
+      }).filter(p => p.nombre);
 
       let addedCount = 0;
       let updatedCount = 0;
 
       importedProducts.forEach(p => {
-        // Buscar si el producto ya existe mediante su código SKU
-        const existingPart = parts.find(ep => ep.codigo === p.codigo);
+        // Buscar si el producto ya existe por nombre
+        const existingPart = foodItems.find(ep => ep.nombre === p.nombre);
         
         if (existingPart) {
-          updatePart(existingPart.id, p);
+          updateFoodItem(existingPart.id, p);
           updatedCount++;
         } else {
-          addPart(p);
+          addFoodItem(p);
           addedCount++;
         }
       });
@@ -876,9 +854,9 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   };
 
   const downloadCSVTemplate = () => {
-    const headers = ["codigo", "nombre", "descripcion", "categoria", "seccion", "subseccion", "marca", "condicion", "anio_inicio", "anio_fin", "precio_usd", "stock", "imagen_urls", "es_promo", "es_nuevo", "es_mas_vendido", "delivery_gratis", "detalle_adicional"];
+    const headers = ["nombre", "descripcion", "categoria", "precio_usd", "stock", "imagen_urls", "es_promo", "es_nuevo", "es_mas_vendido", "delivery_gratis"];
     const exampleRow = [
-      "LCT-LECH-001", "Leche Entera 1L", "Leche de vaca pasteurizada premium", "Lácteos y Quesos", "Pasillo 1", "Lácteos", "Campestre", "Nacional", "2024", "2026", "1.80", "100", "https://images.unsplash.com/photo-1550583724-b2692b85b150?q=80;https://images.unsplash.com/photo-1563636619-e9143da7973b?q=80", "false", "true", "false", "true", "Mantener refrigerado entre 2 y 4 grados"
+      "Smash Clásica", "Hamburguesa doble smash de res con queso cheddar", "Hamburguesas", "7.50", "60", "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=500", "false", "false", "true", "false"
     ];
     
     const csvContent = [headers.join(","), exampleRow.join(",")].join("\n");
@@ -886,7 +864,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-      link.setAttribute("download", "plantilla_importacion_foodapp.csv");
+      link.setAttribute("download", `plantilla_importacion_${config.site_nombre?.toLowerCase().replace(/\s/g, '_') || 'tienda'}.csv`);
     link.click();
   };
 
@@ -1008,7 +986,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const topProductsChartData = useMemo(() => {
     const productsMap: { [name: string]: number } = {};
     // Preload defaults from our catalog if orders list is sparse so the chart looks rich
-    parts.slice(0, 5).forEach(p => {
+    foodItems.slice(0, 5).forEach(p => {
       productsMap[p.nombre.substring(0, 22)] = p.stock > 10 ? 4 : 2;
     });
 
@@ -1027,7 +1005,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
       name: k,
       Unidades: productsMap[k]
     })).sort((a,b) => b.Unidades - a.Unidades).slice(0, 5);
-  }, [orders, parts]);
+  }, [orders, foodItems]);
 
   const monthlyComparisonData = useMemo(() => {
     return [
@@ -1047,7 +1025,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
         if (confirm("🗓️ Han pasado 15 días desde su último respaldo. ¿Desea descargar una copia de seguridad de sus datos ahora?")) {
           handleManualBackup(true);
           localStorage.setItem('foodapp_last_backup_date', String(now));
-          console.log("🍔 BurgerPop: Respaldo manual solicitado por periodo quincenal.");
+          console.log(`🍔 ${config.site_nombre || 'Tienda'}: Respaldo manual solicitado por periodo quincenal.`);
         }
       }
     }
@@ -1055,13 +1033,13 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
 
   // Crud Catalog Search helper match
   const crudSearchParts = useMemo(() => {
-    return searchPartsSemantically(crudSearch, true);
-  }, [parts, crudSearch]);
+    return searchItems(crudSearch, true);
+  }, [foodItems, crudSearch]);
 
   const pickerFilteredProducts = useMemo(() => {
-    if (!pickerSearch.trim()) return parts.slice(0, 5);
-    return searchPartsSemantically(pickerSearch, true).slice(0, 8);
-  }, [parts, pickerSearch]);
+    if (!pickerSearch.trim()) return foodItems.slice(0, 5);
+    return searchItems(pickerSearch, true).slice(0, 8);
+  }, [foodItems, pickerSearch]);
 
   // Filtered orders list mapping
   const activeOrdersMapped = useMemo(() => {
@@ -1069,79 +1047,107 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
     return orders.filter(o => o.status === orderFilter);
   }, [orders, orderFilter]);
 
+  const ADMIN_SECTIONS = [
+    { id: 'reports', label: 'Dashboard', icon: BarChart3 },
+    { id: 'orders', label: 'Pedidos', icon: ShoppingBag },
+    { id: 'inventory', label: 'Menú', icon: Utensils },
+    { id: 'tables', label: 'Mesas', icon: Grid },
+    { id: 'customers', label: 'Clientes', icon: User },
+    { id: 'coupons', label: 'Cupones', icon: Ticket },
+    { id: 'settings', label: 'Configuración', icon: Settings },
+  ];
+  const sidebarSections = ADMIN_SECTIONS.filter(s => s.id !== 'tables' || config.tiene_mesas);
+
+  const sectionLabelMap: Record<string, string> = { branding: 'Configuración', sedes: 'Configuración', extras: 'Configuración', notifications: 'Configuración' };
+  const sectionLabel = sidebarSections.find(s => s.id === adminSection)?.label || sectionLabelMap[adminSection] || 'Dashboard';
+
   return (
-    <div className="flex flex-col gap-6 pb-24 px-4 sm:px-6">
-      <SEOHead title="Panel de Control Admin" type="admin" />
+    <div className="flex h-screen bg-slate-100 overflow-hidden">
+      <SEOHead title={`Admin - ${config.site_nombre || 'Panel'}`} type="admin" />
 
-      {/* DASHBOARD TOP HEADER BAR */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-4 gap-3 bg-white p-4 rounded-xl shadow-sm">
-        <div>
-          <span className="text-[11px] font-mono text-violet-600 font-bold uppercase tracking-wider">Control Total • {config.site_nombre || 'Supermarket'}</span>
-          <h2 className="text-[21px] font-bold font-display text-slate-900">Dashboard Administrativo</h2>
-        </div>
+      {/* Mobile overlay */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        <div className="flex flex-wrap items-center gap-4">
-          {/* Switch de Tienda Abierta/Cerrada */}
-          <button
-            onClick={() => updateConfig({ esta_abierta: !config.esta_abierta })}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all border flex items-center gap-2 ${
-              config.esta_abierta 
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-              : 'bg-rose-50 text-rose-700 border-rose-200'
-            }`}
-          >
-            <div className={`w-2 h-2 rounded-full ${config.esta_abierta ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-            {config.esta_abierta ? 'Tienda: Operativa' : 'Hoy No Trabajamos'}
-          </button>
-
-          <div className="p-2.5 rounded-lg border border-violet-100 bg-violet-50/40 flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-700">
-              <Landmark size={14} className="text-violet-600" />
-              <span>Tasa:</span>
+      {/* Sidebar */}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="p-4 border-b border-slate-200 flex items-center gap-3">
+          {config.logo_url ? (
+            <img src={config.logo_url} alt={config.site_nombre} className="w-8 h-8 rounded-lg object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: config.theme_color || '#7c3aed' }}>
+              {config.site_nombre?.[0] || 'A'}
             </div>
-            <input
-              type="number"
-              step="0.01"
-              value={config.tasa_cambio}
-              onChange={(e) => updateExchangeRate(Number(e.target.value))}
-              className="w-16 bg-white border border-slate-300 rounded-lg px-1 py-1 text-center font-mono text-xs font-bold"
-            />
-          </div>
+          )}
+          <span className="font-bold text-sm text-slate-900 truncate">{config.site_nombre || 'Admin'}</span>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-slate-400 hover:text-slate-600 rounded"><X size={18} /></button>
         </div>
-      </div>
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {sidebarSections.map(section => {
+            const Icon = section.icon;
+            const isActive = adminSection === section.id || (section.id === 'settings' && ['settings', 'branding', 'sedes', 'extras', 'notifications'].includes(adminSection));
+            return (
+              <button
+                key={section.id}
+                onClick={() => { setAdminSection(section.id as any); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  isActive ? 'text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+                style={isActive ? { backgroundColor: config.theme_color || '#7c3aed' } : {}}
+              >
+                <Icon size={16} />
+                {section.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t border-slate-200 text-[9px] text-slate-400 text-center font-mono">
+          {config.site_nombre || 'Admin'} v1.0
+        </div>
+      </aside>
 
-      {/* SECTIONS SELECTION SUB NAVIGATION BAR */}
-      <div className="flex overflow-x-auto no-scrollbar gap-2 bg-slate-100 p-2 rounded-xl font-display text-xs ml-2 mr-2 shadow-inner">
-        {[
-          { key: 'reports', label: 'Estadísticas', icon: BarChart3 },
-          { key: 'inventory', label: 'Catálogo', icon: Settings },
-          { key: 'orders', label: 'Pedidos', icon: ShoppingBag },
-          { key: 'notifications', label: 'Alertas', icon: Bell },
-          { key: 'customers', label: 'Clientes', icon: User },
-          { key: 'coupons', label: 'Cupones', icon: Ticket },
-          { key: 'branding', label: 'Branding', icon: Palette },
-          { key: 'sedes', label: 'Sedes', icon: MapPin },
-          { key: 'extras', label: 'Extras', icon: SlidersHorizontal },
-          { key: 'settings', label: 'Ajustes', icon: Landmark }
-        ].map(sect => {
-          const Icon = sect.icon;
-          return (
-            <button
-              key={sect.key}
-              type="button"
-              onClick={() => setAdminSection(sect.key as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 shrink-0 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                adminSection === sect.key 
-                  ? 'bg-violet-600 text-white shadow-lg' 
-                  : 'text-slate-600 hover:text-violet-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <Icon size={14} />
-              {sect.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Main content area */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-6 pb-24 px-4 sm:px-6 py-4">
+          {/* Top header bar */}
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4 gap-3 bg-white p-4 rounded-xl shadow-sm">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
+                <Menu size={20} />
+              </button>
+              <div>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider" style={{ color: config.theme_color || '#7c3aed' }}>{config.site_nombre || 'Admin'} • {sectionLabel}</span>
+                <h2 className="text-[21px] font-bold font-display text-slate-900">{sectionLabel}</h2>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => updateConfig({ esta_abierta: !config.esta_abierta })}
+                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all border flex items-center gap-2 ${
+                  config.esta_abierta 
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${config.esta_abierta ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                {config.esta_abierta ? 'Tienda: Operativa' : 'Hoy No Trabajamos'}
+              </button>
+
+              <div className="p-2.5 rounded-lg border border-violet-100 bg-violet-50/40 flex items-center gap-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                  <Landmark size={14} className="text-violet-600" />
+                  <span>Tasa:</span>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={config.tasa_cambio}
+                  onChange={(e) => updateExchangeRate(Number(e.target.value))}
+                  className="w-16 bg-white border border-slate-300 rounded-lg px-1 py-1 text-center font-mono text-xs font-bold"
+                />
+              </div>
+            </div>
+          </div>
 
       {/* ----------------- SUBSECTION 1: STATS REPORTS SHOWING RECHARTS ----------------- */}
       {adminSection === 'reports' && (
@@ -1173,6 +1179,15 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
 
           {/* Quick Metrics Cards grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="p-4 border border-slate-200 rounded-xl bg-white shadow-sm hover:border-violet-300 transition-all duration-300 group">
+              <div className="flex justify-between items-start">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Pedidos Activos</span>
+                <div className="p-1.5 rounded-lg bg-violet-50 text-violet-600 transition-all">
+                  <ShoppingBag size={14} />
+                </div>
+              </div>
+              <p className="text-xl font-bold font-mono text-slate-900 mt-1">{orders.filter(o => o.status !== 'Entregado' && o.status !== 'Cancelado').length}</p>
+            </div>
             <div className="p-4 border border-slate-200 rounded-xl bg-white shadow-sm hover:border-violet-300 transition-all duration-300 group">
               <div className="flex justify-between items-start">
                 <span className="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Ingresos (USD)</span>
@@ -1337,7 +1352,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                 type="text"
                 value={crudSearch}
                 onChange={(e) => setCrudSearch(e.target.value)}
-                placeholder="Filtrar por nombre, codigo o categoría..."
+                placeholder="Filtrar por nombre o categoría..."
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2.5 pl-9 pr-12 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 transition-all shadow-inner"
               />
               <button
@@ -1380,8 +1395,6 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                       </span>
                     </div>
                     <div className="text-[10px] text-slate-500 font-mono flex gap-2 mt-0.5">
-                      <span className="text-violet-600 font-bold">COD: {part.codigo}</span>
-                      <span>•</span>
                       <span>Stock: <strong className={part.stock <= 3 ? 'text-red-500' : 'text-slate-900'}>{part.stock} unid</strong></span>
                     </div>
                   </div>
@@ -1400,7 +1413,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                     type="button"
                     onClick={() => {
                       if (confirm(`¿Seguro que desea eliminar '${part.nombre}' del inventario?`)) {
-                        deletePart(part.id);
+                        deleteFoodItem(part.id);
                       }
                     }}
                     className="p-1.5 text-slate-500 hover:text-red-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
@@ -1430,6 +1443,10 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
               <div className="text-sm">
                 <p className="font-bold text-slate-900">{incomingOrder.cliente_nombre}</p>
                 <p className="text-slate-500">{incomingOrder.cliente_telefono}</p>
+                <div className="mt-1 flex gap-3 text-[10px] text-slate-500">
+                  <span>🚚 {incomingOrder.tipo_entrega === 'mesa' ? 'Mesa' : 'Delivery'}</span>
+                  {incomingOrder.numero_mesa && <span>🪑 Mesa #{incomingOrder.numero_mesa}</span>}
+                </div>
                 <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100 font-mono text-xs">
                    {incomingOrder.items.map((it, idx) => (
                      <div key={idx} className="flex justify-between">
@@ -1480,7 +1497,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
               
               {/* Status filters */}
               <div className="flex gap-1 text-[10px] font-mono bg-slate-100 p-1 border border-slate-200 rounded-lg overflow-x-auto no-scrollbar w-full sm:w-auto">
-                {['Todos', 'Pendiente', 'Procesando', 'Enviado'].map(f => (
+                {['Todos', 'Pendiente', 'Procesando', 'En preparación', 'Listo', 'En camino', 'Entregado'].map(f => (
                   <button
                     key={f}
                     type="button"
@@ -1510,8 +1527,24 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-slate-900 font-mono">{order.id}</span>
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold ${order.status === 'Pendiente' ? 'bg-amber-100 text-amber-700' : order.status === 'Procesando' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-750'}`}>
-                          {order.status}
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                          order.status === 'Pendiente' ? 'bg-amber-100 text-amber-700' :
+                          order.status === 'Procesando' ? 'bg-blue-100 text-blue-700' :
+                          order.status === 'En preparación' ? 'bg-indigo-100 text-indigo-700' :
+                          order.status === 'Listo' ? 'bg-emerald-100 text-emerald-700' :
+                          order.status === 'En camino' ? 'bg-purple-100 text-purple-700' :
+                          order.status === 'Entregado' ? 'bg-green-100 text-green-700' :
+                          order.status === 'Cancelado' ? 'bg-red-100 text-red-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {order.status === 'Pendiente' ? '🟡 Pendiente' :
+                           order.status === 'Procesando' ? '🔵 Procesando' :
+                           order.status === 'En preparación' ? '🟣 Preparando' :
+                           order.status === 'Listo' ? '🟢 Listo' :
+                           order.status === 'En camino' ? '🟣 En camino' :
+                           order.status === 'Entregado' ? '✅ Entregado' :
+                           order.status === 'Cancelado' ? '❌ Cancelado' :
+                           order.status}
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-500 mt-1 font-mono">📅 {order.fecha}</div>
@@ -1532,12 +1565,16 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                       <div className="col-span-2 text-violet-600">🎫 Cupón: <strong className="font-bold">{order.cupon_codigo} (-${(Number(order.descuento_cupon_usd) || 0).toFixed(2)})</strong></div>
                     )}
                     <div className="col-span-2">📍 Destino: <strong className="text-slate-900">{order.direccion_envio}</strong></div>
+                    <div className="col-span-2 flex gap-4">
+                      <span>🚚 Tipo: <strong className="text-slate-900">{order.tipo_entrega === 'mesa' ? 'Mesa' : 'Delivery'}</strong></span>
+                      {order.numero_mesa && <span>🪑 Mesa: <strong className="text-slate-900">#{order.numero_mesa}</strong></span>}
+                    </div>
                   </div>
 
                   {/* Items itemized summary list */}
                   <div className="p-2.5 rounded-lg bg-slate-100 border border-slate-200 flex flex-col gap-1 text-[11px] font-mono">
                     {order.items.map(it => (
-                      <div key={it.part_id} className="flex justify-between text-slate-600">
+                      <div key={it.food_id} className="flex justify-between text-slate-600">
                         <span className="truncate pr-2">{it.cantidad}x {it.nombre}</span>
                         <span>${(Number(it.precio_usd) * Number(it.cantidad || 1)).toFixed(2)}</span>
                       </div>
@@ -1585,13 +1622,13 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                     </div>
 
                     <div className="flex gap-1 text-[10px] font-mono w-full xl:w-auto mt-2 xl:mt-0">
-                      {order.status !== 'Enviado' && (
+                      {order.status !== 'Entregado' && order.status !== 'Cancelado' && (
                         <button
                           type="button"
                           onClick={() => handleStatusAdvance(order)}
                           className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition-all text-[11px] cursor-pointer w-full sm:w-auto"
                         >
-                          {order.status === 'En preparación' ? 'Despachar (Pedido Saliendo) 🛵' : 'Siguiente Paso ➔'}
+                          {order.status === 'Pendiente' ? 'Aceptar Pedido ➔' : order.status === 'Procesando' ? 'Comenzar Preparación ➔' : order.status === 'En preparación' ? 'Marcar como Listo ➔' : order.status === 'Listo' ? 'Despachar (Pedido Saliendo) 🛵' : 'Siguiente Paso ➔'}
                         </button>
                       )}
                     </div>
@@ -2263,7 +2300,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                       <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-xl">
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-slate-800">{item.nombre}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">SKU: {item.codigo} • ${item.precio_usd}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">${item.precio_usd}</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden shadow-inner">
@@ -2320,13 +2357,13 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                     <button 
                       key={p.id}
                       onClick={() => {
-                        const existingIdx = tempEditItems.findIndex(item => item.part_id === p.id);
+                        const existingIdx = tempEditItems.findIndex(item => item.food_id === p.id);
                         if (existingIdx > -1) {
                           const next = [...tempEditItems];
                           next[existingIdx].cantidad += 1;
                           setTempEditItems(next);
                         } else {
-                          setTempEditItems(prev => [...prev, { part_id: p.id, nombre: p.nombre, codigo: p.codigo, precio_usd: p.precio_usd, cantidad: 1 }]);
+                          setTempEditItems(prev => [...prev, { food_id: p.id, nombre: p.nombre, precio_usd: p.precio_usd, cantidad: 1 }]);
                         }
                         setOrderEditSearch('');
                       }}
@@ -2531,7 +2568,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                       <button
                         type="button"
                         onClick={() => {
-                          if (confirm(`¿Seguro que deseas eliminar la categoría "${cat}"?\nTodos los productos pertenecientes a ella se moverán a "Víveres y Despensa".`)) {
+                          if (confirm(`¿Seguro que deseas eliminar la categoría "${cat}"?\nTodos los productos pertenecientes a ella se moverán a "Hamburguesas".`)) {
                             deleteCategory(cat);
                             alert(`Categoría "${cat}" eliminada.`);
                           }
@@ -2649,7 +2686,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{config.site_nombre || 'BurgerPop'}</span>
+                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{config.site_nombre || 'Tienda'}</span>
                       <span className="text-[9px] text-slate-400 font-medium">ahora</span>
                     </div>
                     <h5 className="text-[12px] font-bold text-slate-800 leading-tight">¡Bienvenido a {config.site_nombre || 'nuestra tienda'}!</h5>
@@ -3229,7 +3266,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                         {config.site_nombre?.[0] || 'F'}
                       </div>
                     )}
-                    <span className="text-white font-bold text-sm">{config.site_nombre || 'BurgerPop'}</span>
+                    <span className="text-white font-bold text-sm">{config.site_nombre || 'Tienda'}</span>
                   </div>
                   <div className="flex gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: config.accent_color || '#f59e0b' }}>🛒</div>
@@ -3396,8 +3433,78 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
               </div>
             </div>
 
-            <ExtrasManager parts={parts} updatePart={updatePart} />
+            <ExtrasManager foodItems={foodItems} updateFoodItem={updateFoodItem} />
           </div>
+        </div>
+      )}
+
+      {/* ----------------- SUBSECTION: MESAS (TABLES) ----------------- */}
+      {adminSection === 'tables' && config.tiene_mesas && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Gestión de Mesas</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {Array.from({ length: config.total_mesas || 20 }, (_, i) => i + 1).map(num => {
+              const activeOrder = orders.find(o => o.numero_mesa === num && o.tipo_entrega === 'mesa' && o.status !== 'Entregado' && o.status !== 'Cancelado');
+              const isOccupied = !!activeOrder;
+              return (
+                <div
+                  key={num}
+                  className={`p-4 rounded-xl border-2 shadow-sm flex flex-col items-center gap-2 cursor-pointer transition-all hover:shadow-md ${
+                    isOccupied ? 'border-rose-300 bg-rose-50' : 'border-emerald-300 bg-emerald-50'
+                  }`}
+                  onClick={() => {
+                    if (activeOrder) toggleOrderDetail(activeOrder.id);
+                  }}
+                >
+                  <span className="text-2xl font-black font-mono text-slate-800">{num}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isOccupied ? 'bg-rose-200 text-rose-700' : 'bg-emerald-200 text-emerald-700'}`}>
+                    {isOccupied ? 'Ocupada' : 'Disponible'}
+                  </span>
+                  {activeOrder && (
+                    <div className="text-[9px] text-slate-500 text-center mt-1">
+                      <div className="font-bold text-slate-700 truncate max-w-[80px]">{activeOrder.cliente_nombre}</div>
+                      <div>${activeOrder.total_usd.toFixed(2)}</div>
+                    </div>
+                  )}
+                  {isOccupied && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); if (confirm(`¿Marcar mesa ${num} como disponible?`)) updateOrderStatus(activeOrder.id, 'Entregado'); }}
+                      className="text-[9px] bg-rose-600 text-white px-2 py-1 rounded-lg hover:bg-rose-700 transition-colors mt-1 cursor-pointer"
+                    >
+                      Liberar
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {openOrderDetailIds.map(orderId => {
+            const order = orders.find(o => o.id === orderId);
+            if (!order || order.tipo_entrega !== 'mesa') return null;
+            return (
+              <div key={orderId} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <span className="text-xs font-bold font-mono text-slate-800">Mesa {order.numero_mesa} • {order.cliente_nombre}</span>
+                    <span className="ml-2 text-[9px] px-2 py-0.5 rounded-full font-mono font-bold bg-amber-100 text-amber-700">{order.status}</span>
+                  </div>
+                  <span className="text-xs font-bold text-violet-600 font-mono">${order.total_usd.toFixed(2)}</span>
+                </div>
+                <div className="flex flex-col gap-1 text-[11px] font-mono text-slate-600">
+                  {order.items.map((it, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{it.cantidad}x {it.nombre}</span>
+                      <span>${(it.precio_usd * it.cantidad).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-slate-200 pt-1 mt-1 flex justify-between font-bold text-slate-800">
+                    <span>Total</span>
+                    <span>${order.total_usd.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -3409,16 +3516,9 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
           <EditProductForm 
             part={editingPart || {
               id: '',
-              codigo: '',
               nombre: '',
-              marca: 'Genérica',
-              condicion: 'Nacional',
               descripcion: '',
-              categoria: config.categories?.[0] || 'Lácteos y Quesos',
-              seccion: 'Pasillo 1 - Lacteos',
-              subseccion: '',
-              anio_inicio: 15,
-              anio_fin: 4,
+              categoria: config.categories?.[0] || 'Hamburguesas',
               precio_usd: 1.00,
               stock: 10,
               imagen_urls: ['https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=500'],
@@ -3426,36 +3526,27 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
               es_nuevo: true,
               es_mas_vendido: false,
               delivery_gratis: false,
-              detalle_adicional: ''
+              ingredientes: []
             }}
             onClose={() => setIsEditorOpen(false)}
             onSubmit={(updatedPart) => {
               const payload = {
-                codigo: updatedPart.codigo,
                 nombre: updatedPart.nombre,
-                marca: updatedPart.marca,
-                condicion: updatedPart.condicion,
                 descripcion: updatedPart.descripcion,
                 categoria: updatedPart.categoria,
-                seccion: updatedPart.seccion,
-                subseccion: updatedPart.subseccion,
-                anio_inicio: updatedPart.anio_inicio,
-                anio_fin: updatedPart.anio_fin,
                 precio_usd: updatedPart.precio_usd,
                 stock: updatedPart.stock,
                 imagen_urls: updatedPart.imagen_urls,
                 es_promo: updatedPart.es_promo,
                 es_nuevo: updatedPart.es_nuevo,
                 es_mas_vendido: updatedPart.es_mas_vendido,
-                delivery_gratis: updatedPart.delivery_gratis,
-                detalle_adicional: updatedPart.detalle_adicional,
-                disponibilidad: (updatedPart as any).disponibilidad
+                delivery_gratis: updatedPart.delivery_gratis
               };
               if (editingPart) {
-                updatePart(editingPart.id, payload);
+                updateFoodItem(editingPart.id, payload);
                 alert(`¡Producto ${payload.nombre} actualizado!`);
               } else {
-                addPart(payload);
+                addFoodItem(payload);
                 alert(`¡Nuevo producto ${payload.nombre} creado en el catálogo!`);
               }
               setIsEditorOpen(false);
@@ -3501,12 +3592,12 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
             {/* Ordered Parts items list loop inside digital ticket receipt */}
             <div className="text-xs flex flex-col gap-2 mt-2 font-mono">
               {printingOrder.items.map(it => (
-                <div key={it.part_id} className="flex flex-col">
+                <div key={it.food_id} className="flex flex-col">
                   <div className="flex justify-between font-bold">
                     <span>{it.nombre}</span>
                   </div>
                   <div className="flex justify-between text-gray-600 text-[11px] pl-2">
-                    <span>Cod: {it.codigo}  ({it.cantidad}x  ${Number(it.precio_usd || 0).toFixed(2)})</span>
+                    <span>({it.cantidad}x  ${Number(it.precio_usd || 0).toFixed(2)})</span>
                     <span>${(Number(it.cantidad || 0) * Number(it.precio_usd || 0)).toFixed(2)}</span>
                   </div>
                 </div>
@@ -3679,6 +3770,8 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
           </div>
         </div>
       )}
+        </div>
+      </main>
     </div>
   );
 };

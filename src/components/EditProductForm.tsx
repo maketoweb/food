@@ -1,34 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Producto } from '../types/store';
+import { FoodItem } from '../types/store';
 import { X, Upload, Camera, Plus, Trash2 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { uploadFileToStorage, compressImage } from '../store/supabaseClient';
 
 interface EditProductFormProps {
-  part: Producto;
-  onSubmit: (partData: Producto) => void;
+  part: FoodItem;
+  onSubmit: (partData: FoodItem) => void;
   onClose: () => void;
 }
 
 export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit, onClose }) => {
-  const { parts, config } = useApp();
-  const [formCodigo, setFormCodigo] = useState('');
+  const { foodItems, config } = useApp();
   const [formNombre, setFormNombre] = useState('');
-  const [formMarca, setFormMarca] = useState('');
-  const [formCondicion, setFormCondicion] = useState<'Nacional' | 'Importado'>('Nacional');
   const [formDescripcion, setFormDescripcion] = useState('');
-  const [formDetalleAdicional, setFormDetalleAdicional] = useState('');
   const [uploadFormat, setUploadFormat] = useState<'image/webp' | 'image/jpeg'>('image/webp');
   const [formCategoria, setFormCategoria] = useState('Hamburguesas');
-  const [formSeccion, setFormSeccion] = useState('Hamburguesas');
-  const [formSubseccion, setFormSubseccion] = useState('');
-  const [formAnioInicio, setFormAnioInicio] = useState(15);
-  const [formAnioFin, setFormAnioFin] = useState(4);
   const [formPrecio, setFormPrecio] = useState(0.00);
   const [formStock, setFormStock] = useState(0);
   const [formImages, setFormImages] = useState<string[]>([]);
   const [formPromo, setFormPromo] = useState(false);
-  const [formNuevo, setFormNuevo] = useState(false);
+    const [formNuevo, setFormNuevo] = useState(false);
   const [formVendido, setFormVendido] = useState(false);
   const [formDeliveryGratis, setFormDeliveryGratis] = useState(false);
   const [formActivo, setFormActivo] = useState(true);
@@ -38,16 +30,9 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
 
   useEffect(() => {
     if (part) {
-      setFormCodigo(part.codigo || '');
       setFormNombre(part.nombre || '');
-      setFormMarca(part.marca || '');
-      setFormCondicion(part.condicion || 'Nacional');
       setFormDescripcion(part.descripcion || '');
-      setFormCategoria(part.categoria || 'Lácteos y Quesos');
-      setFormSeccion(part.seccion || 'Pasillo 1 - Lacteos');
-      setFormSubseccion(part.subseccion || '');
-      setFormAnioInicio(part.anio_inicio ?? 15);
-      setFormAnioFin(part.anio_fin ?? 4);
+      setFormCategoria(part.categoria || 'Hamburguesas');
       setFormPrecio(part.precio_usd ?? 0.00);
       setFormStock(part.stock ?? 0);
       setFormImages(part.imagen_urls && part.imagen_urls.length > 0 ? [...part.imagen_urls] : ['']);
@@ -56,29 +41,15 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       setFormVendido(!!part.es_mas_vendido);
       setFormDeliveryGratis(!!part.delivery_gratis);
       setFormActivo(part.activo !== undefined ? part.activo : true);
-      setFormDetalleAdicional(part.detalle_adicional || '');
       setValidationErrors({});
     }
   }, [part]);
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {};
-
-    const trimmedCodigo = formCodigo.trim();
-    if (!trimmedCodigo) {
-      errors.codigo = 'El SKU del artículo es requerido.';
-    } else {
-      const exists = parts.some(p => p.codigo === trimmedCodigo && p.id !== part.id);
-      if (exists) {
-        errors.codigo = 'Ya existe un artículo con este SKU.';
-      }
-    }
     
     if (!formNombre.trim()) {
       errors.nombre = 'El nombre del artículo es requerido.';
-    }
-    if (!formMarca.trim()) {
-      errors.marca = 'La marca del fabricante es requerida.';
     }
     if (!formCategoria.trim()) {
       errors.categoria = 'La categoría/departamento es requerida.';
@@ -105,18 +76,11 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       .map(url => url.trim())
       .filter(url => url !== '');
 
-    const updatedPart: Producto = {
+    const updatedPart: FoodItem = {
       ...part,
-      codigo: formCodigo.trim(),
       nombre: formNombre.trim(),
-      marca: formMarca.trim(),
-      condicion: formCondicion,
       descripcion: formDescripcion.trim(),
       categoria: formCategoria,
-      seccion: formSeccion.trim(),
-      subseccion: formSubseccion.trim(),
-      anio_inicio: Number(formAnioInicio) || 0,
-      anio_fin: Number(formAnioFin) || 0,
       precio_usd: Number(formPrecio),
       stock: Number(formStock),
       imagen_urls: filteredImages.length > 0 ? filteredImages : ['https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=500'],
@@ -124,8 +88,7 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       es_nuevo: formNuevo,
       es_mas_vendido: formVendido,
       delivery_gratis: formDeliveryGratis,
-      activo: formActivo,
-      detalle_adicional: formDetalleAdicional.trim()
+      activo: formActivo
     };
 
     onSubmit(updatedPart);
@@ -156,21 +119,6 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       {/* Main Form content */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4 text-xs">
-          
-          {/* Part Code Input field */}
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-zinc-355">SKU / Código de Fábrica *</span>
-            <input
-              type="text"
-              value={formCodigo}
-              onChange={(e) => setFormCodigo(e.target.value)}
-              placeholder="Ej. MK-96416301"
-              className={`bg-[#09090b] border ${validationErrors.codigo ? 'border-red-500/60 focus:border-red-500' : 'border-[#27272a] focus:border-emerald-500'} rounded-lg px-2.5 py-2 outline-none transition-colors`}
-            />
-            {validationErrors.codigo && (
-              <span className="text-[10px] text-red-400 font-mono mt-0.5">{validationErrors.codigo}</span>
-            )}
-          </div>
 
           {/* Category Input field */}
           <div className="flex flex-col gap-1">
@@ -211,91 +159,16 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
             )}
           </div>
 
-          {/* Brand/Fabricator Brand input */}
           <div className="col-span-2 md:col-span-1 flex flex-col gap-1">
-            <span className="font-semibold text-zinc-350">Marca / Fabricante *</span>
+            <span className="font-semibold text-zinc-350">Description</span>
             <input
               type="text"
-              value={formMarca}
-              onChange={(e) => setFormMarca(e.target.value)}
-              placeholder="Ej. BurgerPop, Artesanal, Premium..."
-              className={`bg-[#09090b] border ${validationErrors.marca ? 'border-red-500/60 focus:border-red-500' : 'border-[#27272a] focus:border-emerald-500'} rounded-lg px-2.5 py-2 outline-none transition-colors`}
-            />
-            {validationErrors.marca && (
-              <span className="text-[10px] text-red-400 font-mono mt-0.5">{validationErrors.marca}</span>
-            )}
-          </div>
-
-          {/* Condition Field */}
-          <div className="col-span-2 md:col-span-1 flex flex-col gap-1">
-            <span className="font-semibold text-zinc-350">Origen / Tipo del Producto *</span>
-            <div className="flex bg-[#09090b] border border-[#27272a] rounded-lg p-1 gap-1">
-              {['Nacional', 'Importado'].map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setFormCondicion(opt as any)}
-                  className={`flex-1 py-1 text-xs font-bold rounded-md transition-all ${
-                    formCondicion === opt 
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' 
-                      : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Supermarket Section */}
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-zinc-350">Pasillo de Ubicación (Opcional)</span>
-            <input
-              type="text"
-              value={formSeccion}
-              onChange={(e) => setFormSeccion(e.target.value)}
-              placeholder="Ej. Lácteos, Carnes, Bebidas..."
-              className="bg-[#09090b] border border-[#27272a] text-white rounded-lg px-2.5 py-2 focus:border-emerald-500 outline-none transition-colors h-[34px]"
+              value={formDescripcion}
+              onChange={(e) => setFormDescripcion(e.target.value)}
+              placeholder="Ej. Exquisito queso madurado premium..."
+              className="bg-[#09090b] border border-[#27272a] focus:border-emerald-500 rounded-lg px-2.5 py-2 outline-none transition-colors"
             />
           </div>
-
-          {/* Supermarket Subsection */}
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-zinc-350">Estante / Ubicación (Opcional)</span>
-            <input
-              type="text"
-              value={formSubseccion}
-              onChange={(e) => setFormSubseccion(e.target.value)}
-              placeholder="Ej. Refrigerador 3, Estante B2..."
-              className="bg-[#09090b] border border-[#27272a] focus:border-emerald-500 rounded-lg px-2.5 py-2 outline-none transition-colors h-[34px]"
-            />
-          </div>
-
-          {/* Start and End Years compatibilities interval fields */}
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-zinc-350">Vida Útil en Días (Opcional)</span>
-            <input
-              type="number"
-              value={formAnioInicio || ''}
-              onChange={(e) => setFormAnioInicio(e.target.value ? Number(e.target.value) : 0)}
-              placeholder="Ej. 15"
-              className="bg-[#09090b] border border-[#27272a] rounded-lg px-2.5 py-2 focus:border-emerald-500 outline-none transition-colors font-mono"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-zinc-350">Temperatura Conservación °C (Opcional)</span>
-            <input
-              type="number"
-              value={formAnioFin || ''}
-              onChange={(e) => setFormAnioFin(e.target.value ? Number(e.target.value) : 0)}
-              placeholder="Ej. 4"
-              className="bg-[#09090b] border border-[#27272a] rounded-lg px-2.5 py-2 focus:border-emerald-500 outline-none transition-colors font-mono"
-            />
-          </div>
-          {validationErrors.anios && (
-            <div className="col-span-2 text-[10px] text-red-400 font-mono text-right">{validationErrors.anios}</div>
-          )}
 
           {/* Price of output component */}
           <div className="flex flex-col gap-1">
@@ -484,18 +357,6 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
               value={formDescripcion}
               onChange={(e) => setFormDescripcion(e.target.value)}
               placeholder="Ej. Exquisito queso madurado premium, empacado al vacío para máxima frescura..."
-              className="bg-[#09090b] border border-[#27272a] focus:border-emerald-500 rounded-lg px-2.5 py-2 outline-none font-sans text-xs text-zinc-300 transition-colors"
-            />
-          </div>
-
-          {/* Additional details like ingredients, allergens, or nutrition info */}
-          <div className="col-span-2 flex flex-col gap-1">
-            <span className="font-semibold text-zinc-355 font-sans">Información Nutricional / Ingredientes / Alérgenos:</span>
-            <input
-              type="text"
-              value={formDetalleAdicional}
-              onChange={(e) => setFormDetalleAdicional(e.target.value)}
-              placeholder="Ej. Sin Gluten • Alto en Calcio • 100% Orgánico"
               className="bg-[#09090b] border border-[#27272a] focus:border-emerald-500 rounded-lg px-2.5 py-2 outline-none font-sans text-xs text-zinc-300 transition-colors"
             />
           </div>

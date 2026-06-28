@@ -7,41 +7,26 @@ export interface AppUser {
   createdAt: string;
 }
 
-// ========================
-// PRODUCT OPTIONS (EXTRAS)
-// ========================
-
-export interface ProductOption {
+export interface FoodOption {
   id: string;
   nombre: string;
   precio_usd: number;
   activo?: boolean;
 }
 
-export interface ProductOptionGroup {
+export interface FoodOptionGroup {
   id: string;
   nombre: string;
   min_select: number;
   max_select: number;
-  options: ProductOption[];
+  options: FoodOption[];
 }
 
-// ========================
-// PRODUCTO
-// ========================
-
-export interface Producto {
+export interface FoodItem {
   id: string;
-  codigo: string;
   nombre: string;
   descripcion: string;
   categoria: string;
-  seccion: string;
-  subseccion: string;
-  marca: string;
-  condicion: 'Nacional' | 'Importado';
-  anio_inicio: number;
-  anio_fin: number;
   precio_usd: number;
   stock: number;
   imagen_urls: string[];
@@ -49,15 +34,10 @@ export interface Producto {
   es_nuevo: boolean;
   es_mas_vendido: boolean;
   delivery_gratis?: boolean;
-  detalle_adicional?: string;
   ingredientes?: string[];
   activo?: boolean;
-  option_groups?: ProductOptionGroup[];
+  option_groups?: FoodOptionGroup[];
 }
-
-// ========================
-// ORDER
-// ========================
 
 export interface SelectedOption {
   group_name: string;
@@ -66,13 +46,13 @@ export interface SelectedOption {
 }
 
 export interface OrderItem {
-  part_id: string;
+  food_id: string;
   nombre: string;
-  codigo: string;
   precio_usd: number;
   cantidad: number;
   selected_options?: SelectedOption[];
   options_total_usd?: number;
+  ingredientes_removidos?: string[];
 }
 
 export interface Order {
@@ -89,20 +69,18 @@ export interface Order {
   total_usd: number;
   total_bs: number;
   metodo_pago: 'Pago Móvil' | 'Zelle' | 'Efectivo' | 'Transferencia';
+  tipo_entrega: 'delivery' | 'mesa';
+  numero_mesa?: number;
   lat: number;
   lng: number;
   direccion_envio: string;
   distancia_km: number;
-  status: 'Pendiente' | 'Procesando' | 'Enviado' | 'En preparación' | 'En camino' | 'Entregado' | 'Cancelado';
+  status: 'Pendiente' | 'Procesando' | 'En preparación' | 'Listo' | 'En camino' | 'Entregado' | 'Cancelado';
   tiempo_estimado_entrega?: string;
   notas_admin?: string;
   fecha: string;
   sede_id?: string;
 }
-
-// ========================
-// SEDE (MULTI-LOCATION)
-// ========================
 
 export interface Sede {
   id: string;
@@ -114,10 +92,6 @@ export interface Sede {
   activa: boolean;
   es_principal: boolean;
 }
-
-// ========================
-// STORE CONFIG
-// ========================
 
 export interface StoreConfig {
   site_nombre: string;
@@ -161,11 +135,9 @@ export interface StoreConfig {
   sedes?: Sede[];
   sede_activa_id?: string;
   esta_abierta?: boolean;
+  tiene_mesas?: boolean;
+  total_mesas?: number;
 }
-
-// ========================
-// DELIVERY ZONE
-// ========================
 
 export interface DeliveryZone {
   id: string;
@@ -174,10 +146,6 @@ export interface DeliveryZone {
   minKm: number;
   maxKm: number;
 }
-
-// ========================
-// COUPON
-// ========================
 
 export interface Coupon {
   id: string;
@@ -189,10 +157,6 @@ export interface Coupon {
   valid_until?: string;
   created_at?: string;
 }
-
-// ========================
-// NOTIFICATION
-// ========================
 
 export interface InAppNotification {
   id: string;
@@ -206,13 +170,10 @@ export interface InAppNotification {
   link_url?: string;
 }
 
-// ========================
-// CART ITEM (with extras)
-// ========================
-
 export interface CartItem {
-  item: Producto;
+  item: FoodItem;
   quantity: number;
   selected_options?: SelectedOption[];
   options_total_usd?: number;
+  ingredientes_removidos?: string[];
 }

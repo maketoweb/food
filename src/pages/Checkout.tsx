@@ -6,7 +6,7 @@ import { LeafletMap } from '../components/LeafletMap';
 import { SEOHead } from '../components/SEOHead';
 
 interface CheckoutProps {
-  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin') => void;
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
@@ -288,6 +288,16 @@ ${productosDetailText}
       cliente_telefono: cleanedPhone,
       cliente_email: finalClientEmail,
       usuario_id: finalUserId,
+      items: cart.map(ci => ({
+        food_id: ci.item.id,
+        nombre: ci.item.nombre,
+        precio_usd: ci.item.precio_usd,
+        cantidad: ci.quantity,
+        selected_options: ci.selected_options,
+        options_total_usd: ci.options_total_usd,
+        ingredientes_removidos: ci.ingredientes_removidos || []
+      })),
+      tipo_entrega: 'delivery',
       costo_envio_usd: effectiveShippingCost,
       descuento_cupon_usd: discountFromCoupon,
       cupon_codigo: appliedCoupon?.code,
@@ -296,7 +306,7 @@ ${productosDetailText}
       lng: shippingLng,
       direccion_envio: `${shippingZone} (Distancia: ${shippingDistance}km)`,
       distancia_km: shippingDistance,
-      notas_cliente: orderNotes
+      notas_admin: orderNotes
     }, preOrderId);
 
     if (created) {
@@ -329,7 +339,7 @@ ${productosDetailText}
 
         <h3 className="text-[21px] font-bold font-display text-zinc-900">¡Su Compra ha sido Procesada!</h3>
         <p className="text-[13px] text-zinc-600 max-w-sm leading-relaxed">
-          Hemos recibido su pedido de supermercado con el ID <strong>{processedOrder.id}</strong>. 
+          Hemos recibido su pedido con el ID <strong>{processedOrder.id}</strong>. 
           Para agilizar el despacho y coordinar el pago, por favor envíe su factura por WhatsApp.
         </p>
 
@@ -349,7 +359,7 @@ ${productosDetailText}
               // Re-construir mensaje si el popup fue bloqueado la primera vez
               let details = '';
               processedOrder.items.forEach((it: any) => {
-                details += `- ${it.quantity || it.cantidad}x ${it.nombre} (SKU: ${it.codigo}) - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`;
+                details += `- ${it.quantity || it.cantidad}x ${it.nombre} - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`;
               });
               const msg = `*Nuevo Pedido en ${config.site_nombre || 'BurgerPop'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion de Entrega:* ${processedOrder.direccion_envio}\n*Ubicacion Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n*Metodo Despacho:* Delivery Express - Costo: $${processedOrder.costo_envio_usd.toFixed(2)}\n\n*Productos:*\n${details}\n*Total Neto a Pagar:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Metodo de Pago:* ${processedOrder.metodo_pago}\n----------------------------------`;
               let cleanPhone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
@@ -523,7 +533,7 @@ ${productosDetailText}
                 className="mt-4 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all cursor-pointer hover:opacity-90"
                 style={{ backgroundColor: config.theme_color || '#0f5d34' }}
               >
-                Explorar los Pasillos
+                Explorar el Menú
               </button>
             </div>
           ) : (
@@ -543,7 +553,7 @@ ${productosDetailText}
                         
                         <div className="flex flex-col">
                           <h4 className="text-xs font-bold text-zinc-800 line-clamp-1">{item.item.nombre}</h4>
-                          <span className="text-[10px] text-zinc-500 font-mono">{item.item.codigo}</span>
+                          
                           {/* Show selected extras */}
                           {item.selected_options && item.selected_options.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -958,7 +968,7 @@ ${productosDetailText}
             
             <div className="grid grid-cols-2 gap-2 text-xs">
               {[
-                { key: 'Pago Movil', label: 'Pago Movil Bs', icon: 'Bs', enabled: config.pagomovil_enabled },
+                { key: 'Pago Móvil', label: 'Pago Móvil Bs', icon: 'Bs', enabled: config.pagomovil_enabled },
                 { key: 'Zelle', label: 'Zelle USD', icon: 'USD', enabled: config.zelle_enabled },
                 { key: 'Efectivo', label: 'Efectivo / Cash', icon: 'Cash', enabled: config.efectivo_enabled },
                 { key: 'Transferencia', label: 'Transferencia', icon: 'Bco', enabled: config.transferencia_enabled }
@@ -979,7 +989,7 @@ ${productosDetailText}
           {/* Static details instructions block for payment */}
           <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg text-[12px] text-zinc-750 leading-relaxed font-mono flex flex-col gap-1.5 shadow-sm">
             <span className="font-bold font-display text-sm mb-1" style={{ color: config.theme_color || '#0f5d34' }}>Instrucciones de Pago:</span>
-            {selectedPayment === 'Pago Movil' && (
+            {selectedPayment === 'Pago Móvil' && (
               <>
                 <div>{config.pagomovil_data || 'Banesco (0134) - RIF J-50123456-7 - Tel: 0412-4976451'}</div>
                 <div className="font-black pt-1 px-2 py-1 rounded inline-block mt-1" style={{ color: config.theme_color || '#0f5d34', backgroundColor: `${config.theme_color || '#0f5d34'}10` }}>Calcular al cambio: {totalBs.toFixed(2)} Bs.</div>

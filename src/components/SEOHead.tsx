@@ -1,18 +1,14 @@
 ﻿import React, { useEffect, useRef } from 'react';
-import { Producto } from '../types/store';
+import { FoodItem } from '../types/store';
 import { useApp } from '../store/AppContext';
 
 interface SEOHeadProps {
   title?: string;
   description?: string;
   type?: 'home' | 'product' | 'catalog' | 'admin';
-  product?: Producto;
+  product?: FoodItem;
   filters?: {
     category?: string;
-    brand?: string;
-    model?: string;
-    year?: string;
-    engine?: string;
   };
 }
 
@@ -37,28 +33,19 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
 
     if (type === 'product' && product) {
       seoTitle = `${product.nombre} | ${config.site_nombre || 'BurgerPop'}`;
-      seoDesc = `Pide ${product.nombre} ${product.condicion.toLowerCase()} de la mejor calidad. Delivery express en minutos. Código: ${product.codigo}.`;
-      seoKeywords = `${product.nombre}, ${product.seccion}, ${product.subseccion}, ${product.categoria}, foodapp, restaurante, delivery, ${product.marca}`;
+      seoDesc = `Pide ${product.nombre} de la mejor calidad. Delivery express en minutos.`;
+      seoKeywords = `${product.nombre}, ${product.categoria}, foodapp, restaurante, delivery`;
     }
 
     if (type === 'catalog') {
-      const { category, brand, model, year, engine } = filters || {};
-      const parts = [];
-      if (category) parts.push(category);
-      if (brand) parts.push(brand);
-      if (model) parts.push(model);
-      if (year) parts.push(year);
-      if (engine) parts.push(engine);
-
-      const filterText = parts.length > 0 ? parts.join(' ') : 'Menú Completo';
+      const category = filters?.category || '';
+      const filterText = category || 'Menú Completo';
       
       seoTitle = `Comprar ${filterText} | Catálogo ${config.site_nombre || 'BurgerPop'}`;
       seoDesc = `Menú de ${filterText}. Hamburguesas, pastas, pizzas, postres y más con delivery express. Pide online en ${config.site_nombre || 'nuestro restaurante'}.`;
       
       const kwParts = ['foodapp', 'restaurante', 'delivery', 'comida online'];
       if (category) kwParts.push(category.toLowerCase());
-      if (brand) kwParts.push(brand.toLowerCase());
-      if (model) kwParts.push(model.toLowerCase());
       seoKeywords = kwParts.join(', ');
     }
 
@@ -199,12 +186,9 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         'name': product.nombre,
         'image': product.imagen_urls[0],
         'description': seoDesc,
-        'sku': product.codigo,
-        'mpn': product.codigo,
-        'brand': { '@type': 'Brand', 'name': product.marca },
         'offers': {
           '@type': 'Offer',
-          'url': `https://foodapp.com.ve/catalog?search=${product.codigo}`,
+          'url': `https://foodapp.com.ve/catalog?search=${product.id}`,
           'priceCurrency': 'USD',
           'price': product.precio_usd.toFixed(2),
           'itemCondition': 'https://schema.org/NewCondition',
