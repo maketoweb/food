@@ -22,6 +22,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   const { cart, config, isAdminAuthenticated, logoutAdmin, currentUser, notifications } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
+
   const unreadCount = currentUser 
     ? notifications.filter(n => (!n.leida && (n.tipo === 'todos' || (n.tipo === 'personal' && n.destinatario_telefono?.trim() === currentUser.telefono.trim())))).length
     : 0;
@@ -45,7 +47,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${currentTab === 'home' ? 'text-orange-500 font-semibold' : 'text-zinc-500'}`}
         >
           {currentTab === 'home' && (
-            <span className="absolute -top-1 w-6 h-[3px] rounded-full bg-orange-500" />
+            <span className="absolute -top-1 w-6 h-[3px] rounded-full" style={{ background: 'linear-gradient(90deg, #FF6B35, #FFB703)' }} />
           )}
           <Home size={20} />
           <span className="text-[10px] mt-0.5 font-semibold">Inicio</span>
@@ -68,7 +70,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${currentTab === 'catalog' ? 'text-orange-500 font-semibold' : 'text-zinc-500'}`}
         >
           {currentTab === 'catalog' && (
-            <span className="absolute -top-1 w-6 h-[3px] rounded-full bg-orange-500" />
+            <span className="absolute -top-1 w-6 h-[3px] rounded-full" style={{ background: 'linear-gradient(90deg, #FF6B35, #FFB703)' }} />
           )}
           <Grid size={20} />
           <span className="text-[10px] mt-0.5 font-semibold">Menú</span>
@@ -80,12 +82,12 @@ export const Navigation: React.FC<NavigationProps> = ({
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${currentTab === 'cart' ? 'text-orange-500 font-semibold' : 'text-zinc-500'}`}
         >
           {currentTab === 'cart' && (
-            <span className="absolute -top-1 w-6 h-[3px] rounded-full bg-orange-500" />
+            <span className="absolute -top-1 w-6 h-[3px] rounded-full" style={{ background: 'linear-gradient(90deg, #FF6B35, #FFB703)' }} />
           )}
           <div className="relative">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 text-white font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center bg-red-500 animate-bounce">
+              <span className="absolute -top-1.5 -right-2 text-white font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center animate-bounce" style={{ background: 'linear-gradient(135deg, #F472B6, #A855F7)' }}>
                 {cartCount}
               </span>
             )}
@@ -99,7 +101,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${currentTab === 'profile' ? 'text-orange-500 font-semibold' : 'text-zinc-500'}`}
         >
           {currentTab === 'profile' && (
-            <span className="absolute -top-1 w-6 h-[3px] rounded-full bg-orange-500" />
+            <span className="absolute -top-1 w-6 h-[3px] rounded-full" style={{ background: 'linear-gradient(90deg, #FF6B35, #FFB703)' }} />
           )}
           <div className="relative">
             <User size={20} />
@@ -193,7 +195,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
 
               <a
-                href={`https://wa.me/${config.telefono_soporte.replace(/[+ ]/g, '')}`}
+                href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                 target="_blank"
                 referrerPolicy="no-referrer"
                 className="flex items-center gap-3 w-full px-3 py-2 text-xs text-zinc-800 hover:bg-orange-50 hover:text-orange-600 rounded-xl font-semibold transition-all"

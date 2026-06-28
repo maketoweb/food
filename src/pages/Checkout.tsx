@@ -50,8 +50,40 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
   // Completed order log reference
   const [processedOrder, setProcessedOrder] = useState<any>(null);
 
-  // Cart prices calculations
-  const subtotalUsd = cart.reduce((acc, ci) => acc + (ci.item.precio_usd * ci.quantity), 0);
+  // Sede selection for WhatsApp (when multiple sedes exist)
+  const [selectedSedeId, setSelectedSedeId] = useState<string>('');
+  const activeSedes = config.sedes?.filter(s => s.activa) || [];
+  const hasMultipleSedes = activeSedes.length > 1;
+
+  // Helper: get WhatsApp phone based on selected sede or location
+  const getWhatsAppPhone = (): string => {
+    if (selectedSedeId) {
+      const selectedSede = activeSedes.find(s => s.id === selectedSedeId);
+      if (selectedSede) return selectedSede.telefono;
+    }
+    if (hasMultipleSedes && shippingLat && shippingLng) {
+      let closestSede = activeSedes[0];
+      let minDist = Infinity;
+      for (const sede of activeSedes) {
+        const R = 6371;
+        const dLat = (sede.coordenadas.lat - shippingLat) * Math.PI / 180;
+        const dLng = (sede.coordenadas.lng - shippingLng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(shippingLat * Math.PI / 180) * Math.cos(sede.coordenadas.lat * Math.PI / 180) *
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        if (dist < minDist) { minDist = dist; closestSede = sede; }
+      }
+      return closestSede.telefono;
+    }
+    return config.telefono_soporte || '584124976451';
+  };
+
+  // Cart prices calculations - includes extras/options pricing
+  const subtotalUsd = cart.reduce((acc, ci) => {
+    const extrasTotal = ci.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
+    return acc + ((ci.item.precio_usd + extrasTotal) * ci.quantity);
+  }, 0);
   const effectiveShippingCost = hasFreeDeliveryItem ? 0 : shippingCost;
   
   // Loyalty Calculation
@@ -198,7 +230,18 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
     // Esto garantiza que podemos abrir WhatsApp dentro del contexto de gesto del usuario.
     let productosDetailText = '';
     cart.forEach(ci => {
-      productosDetailText += `- ${ci.quantity}x ${ci.item.nombre} (SKU: ${ci.item.codigo}) - $${(ci.item.precio_usd * ci.quantity).toFixed(2)}\n`;
+      const extrasTotal = ci.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
+      const itemTotal = (ci.item.precio_usd + extrasTotal) * ci.quantity;
+      productosDetailText += `- ${ci.quantity}x ${ci.item.nombre} - $${itemTotal.toFixed(2)}\n`;
+      if (ci.selected_options && ci.selected_options.length > 0) {
+        ci.selected_options.forEach(opt => {
+          if (opt.precio_usd > 0) {
+            productosDetailText += `   + ${opt.option_name} (+$${opt.precio_usd.toFixed(2)})\n`;
+          } else {
+            productosDetailText += `   + ${opt.option_name}\n`;
+          }
+        });
+      }
     });
 
     const deliveryLabel = shippingMethod === 'recogida'
@@ -212,8 +255,12 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
     const finalTotalUsd = (subtotalUsd + effectiveShippingCost).toFixed(2);
     const finalTotalBs  = ((subtotalUsd + effectiveShippingCost) * config.tasa_cambio).toFixed(2);
 
+    const sedeInfo = hasMultipleSedes && selectedSedeId
+      ? `\n*Sede Destino:* ${activeSedes.find(s => s.id === selectedSedeId)?.nombre || 'N/A'}`
+      : '';
+
     const whatsappMessage =
-`*Nuevo Pedido en ${config.site_nombre || 'Supermercado'}*
+`*Nuevo Pedido en ${config.site_nombre || 'FoodApp'}*${sedeInfo}
 ----------------------------------
 *Pedido ID:* ${preOrderId}
 *Cliente:* ${finalClientName}
@@ -228,7 +275,7 @@ ${productosDetailText}
 *Metodo de Pago:* ${selectedPayment}
 ----------------------------------`;
 
-    let cleanConfigPhone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
+    let cleanConfigPhone = getWhatsAppPhone().replace(/\D/g, '');
     if (cleanConfigPhone.startsWith('0')) {
       cleanConfigPhone = '58' + cleanConfigPhone.substring(1);
     }
@@ -304,7 +351,7 @@ ${productosDetailText}
               processedOrder.items.forEach((it: any) => {
                 details += `- ${it.quantity || it.cantidad}x ${it.nombre} (SKU: ${it.codigo}) - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`;
               });
-              const msg = `*Nuevo Pedido en ${config.site_nombre || 'Supermercado'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion de Entrega:* ${processedOrder.direccion_envio}\n*Ubicacion Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n*Metodo Despacho:* Delivery Express - Costo: $${processedOrder.costo_envio_usd.toFixed(2)}\n\n*Productos:*\n${details}\n*Total Neto a Pagar:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Metodo de Pago:* ${processedOrder.metodo_pago}\n----------------------------------`;
+              const msg = `*Nuevo Pedido en ${config.site_nombre || 'FoodApp'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion de Entrega:* ${processedOrder.direccion_envio}\n*Ubicacion Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n*Metodo Despacho:* Delivery Express - Costo: $${processedOrder.costo_envio_usd.toFixed(2)}\n\n*Productos:*\n${details}\n*Total Neto a Pagar:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Metodo de Pago:* ${processedOrder.metodo_pago}\n----------------------------------`;
               let cleanPhone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
               if (cleanPhone.startsWith('0')) cleanPhone = '58' + cleanPhone.substring(1);
               const retryUrlMobile = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
@@ -484,7 +531,8 @@ ${productosDetailText}
               {/* Items List */}
               <div className="flex flex-col gap-3">
                 {cart.map(item => {
-                  const subTotalItem = item.item.precio_usd * item.quantity;
+                  const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
+                  const subTotalItem = (item.item.precio_usd + extrasTotal) * item.quantity;
                   return (
                     <div key={item.item.id} className="p-3 border border-zinc-200 rounded-lg bg-zinc-50/40 flex justify-between items-center gap-4 group hover:border-blue-500/20 transition-all text-zinc-900">
                       <div className="flex items-center gap-3">
@@ -493,10 +541,23 @@ ${productosDetailText}
                           <img src={item.item.imagen_urls[0]} alt={item.item.nombre} className="w-full h-full object-cover" />
                         </div>
                         
-                        <div>
+                        <div className="flex flex-col">
                           <h4 className="text-xs font-bold text-zinc-800 line-clamp-1">{item.item.nombre}</h4>
-                          <span className="text-[10px] text-zinc-500 font-mono">SKU: {item.item.codigo}</span>
-                          <div className="text-[12px] font-mono font-bold mt-0.5" style={{ color: config.theme_color || '#0f5d34' }}>${item.item.precio_usd.toFixed(2)} c/u</div>
+                          <span className="text-[10px] text-zinc-500 font-mono">{item.item.codigo}</span>
+                          {/* Show selected extras */}
+                          {item.selected_options && item.selected_options.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {item.selected_options.map((opt, idx) => (
+                                <span key={idx} className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-600 font-semibold border border-violet-100">
+                                  {opt.option_name}{opt.precio_usd > 0 ? ` +$${opt.precio_usd.toFixed(2)}` : ''}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          <div className="text-[12px] font-mono font-bold mt-0.5" style={{ color: config.theme_color || '#FF6B35' }}>
+                            ${subTotalItem.toFixed(2)}
+                            {extrasTotal > 0 && <span className="text-[10px] font-normal opacity-70"> (base: ${item.item.precio_usd.toFixed(2)})</span>}
+                          </div>
                         </div>
                       </div>
 
@@ -725,6 +786,37 @@ ${productosDetailText}
                   </span>
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Sede Selector - Only when multiple sedes exist */}
+          {hasMultipleSedes && (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Enviar pedido a:</span>
+              <div className="flex flex-wrap gap-2">
+                {activeSedes.map(sede => (
+                  <button
+                    key={sede.id}
+                    type="button"
+                    onClick={() => setSelectedSedeId(sede.id)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold transition-all border-2 cursor-pointer ${
+                      selectedSedeId === sede.id
+                        ? 'text-white shadow-md'
+                        : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                    }`}
+                    style={selectedSedeId === sede.id ? {
+                      borderColor: config.theme_color || '#FF6B35',
+                      backgroundColor: config.theme_color || '#FF6B35'
+                    } : undefined}
+                  >
+                    <span className="text-base">🏪</span>
+                    <div className="flex flex-col items-start">
+                      <span>{sede.nombre}</span>
+                      {sede.horario && <span className="text-[10px] opacity-70">{sede.horario}</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

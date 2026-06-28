@@ -7,8 +7,9 @@ import { Admin } from './pages/Admin';
 import { UserProfile } from './pages/UserProfile';
 import { Navigation } from './components/Navigation';
 import { BarcodeScanner } from './components/BarcodeScanner';
-import { Producto } from './types/store';
+import { Producto, SelectedOption } from './types/store';
 import { PushNotificationModal } from './components/PushNotificationModal';
+import { ProductOptionsEditor } from './components/ProductOptionsEditor';
 import { 
   X, ShoppingCart, Landmark, ShieldCheck, Tag, Info, AlertOctagon, 
   HelpCircle, Eye, Share2, ClipboardCheck, ChevronLeft, ChevronRight,
@@ -70,6 +71,8 @@ function AppContent() {
   const [adminUserInput, setAdminUserInput] = useState('');
   const [microModalQuantity, setMicroModalQuantity] = useState(1);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [selectedProductOptions, setSelectedProductOptions] = useState<SelectedOption[]>([]);
+  const [optionsTotal, setOptionsTotal] = useState(0);
 
   const resetAllFilters = () => {
     setSelectedCategory('');
@@ -84,6 +87,8 @@ function AppContent() {
   useEffect(() => {
     setActiveImageIdx(0);
     setMicroModalQuantity(1);
+    setSelectedProductOptions([]);
+    setOptionsTotal(0);
   }, [selectedProductDetails]);
   
   // Authentication trigger helper
@@ -107,9 +112,11 @@ function AppContent() {
     setTab('catalog'); // Navigate to catalog immediately to filter
   };
 
+  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
+
   const handleShareProduct = (part: Producto) => {
-    const text = `🍏 *${part.nombre}* en *${config.site_nombre || 'nuestra tienda'}* • Código SKU: *${part.codigo}* por un precio de *$${part.precio_usd.toFixed(2)} USD*. ¡Pídelo directo al delivery express de ${config.site_nombre || 'nuestra tienda'}!`;
-    const phone = config.telefono_soporte.replace(/[+ ]/g, '');
+    const text = `🍏 *${part.nombre}* en *${config.site_nombre || 'nuestra tienda'}* • Código: *${part.codigo}* por un precio de *$${part.precio_usd.toFixed(2)} USD*. ¡Pídelo directo al delivery express de ${config.site_nombre || 'nuestra tienda'}!`;
+    const phone = getWhatsAppPhone().replace(/[+ ]/g, '');
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -214,7 +221,7 @@ function AppContent() {
                       <span className="text-zinc-900 transition-colors duration-150" style={{ ['--tw-group-hover-color' as any]: config.theme_color || '#0f5d34' }}>{config.site_nombre}</span>
                     </h1>
                     <span className="text-[8px] text-zinc-400 font-bold uppercase tracking-[0.22em] font-mono leading-none mt-1">
-                      Premium Supermarket
+                      Delivery Express
                     </span>
                   </div>
                 </div>
@@ -301,11 +308,11 @@ function AppContent() {
                   onClick={() => setIsScannerOpen(true)}
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-xs text-zinc-750 hover:bg-zinc-200/50 rounded-xl font-bold transition-all cursor-pointer"
                 >
-                  Escáner de Código SKU
+                  Escanear Código
                 </button>
 
                 <a
-                  href={`https://wa.me/${config.telefono_soporte.replace(/[+ ]/g, '')}`}
+                  href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                   target="_blank"
                   referrerPolicy="no-referrer"
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-xs hover:opacity-80 rounded-xl font-bold transition-all cursor-pointer"
@@ -379,7 +386,7 @@ function AppContent() {
           {/* 1. PREMIUM HEADER SYSTEM - Woolworths Inspired */}
           <div className="sticky top-0 z-40 flex flex-col w-full select-none shadow-sm">
             {/* A. Top Header Bar */}
-            <div className="text-white py-2.5 px-4 flex items-center justify-between gap-3 border-b" style={{ backgroundColor: config.theme_color || '#0f5d34', borderColor: 'rgba(0,0,0,0.1)' }}>
+            <div className="text-white py-2.5 px-4 flex items-center justify-between gap-3" style={{ background: `linear-gradient(135deg, ${config.theme_color || '#0f5d34'}, ${config.theme_color ? config.theme_color + 'cc' : '#1a8a5a'})` }}>
               {/* Menu Trigger & Brand Logo */}
               <div className="flex items-center gap-3">
                 <button
@@ -413,9 +420,9 @@ function AppContent() {
                   type="text"
                   value={headerSearchInput}
                   onChange={(e) => setHeaderSearchInput(e.target.value)}
-                  placeholder="Buscar productos, marcas o ingredientes..."
-                  className="w-full bg-white text-zinc-900 placeholder-zinc-400 rounded-lg pl-3.5 pr-10 py-1.5 text-xs shadow-inner font-sans border-0"
-                  style={{ outline: 'none' }}
+                  placeholder="Buscar hamburguesas, pizzas, pastas..."
+                  className="w-full bg-white/90 backdrop-blur-sm text-zinc-900 placeholder-zinc-400 rounded-xl pl-3.5 pr-10 py-1.5 text-xs shadow-[0_2px_8px_rgba(0,0,0,0.08)] font-sans border border-white/20 outline-none focus:ring-2 transition-all"
+                  style={{ ['--tw-ring-color' as any]: config.theme_color || '#0f5d34', ['--tw-ring-offset-color' as any]: 'transparent' } as React.CSSProperties}
                 />
                 <button
                   type="submit"
@@ -460,8 +467,8 @@ function AppContent() {
                 <button
                   type="button"
                   onClick={() => setTab('cart')}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-white font-bold transition-all shadow-md active:scale-95 cursor-pointer text-xs font-mono hover:opacity-90"
-                  style={{ backgroundColor: config.theme_color ? `color-mix(in srgb, ${config.theme_color} 80%, black)` : '#0a3d26' }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-white font-bold transition-all shadow-[0_2px_12px_rgba(0,0,0,0.15)] active:scale-95 cursor-pointer text-xs font-mono hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, #F472B6, #A855F7)' }}
                 >
                   <ShoppingCart size={15} />
                   <span className="hidden sm:inline text-[11px]">Carrito</span>
@@ -617,7 +624,7 @@ function AppContent() {
       A. MICRO-MODAL DETALLES DEL PRODUCTO (PREMIUM TRANSITIONAL WINDOW)
       -------------------------------------------------------------------------------- */}
       {selectedProductDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
           {/* SEO Head dynamic inject during detail open */}
           <SEOHead 
             type="product" 
@@ -718,10 +725,10 @@ function AppContent() {
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex gap-2">
-                    <span className="text-[10px] text-blue-600 font-black tracking-widest uppercase bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                    <span className="text-[10px] text-blue-600 font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-blue-50 border border-blue-100">
                       {selectedProductDetails.marca}
                     </span>
-                    <span className={`text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border ${
+                    <span className={`text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full border ${
                       selectedProductDetails.condicion === 'Nacional'
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
                         : 'bg-amber-50 text-amber-600 border-amber-100'
@@ -729,17 +736,17 @@ function AppContent() {
                       {selectedProductDetails.condicion}
                     </span>
                     {selectedProductDetails.delivery_gratis && (
-                      <span className="text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border bg-indigo-50 text-indigo-600 border-indigo-100 animate-pulse">
+                      <span className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 animate-pulse">
                         Delivery Gratis
                       </span>
                     )}
                     {selectedProductDetails.stock > 0 && selectedProductDetails.stock < 5 && (
-                      <span className="text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border bg-orange-50 text-orange-600 border-orange-100 animate-pulse">
+                      <span className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100 animate-pulse">
                         Stock Bajo
                       </span>
                     )}
                     {selectedProductDetails.stock === 0 && (
-                      <span className="text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border bg-red-50 text-red-600 border-red-100">
+                      <span className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
                         Agotado
                       </span>
                     )}
@@ -749,12 +756,12 @@ function AppContent() {
                   </span>
                 </div>
                 <h3 className="text-sm font-bold font-display text-zinc-900 leading-snug">{selectedProductDetails.nombre}</h3>
-                <div className="text-[10px] text-emerald-600 font-mono">Código SKU: <strong>{selectedProductDetails.codigo}</strong></div>
+                <div className="text-[10px] text-emerald-600 font-mono">Código: <strong>{selectedProductDetails.codigo}</strong></div>
               </div>
 
               {/* Vehicle Ranges Compatibilities */}
               <div className="p-3 border border-zinc-200 rounded-lg bg-zinc-50 text-xs flex flex-col gap-1 font-mono">
-                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Ubicación y Conservación</span>
+                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Detalles del Plato</span>
                 <div className="text-zinc-900 mt-1 font-sans">
                   📍 {selectedProductDetails.seccion} ➔ {selectedProductDetails.subseccion}
                 </div>
@@ -774,10 +781,34 @@ function AppContent() {
               <div className="p-3.5 border border-emerald-250 bg-emerald-50/30 rounded-lg flex items-center justify-between">
                 <span className="text-xs text-zinc-500">Precio Unitario:</span>
                 <div className="text-right">
-                  <div className="text-md font-bold font-mono text-emerald-600">${selectedProductDetails.precio_usd.toFixed(2)}</div>
-                  <div className="text-xs font-mono text-emerald-700 font-bold">{(selectedProductDetails.precio_usd * config.tasa_cambio).toFixed(2)} Bs</div>
+                  <div className="text-md font-bold font-mono text-emerald-600">
+                    ${(selectedProductDetails.precio_usd + optionsTotal).toFixed(2)}
+                  </div>
+                  <div className="text-xs font-mono text-emerald-700 font-bold">
+                    {((selectedProductDetails.precio_usd + optionsTotal) * config.tasa_cambio).toFixed(2)} Bs
+                  </div>
                 </div>
               </div>
+
+              {/* Product Options / Extras */}
+              {selectedProductDetails.option_groups && selectedProductDetails.option_groups.length > 0 && (
+                <div className="border-t border-zinc-100 pt-3">
+                  <ProductOptionsEditor
+                    optionGroups={selectedProductDetails.option_groups}
+                    selectedOptions={selectedProductOptions}
+                    onSelectionChange={(opts, total) => {
+                      setSelectedProductOptions(opts);
+                      setOptionsTotal(total);
+                    }}
+                    themeColor={config.theme_color || '#FF6B35'}
+                  />
+                  {optionsTotal > 0 && (
+                    <div className="mt-2 px-3 py-1.5 rounded-lg text-xs font-mono text-right" style={{ color: config.theme_color || '#FF6B35', backgroundColor: `${config.theme_color || '#FF6B35'}10` }}>
+                      Extras: +${optionsTotal.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Cart add section with local stepper quantity selector */}
               {selectedProductDetails.stock > 0 && (
@@ -807,11 +838,14 @@ function AppContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      addToCart(selectedProductDetails, microModalQuantity);
+                      addToCart(selectedProductDetails, microModalQuantity, selectedProductOptions, optionsTotal);
                       setSelectedProductDetails(null);
                       setMicroModalQuantity(1);
+                      setSelectedProductOptions([]);
+                      setOptionsTotal(0);
                     }}
-                    className="flex-1 h-12 bg-zinc-950 hover:bg-zinc-850 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all self-end cursor-pointer shadow-lg active:scale-95"
+                    className="flex-1 h-12 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all self-end cursor-pointer shadow-[0_4px_16px_rgba(244,114,182,0.35)] active:scale-95 hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, #F472B6, #A855F7)' }}
                   >
                     <ShoppingCart size={13} />
                     Añadir al Carrito

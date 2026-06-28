@@ -1,6 +1,7 @@
 import React from 'react';
 import { Producto, StoreConfig } from '../types/store';
 import { ShoppingCart, Eye } from 'lucide-react';
+import { getCategoryColor } from '../utils/categoryColors';
 
 interface ProductCardProps {
   part: Producto;
@@ -24,7 +25,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isDisponible = disponibilidad === 'Disponible';
 
   return (
-    <div className="shrink-0 snap-start w-[165px] sm:w-[210px] flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group relative">
+    <div className="shrink-0 snap-start w-[165px] sm:w-[210px] flex flex-col bg-white rounded-3xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-all group relative">
       {/* Etiqueta Flotante de Disponibilidad */}
       {!isDisponible && (
         <div className={`absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-sm border animate-in fade-in zoom-in duration-300 ${
@@ -55,28 +56,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Información del Producto */}
       <div className="p-3.5 flex flex-col gap-1.5 flex-1">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{part.marca}</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest rounded-md px-1.5 py-0.5 w-fit" style={{ backgroundColor: getCategoryColor(part.categoria).light, color: getCategoryColor(part.categoria).textColor }}>{part.marca}</span>
           <h4 className="text-[13px] font-bold text-slate-900 line-clamp-2 leading-tight h-8">{part.nombre}</h4>
         </div>
 
         <div className="mt-auto flex flex-col gap-3">
           <div className="flex flex-col">
-            <span className="text-sm font-black" style={{ color: config.theme_color || '#0f5d34' }}>${part.precio_usd.toFixed(2)}</span>
+            <span className="text-sm font-black" style={{ color: getCategoryColor(part.categoria).primary }}>${part.precio_usd.toFixed(2)}</span>
             <span className="text-[10px] text-slate-400 font-mono">{(part.precio_usd * config.tasa_cambio).toFixed(2)} Bs.</span>
           </div>
           
           <button
             onClick={() => !isAgotado && addToCart(part)}
             disabled={isAgotado}
-            style={!isAgotado ? { backgroundColor: config.theme_color || '#0f5d34' } : undefined}
+            style={!isAgotado ? { background: getCategoryColor(part.categoria).gradient } : undefined}
             className={`w-full py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all ${
               isAgotado 
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' 
-                : 'text-white shadow-md active:scale-95 cursor-pointer hover:opacity-90'
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                : 'text-white shadow-[0_2px_10px_rgba(0,0,0,0.12)] active:scale-95 cursor-pointer hover:opacity-90'
             }`}
           >
             <ShoppingCart size={14} />
-            {isAgotado ? 'Sin Stock' : 'Agregar'}
+            {isAgotado ? 'Agotado' : 'Agregar'}
           </button>
         </div>
       </div>

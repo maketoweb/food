@@ -38,6 +38,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
     toggleHaptic
   } = useApp();
 
+  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
+
   const [activeSubTab, setActiveSubTab] = useState<'profile' | 'orders' | 'notifications'>('orders');
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
 
@@ -1105,7 +1107,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                         </div>
                         
                         <a
-                          href={`https://wa.me/${config.telefono_soporte.replace(/[+ ]/g, '')}?text=${encodeURIComponent(`Hola, quisiera soporte e información de mi Pedido en Valencia con Código: *${order.id}*. El estatus actual es *${order.status}*.`)}`}
+                          href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}?text=${encodeURIComponent(`Hola, quisiera soporte e información de mi Pedido en Valencia con Código: *${order.id}*. El estatus actual es *${order.status}*.`)}`}
                           target="_blank"
                           referrerPolicy="no-referrer"
                           className="bg-zinc-950 hover:bg-zinc-800 text-white font-sans text-[10px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors hover:scale-[1.02]"

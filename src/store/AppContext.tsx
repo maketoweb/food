@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Producto, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon } from '../types/store';
+import { Producto, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
@@ -8,7 +8,7 @@ interface AppContextProps {
   config: StoreConfig;
   coupons: Coupon[];
   notifications: InAppNotification[];
-  cart: { item: Producto; quantity: number }[];
+  cart: CartItem[];
   isAdminAuthenticated: boolean;
   favorites: string[];
   toggleFavorite: (partId: string) => void;
@@ -38,7 +38,7 @@ interface AppContextProps {
   searchPartsSemantically: (query: string, includeInactive?: boolean) => Producto[];
   
   // Cart Actions
-  addToCart: (part: Producto, qty?: number) => void;
+  addToCart: (part: Producto, qty?: number, selectedOptions?: SelectedOption[], optionsTotal?: number) => void;
   removeFromCart: (partId: string) => void;
   updateCartQuantity: (partId: string, quantity: number) => void;
   clearCart: () => void;
@@ -104,7 +104,37 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Carne Angus 200g. Incluye papas fritas.'
+    detalle_adicional: 'Carne Angus 200g. Incluye papas fritas.',
+    option_groups: [
+      {
+        id: 'og-size-001', nombre: 'Tamaño', min_select: 1, max_select: 1,
+        options: [
+          { id: 'opt-personal-001', nombre: 'Personal (200g)', precio_usd: 0 },
+          { id: 'opt-doble-001', nombre: 'Doble (400g)', precio_usd: 3.50 },
+          { id: 'opt-familiar-001', nombre: 'Familiar (600g)', precio_usd: 6.00 }
+        ]
+      },
+      {
+        id: 'og-toppings-001', nombre: 'Toppings Extra', min_select: 0, max_select: 5,
+        options: [
+          { id: 'opt-queso-001', nombre: 'Extra Queso', precio_usd: 1.00 },
+          { id: 'opt-tocino-001', nombre: 'Tocino', precio_usd: 1.50 },
+          { id: 'opt-jalapenos-001', nombre: 'Jalapeños', precio_usd: 0.75 },
+          { id: 'opt-huevo-001', nombre: 'Huevo Frito', precio_usd: 1.00 },
+          { id: 'opt-cebolla-001', nombre: 'Cebolla Caramelizada', precio_usd: 1.25 }
+        ]
+      },
+      {
+        id: 'og-salsas-001', nombre: 'Salsas', min_select: 0, max_select: 3,
+        options: [
+          { id: 'opt-ketchup-001', nombre: 'Ketchup', precio_usd: 0 },
+          { id: 'opt-mostaza-001', nombre: 'Mostaza', precio_usd: 0 },
+          { id: 'opt-bbq-001', nombre: 'BBQ', precio_usd: 0.50 },
+          { id: 'opt-mayo-001', nombre: 'Mayonesa', precio_usd: 0 },
+          { id: 'opt-picante-001', nombre: 'Salsa Picante', precio_usd: 0.50 }
+        ]
+      }
+    ]
   },
   {
     id: 'food-002',
@@ -125,7 +155,34 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: true,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Doble carne 400g total. Incluye papas fritas.'
+    detalle_adicional: 'Doble carne 400g total. Incluye papas fritas.',
+    option_groups: [
+      {
+        id: 'og-size-002', nombre: 'Tamaño', min_select: 1, max_select: 1,
+        options: [
+          { id: 'opt-personal-002', nombre: 'Personal (400g)', precio_usd: 0 },
+          { id: 'opt-doble-002', nombre: 'Doble (800g)', precio_usd: 5.00 }
+        ]
+      },
+      {
+        id: 'og-toppings-002', nombre: 'Toppings Extra', min_select: 0, max_select: 5,
+        options: [
+          { id: 'opt-queso-002', nombre: 'Extra Queso Cheddar', precio_usd: 1.50 },
+          { id: 'opt-tocino-002', nombre: 'Bacon Extra', precio_usd: 2.00 },
+          { id: 'opt-jalapenos-002', nombre: 'Jalapeños', precio_usd: 0.75 },
+          { id: 'opt-huevo-002', nombre: 'Huevo Frito', precio_usd: 1.00 }
+        ]
+      },
+      {
+        id: 'og-salsas-002', nombre: 'Salsas', min_select: 0, max_select: 3,
+        options: [
+          { id: 'opt-bbq-002', nombre: 'BBQ Extra', precio_usd: 0.50 },
+          { id: 'opt-ketchup-002', nombre: 'Ketchup', precio_usd: 0 },
+          { id: 'opt-mostaza-002', nombre: 'Mostaza', precio_usd: 0 },
+          { id: 'opt-mayo-002', nombre: 'Mayonesa', precio_usd: 0 }
+        ]
+      }
+    ]
   },
   {
     id: 'food-003',
@@ -188,7 +245,34 @@ const DEFAULT_PRODUCTS: Producto[] = [
     es_nuevo: false,
     es_mas_vendido: true,
     delivery_gratis: false,
-    detalle_adicional: 'Tamaño familiar. Masa artesanal fermentada 24h.'
+    detalle_adicional: 'Tamaño familiar. Masa artesanal fermentada 24h.',
+    option_groups: [
+      {
+        id: 'og-size-pzz', nombre: 'Tamaño', min_select: 1, max_select: 1,
+        options: [
+          { id: 'opt-personal-pzz', nombre: 'Personal (25cm)', precio_usd: 0 },
+          { id: 'opt-mediana-pzz', nombre: 'Mediana (30cm)', precio_usd: 3.00 },
+          { id: 'opt-familiar-pzz', nombre: 'Familiar (40cm)', precio_usd: 6.00 }
+        ]
+      },
+      {
+        id: 'og-masa-pzz', nombre: 'Tipo de Masa', min_select: 1, max_select: 1,
+        options: [
+          { id: 'opt-tradicional-pzz', nombre: 'Tradicional', precio_usd: 0 },
+          { id: 'opt-fina-pzz', nombre: 'Fina y Crujiente', precio_usd: 0 },
+          { id: 'opt-gruesa-pzz', nombre: 'Gruesa y Esponjosa', precio_usd: 0.75 }
+        ]
+      },
+      {
+        id: 'og-extras-pzz', nombre: 'Extras', min_select: 0, max_select: 5,
+        options: [
+          { id: 'opt-queso-extra-pzz', nombre: 'Extra Queso', precio_usd: 1.50 },
+          { id: 'opt-jamon-pzz', nombre: 'Jamón', precio_usd: 1.25 },
+          { id: 'opt-champ-pzz', nombre: 'Champiñones', precio_usd: 1.00 },
+          { id: 'opt-aceitunas-pzz', nombre: 'Aceitunas', precio_usd: 0.75 }
+        ]
+      }
+    ]
   },
   {
     id: 'food-006',
@@ -456,7 +540,20 @@ const DEFAULT_CONFIG: StoreConfig = {
     'Combos'
   ],
   push_webhook_url: import.meta.env.VITE_PUSH_WEBHOOK_URL || '',
-  push_webhook_secret: import.meta.env.VITE_WEBHOOK_SECRET || ''
+  push_webhook_secret: import.meta.env.VITE_WEBHOOK_SECRET || '',
+  esta_abierta: true,
+  sedes: [
+    {
+      id: 'sede-1',
+      nombre: 'Sede Principal',
+      direccion: 'Av. Principal, Local #12, Ciudad',
+      telefono: '+584124976451',
+      coordenadas: { lat: 10.198300, lng: -68.004400 },
+      horario: '11am - 10pm',
+      activa: true,
+      es_principal: true
+    }
+  ]
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -505,7 +602,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [isGlobalLoading, setIsGlobalLoading] = useState(true);
 
-  const [cart, setCart] = useState<{ item: Producto; quantity: number }[]>(() => {
+  const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('trv_cart');
     return saved ? JSON.parse(saved) : [];
   });
@@ -1254,9 +1351,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Cart Actions
-  const addToCart = (part: Producto, qty = 1) => {
+  const addToCart = (part: Producto, qty = 1, selectedOptions?: SelectedOption[], optionsTotal = 0) => {
     setCart(prev => {
-      const idx = prev.findIndex(item => item.item.id === part.id);
+      // Generate composite key for same product with different options
+      const optionsKey = selectedOptions && selectedOptions.length > 0
+        ? JSON.stringify([...selectedOptions].sort((a, b) => a.option_name.localeCompare(b.option_name)))
+        : '';
+      const cartKey = `${part.id}${optionsKey ? `_${optionsKey}` : ''}`;
+
+      const idx = prev.findIndex(item => {
+        const itemOptionsKey = item.selected_options && item.selected_options.length > 0
+          ? JSON.stringify([...item.selected_options].sort((a, b) => a.option_name.localeCompare(b.option_name)))
+          : '';
+        return `${item.item.id}${itemOptionsKey ? `_${itemOptionsKey}` : ''}` === cartKey;
+      });
+
       if (idx > -1) {
         const currentQty = prev[idx].quantity;
         const targetQty = Math.min(part.stock, currentQty + qty);
@@ -1264,7 +1373,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         copy[idx] = { ...copy[idx], quantity: targetQty };
         return copy;
       } else {
-        return [...prev, { item: part, quantity: Math.min(part.stock, qty) }];
+        return [...prev, {
+          item: part,
+          quantity: Math.min(part.stock, qty),
+          selected_options: selectedOptions,
+          options_total_usd: optionsTotal
+        }];
       }
     });
   };
@@ -1293,16 +1407,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Orders Management
   const createOrder = async (orderData: Omit<Order, 'id' | 'subtotal_usd' | 'total_usd' | 'total_bs' | 'fecha' | 'status'> & { descuento_cupon_usd?: number; cupon_codigo?: string }, preGeneratedId?: string) => {
-    // Recalculate Totals securely
+    // Recalculate Totals securely - includes extras/options pricing
     const items = cart.map(item => ({
       part_id: item.item.id,
       nombre: item.item.nombre,
       codigo: item.item.codigo,
       precio_usd: item.item.precio_usd,
-      cantidad: item.quantity
+      cantidad: item.quantity,
+      selected_options: item.selected_options,
+      options_total_usd: item.options_total_usd
     }));
 
-    const subtotal = items.reduce((acc, item) => acc + (item.precio_usd * item.cantidad), 0);
+    const subtotal = items.reduce((acc, item) => {
+      const itemTotal = (item.precio_usd + (item.options_total_usd || 0)) * item.cantidad;
+      return acc + itemTotal;
+    }, 0);
     console.log('Subtotal:', subtotal);
     
     // Apply discount based on payment method

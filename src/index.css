@@ -1,61 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f8f9fa;
-  --card: #ffffff;
-  --border: #e9ecef;
+  --bg: #FAFAFA;
+  --card: #FFFFFF;
+  --border: #F1F5F9;
+  --text: #1E293B;
+  --muted: #94A3B8;
+  --border-soft: #E2E8F0;
+
+  /* Vibrant rainbow category colors */
+  --cat-burger: #FF6B35;
+  --cat-pizza: #E63946;
+  --cat-pasta: #FFB703;
+  --cat-dessert: #C084FC;
+  --cat-drinks: #22D3EE;
+  --cat-entries: #10B981;
+  --cat-salads: #84CC16;
+  --cat-combos: #F472B6;
+
+  /* Accent colors */
   --accent-orange: #FF6B35;
   --accent-red: #E63946;
   --accent-yellow: #FFB703;
-  --accent-green: #2EC4B6;
-  --text: #1a1a1a;
-  --muted: #6c757d;
+  --accent-green: #10B981;
+  --accent-cyan: #22D3EE;
+  --accent-purple: #C084FC;
+  --accent-pink: #F472B6;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 50px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
+  --shadow-color-orange: 0 4px 20px rgba(255, 107, 53, 0.25);
+  --shadow-color-pink: 0 4px 20px rgba(244, 114, 182, 0.25);
+  --shadow-color-purple: 0 4px 20px rgba(192, 132, 252, 0.25);
+  --shadow-color-cyan: 0 4px 20px rgba(34, 211, 238, 0.25);
+  --shadow-color-green: 0 4px 20px rgba(16, 185, 129, 0.25);
 }
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
   --font-mono: "Fira Code", monospace;
-  
-  --color-premium-dark: var(--bg);
-  --color-premium-card: var(--card);
-  --color-premium-border: var(--border);
-  --color-premium-text: var(--text);
-  --color-premium-muted: var(--muted);
-  --color-electric-orange: var(--accent-orange);
-  --color-deep-red: var(--accent-red);
-  --color-neon-orange: var(--accent-orange);
-  
-  /* Pop-vibrant orange primary palette */
+
+  /* Pop vibrant palette */
   --color-violet-50: #fff4ed;
   --color-violet-100: #ffe4d4;
-  --color-violet-150: #ffd4b8;
   --color-violet-200: #ffb688;
   --color-violet-300: #ff9050;
   --color-violet-400: #FF6B35;
   --color-violet-500: #FF5722;
   --color-violet-600: #E64A19;
-  --color-violet-650: #D84315;
   --color-violet-700: #BF360C;
-  --color-violet-750: #A62B08;
   --color-violet-800: #8C2106;
   --color-violet-900: #6D1A04;
 
-  /* Vibrant red accent */
+  /* Vibrant accents */
   --color-amber-50: #fff0f0;
   --color-amber-100: #ffe0e0;
   --color-amber-500: #E63946;
   --color-amber-600: #C62828;
-  
-  /* Fresh green accent */
+
   --color-emerald-50: #e8faf7;
   --color-emerald-100: #d0f5ef;
   --color-emerald-600: #2EC4B6;
   --color-emerald-650: #20B2AA;
-  --color-emerald-700: #1A9E92;
-  --color-emerald-800: #148A7F;
 
-  /* Yellow highlight */
   --color-yellow-50: #fff9e6;
   --color-yellow-100: #fff0b3;
   --color-yellow-400: #FFB703;
@@ -91,18 +102,110 @@ svg {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ========================
+   VIBRANT POP COMPONENTS
+   ======================== */
+
+.card-vibrant {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+.card-vibrant:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-vibrant {
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-color-orange);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn-vibrant:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 25px rgba(255, 107, 53, 0.35);
+}
+.btn-vibrant:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge-pop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chip-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 2px solid;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: white;
+}
+.chip-category:hover {
+  transform: scale(1.05);
+}
+
+.input-pop {
+  border: 2px solid var(--border-soft);
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background: white;
+  outline: none;
+  width: 100%;
+}
+.input-pop:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.header-vibrant {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8F5E 50%, #FFB703 100%);
+  color: white;
+}
+
+.modal-overlay {
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Glass effect */
 .glass-panel {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 .glass-panel-heavy {
   background: #ffffff;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
 }
 
+/* Gradients */
 .premium-gradient {
   background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-red) 100%);
 }
@@ -116,11 +219,23 @@ svg {
 }
 
 .fresh-gradient {
-  background: linear-gradient(135deg, #2EC4B6 0%, #20B2AA 100%);
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
 }
 
 .warm-gradient {
   background: linear-gradient(135deg, #FFB703 0%, #FF6B35 100%);
+}
+
+.candy-gradient {
+  background: linear-gradient(135deg, #F472B6 0%, #C084FC 100%);
+}
+
+.ocean-gradient {
+  background: linear-gradient(135deg, #22D3EE 0%, #C084FC 100%);
+}
+
+.sunset-gradient {
+  background: linear-gradient(135deg, #FF6B35 0%, #FFB703 50%, #E63946 100%);
 }
 
 .rounded-premium { border-radius: 50px; }
@@ -142,53 +257,9 @@ svg {
   box-shadow: 0 0 8px var(--accent-orange);
 }
 
-.leaflet-container {
-  background: #ffffff !important;
-  border-radius: 12px !important;
-  font-family: var(--font-sans) !important;
-}
-
-.leaflet-bar {
-  border: 1px solid var(--border) !important;
-  box-shadow: none !important;
-}
-
-.leaflet-bar a {
-  background-color: var(--card) !important;
-  color: var(--accent-orange) !important;
-  border-bottom: 1px solid var(--border) !important;
-}
-
-.leaflet-bar a:hover {
-  background-color: #fff4ed !important;
-  color: #FF6B35 !important;
-}
-
-.leaflet-popup-content-wrapper {
-  background: var(--card) !important;
-  color: var(--text) !important;
-  border-radius: 12px !important;
-  border: 1px solid var(--border) !important;
-}
-
-.leaflet-popup-tip {
-  background: var(--card) !important;
-}
-
-.neon-glow {
-  box-shadow: 0 0 20px rgba(255, 107, 53, 0.25);
-}
-
-.neon-glow-orange {
-  box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
-}
-
-.neon-glow-red {
-  box-shadow: 0 0 20px rgba(230, 57, 70, 0.25);
-}
-
-.snap-inline { scroll-snap-type: x mandatory; }
-.snap-item { scroll-snap-align: start; }
+/* ========================
+   ANIMATIONS
+   ======================== */
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.98) translateY(2px); }
@@ -233,7 +304,92 @@ svg {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 25%, rgba(255,107,53,0.1) 50%, transparent 75%);
+  background: linear-gradient(90deg, transparent 25%, rgba(255,107,53,0.08) 50%, transparent 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+@keyframes popBounce {
+  0% { transform: scale(0.85); opacity: 0; }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop-bounce {
+  animation: popBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUpPop {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-pop {
+  animation: slideUpPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes colorShift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.press-scale {
+  transition: transform 0.15s ease;
+}
+.press-scale:active {
+  transform: scale(0.95);
+}
+
+/* ========================
+   SCROLL SNAP
+   ======================== */
+
+.snap-inline { scroll-snap-type: x mandatory; }
+.snap-item { scroll-snap-align: start; }
+
+/* ========================
+   LEAFLET MAP OVERRIDES
+   ======================== */
+
+.leaflet-container {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-bar {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.leaflet-bar a {
+  background-color: var(--card) !important;
+  color: var(--accent-orange) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #fff4ed !important;
+  color: #FF6B35 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--card) !important;
 }

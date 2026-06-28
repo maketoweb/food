@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '../store/AppContext';
-import { Producto, Order, OrderItem, AppUser, DeliveryZone } from '../types/store';
+import { Producto, Order, OrderItem, AppUser, DeliveryZone, Sede, ProductOptionGroup, ProductOption } from '../types/store';
 import { supabase, uploadFileToStorage, compressImage, getPublicUrl } from '../store/supabaseClient';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
 import {
   Plus, Edit, Trash2, Landmark, Settings, ShoppingBag, BarChart3, Mic, FileJson,
   Search, CheckCircle, Truck, PackageCheck, AlertTriangle, Send, Bell, Ticket,
-  Receipt, Printer, Check, X, MessageSquare, MessageCircle, ExternalLink, Upload, DollarSign, Package, ShoppingCart, User, Download, FileSpreadsheet, Eye, EyeOff, Calendar, AlertCircle, RefreshCcw
+  Receipt, Printer, Check, X, MessageSquare, MessageCircle, ExternalLink, Upload, DollarSign, Package, ShoppingCart, User, Download, FileSpreadsheet, Eye, EyeOff, Calendar, AlertCircle, RefreshCcw,
+  Palette, MapPin, SlidersHorizontal
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { EditProductForm } from '../components/EditProductForm';
@@ -14,6 +15,318 @@ import { EditProductForm } from '../components/EditProductForm';
 interface AdminProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin') => void;
 }
+
+const SedeForm: React.FC<{ onSave: (sede: Sede) => void }> = ({ onSave }) => {
+  const [nombre, setNombre] = useState('');
+  const [direccion, setDireccion] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [horario, setHorario] = useState('');
+  const [lat, setLat] = useState(0);
+  const [lng, setLng] = useState(0);
+
+  const handleSubmit = () => {
+    if (!nombre.trim() || !direccion.trim()) return;
+    onSave({
+      id: `sede-${Date.now()}`,
+      nombre: nombre.trim(),
+      direccion: direccion.trim(),
+      telefono: telefono.trim(),
+      horario: horario.trim(),
+      coordenadas: { lat, lng },
+      activa: true,
+      es_principal: false
+    });
+    setNombre('');
+    setDireccion('');
+    setTelefono('');
+    setHorario('');
+    setLat(0);
+    setLng(0);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nombre *</span>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Ej: Sede Principal"
+            className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dirección *</span>
+          <input
+            type="text"
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
+            placeholder="Ej: Av. Principal, Caracas"
+            className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Teléfono</span>
+          <input
+            type="text"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            placeholder="Ej: 0412-1234567"
+            className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Horario</span>
+          <input
+            type="text"
+            value={horario}
+            onChange={(e) => setHorario(e.target.value)}
+            placeholder="Ej: Lun-Sab 8am-6pm"
+            className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Latitud</span>
+          <input
+            type="number"
+            step="0.0001"
+            value={lat}
+            onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
+            className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Longitud</span>
+          <input
+            type="number"
+            step="0.0001"
+            value={lng}
+            onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
+            className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs"
+          />
+        </div>
+      </div>
+      <button
+        onClick={handleSubmit}
+        disabled={!nombre.trim() || !direccion.trim()}
+        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-emerald-200 cursor-pointer"
+      >
+        Agregar Sede
+      </button>
+    </div>
+  );
+};
+
+const ExtrasManager: React.FC<{ parts: Producto[]; updatePart: (id: string, updated: Partial<Producto>) => void }> = ({ parts, updatePart }) => {
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [editingGroupName, setEditingGroupName] = useState('');
+  const [editingOptionName, setEditingOptionName] = useState('');
+  const [editingOptionPrice, setEditingOptionPrice] = useState(0);
+
+  const selectedProduct = useMemo(() => parts.find(p => p.id === selectedProductId), [parts, selectedProductId]);
+  const optionGroups = selectedProduct?.option_groups || [];
+
+  const saveGroups = (groups: ProductOptionGroup[]) => {
+    if (selectedProduct) {
+      updatePart(selectedProduct.id, { option_groups: groups });
+    }
+  };
+
+  const addGroup = () => {
+    const name = prompt('Nombre del nuevo grupo de opciones (ej: "Tamaño", "Extras", "Salsa"):');
+    if (!name || !name.trim()) return;
+    const newGroup: ProductOptionGroup = {
+      id: `og-${Date.now()}`,
+      nombre: name.trim(),
+      min_select: 0,
+      max_select: 1,
+      options: []
+    };
+    saveGroups([...optionGroups, newGroup]);
+  };
+
+  const deleteGroup = (groupId: string) => {
+    if (confirm('¿Eliminar este grupo de opciones y todas sus opciones?')) {
+      saveGroups(optionGroups.filter(g => g.id !== groupId));
+    }
+  };
+
+  const addOption = (groupId: string) => {
+    setEditingGroupName(groupId);
+    setEditingOptionName('');
+    setEditingOptionPrice(0);
+  };
+
+  const saveOption = (groupId: string) => {
+    if (!editingOptionName.trim()) return;
+    const newOption: ProductOption = {
+      id: `opt-${Date.now()}`,
+      nombre: editingOptionName.trim(),
+      precio_usd: editingOptionPrice,
+      activo: true
+    };
+    const updated = optionGroups.map(g =>
+      g.id === groupId ? { ...g, options: [...g.options, newOption] } : g
+    );
+    saveGroups(updated);
+    setEditingGroupName('');
+    setEditingOptionName('');
+    setEditingOptionPrice(0);
+  };
+
+  const deleteOption = (groupId: string, optionId: string) => {
+    const updated = optionGroups.map(g =>
+      g.id === groupId ? { ...g, options: g.options.filter(o => o.id !== optionId) } : g
+    );
+    saveGroups(updated);
+  };
+
+  const updateGroupLimits = (groupId: string, field: 'min_select' | 'max_select', value: number) => {
+    const updated = optionGroups.map(g =>
+      g.id === groupId ? { ...g, [field]: value } : g
+    );
+    saveGroups(updated);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Seleccionar Producto</span>
+        <select
+          value={selectedProductId}
+          onChange={(e) => setSelectedProductId(e.target.value)}
+          className="bg-white border border-slate-300 rounded-lg px-2.5 py-2 outline-none focus:border-violet-500 text-xs"
+        >
+          <option value="">-- Selecciona un producto --</option>
+          {parts.map(p => (
+            <option key={p.id} value={p.id}>{p.nombre} ({p.codigo})</option>
+          ))}
+        </select>
+      </div>
+
+      {selectedProduct && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800">Grupos de Opciones de &quot;{selectedProduct.nombre}&quot;</span>
+            <button
+              onClick={addGroup}
+              className="flex items-center gap-1 bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+            >
+              <Plus size={12} /> Agregar Grupo
+            </button>
+          </div>
+
+          {optionGroups.length === 0 && (
+            <p className="text-[11px] text-slate-400 italic text-center py-3">Este producto no tiene grupos de opciones. Agrega uno arriba.</p>
+          )}
+
+          {optionGroups.map(group => (
+            <div key={group.id} className="p-3 border border-slate-200 rounded-xl bg-slate-50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-900">{group.nombre}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => deleteGroup(group.id)}
+                    className="p-1 rounded hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
+                    title="Eliminar grupo"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mb-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500">Mín:</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={group.min_select}
+                    onChange={(e) => updateGroupLimits(group.id, 'min_select', parseInt(e.target.value) || 0)}
+                    className="w-12 bg-white border border-slate-300 rounded px-1 py-0.5 text-center text-[11px] outline-none focus:border-violet-500"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500">Máx:</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={group.max_select}
+                    onChange={(e) => updateGroupLimits(group.id, 'max_select', parseInt(e.target.value) || 0)}
+                    className="w-12 bg-white border border-slate-300 rounded px-1 py-0.5 text-center text-[11px] outline-none focus:border-violet-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                {group.options.map(opt => (
+                  <div key={opt.id} className="flex items-center justify-between p-2 bg-white border border-slate-200 rounded-lg text-[11px]">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-800">{opt.nombre}</span>
+                      {opt.precio_usd > 0 && (
+                        <span className="text-emerald-600 font-mono font-bold">+${opt.precio_usd.toFixed(2)}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => deleteOption(group.id, opt.id)}
+                      className="p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {editingGroupName === group.id ? (
+                <div className="flex gap-2 mt-2 p-2 bg-white border border-violet-200 rounded-lg">
+                  <input
+                    type="text"
+                    value={editingOptionName}
+                    onChange={(e) => setEditingOptionName(e.target.value)}
+                    placeholder="Nombre de la opción"
+                    className="flex-1 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px] outline-none focus:border-violet-500"
+                    autoFocus
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editingOptionPrice}
+                    onChange={(e) => setEditingOptionPrice(parseFloat(e.target.value) || 0)}
+                    placeholder="Precio"
+                    className="w-20 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px] outline-none focus:border-violet-500"
+                  />
+                  <button
+                    onClick={() => saveOption(group.id)}
+                    disabled={!editingOptionName.trim()}
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    onClick={() => { setEditingGroupName(''); setEditingOptionName(''); setEditingOptionPrice(0); }}
+                    className="bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded text-[10px] font-bold cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => addOption(group.id)}
+                  className="flex items-center gap-1 mt-2 text-violet-600 hover:text-violet-700 text-[11px] font-bold cursor-pointer"
+                >
+                  <Plus size={12} /> Agregar Opción
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const { 
@@ -33,7 +346,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
   const [newAdminPass, setNewAdminPass] = useState(adminPass);
 
   // Navigation within admin panel: 'inventory' | 'orders' | 'settings' | 'reports' | 'notifications' | 'customers'
-  const [adminSection, setAdminSection] = useState<'inventory' | 'orders' | 'settings' | 'reports' | 'notifications' | 'customers' | 'coupons'>('reports');
+  const [adminSection, setAdminSection] = useState<'inventory' | 'orders' | 'settings' | 'reports' | 'notifications' | 'customers' | 'coupons' | 'branding' | 'sedes' | 'extras'>('reports');
   const [showAdminPass, setShowAdminPass] = useState(false);
   const restoreInputRef = useRef<HTMLInputElement>(null);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
@@ -806,6 +1119,9 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
           { key: 'notifications', label: 'Alertas', icon: Bell },
           { key: 'customers', label: 'Clientes', icon: User },
           { key: 'coupons', label: 'Cupones', icon: Ticket },
+          { key: 'branding', label: 'Branding', icon: Palette },
+          { key: 'sedes', label: 'Sedes', icon: MapPin },
+          { key: 'extras', label: 'Extras', icon: SlidersHorizontal },
           { key: 'settings', label: 'Ajustes', icon: Landmark }
         ].map(sect => {
           const Icon = sect.icon;
@@ -2825,6 +3141,263 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
             Guardar Cambios de Sucursal
           </button>
         </form>
+        </div>
+      )}
+
+      {/* ----------------- SUBSECTION: BRANDING (COLORS) ----------------- */}
+      {adminSection === 'branding' && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <div className="flex flex-col gap-4 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-violet-100 text-violet-600 rounded-xl">
+                <Palette size={20} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Identidad Visual (Colores)</h4>
+                <p className="text-[11px] text-slate-500">Configura los colores principales de la tienda. Los cambios se aplican en toda la interfaz.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Color Primario</span>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={config.theme_color || '#6d28d9'}
+                    onChange={(e) => updateConfig({ theme_color: e.target.value })}
+                    className="w-12 h-12 p-0 border-0 rounded-lg cursor-pointer shadow-sm"
+                  />
+                  <input
+                    type="text"
+                    value={config.theme_color || '#6d28d9'}
+                    onChange={(e) => updateConfig({ theme_color: e.target.value })}
+                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 font-mono text-xs flex-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Color Secundario</span>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={config.secondary_color || '#1e293b'}
+                    onChange={(e) => updateConfig({ secondary_color: e.target.value })}
+                    className="w-12 h-12 p-0 border-0 rounded-lg cursor-pointer shadow-sm"
+                  />
+                  <input
+                    type="text"
+                    value={config.secondary_color || '#1e293b'}
+                    onChange={(e) => updateConfig({ secondary_color: e.target.value })}
+                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 font-mono text-xs flex-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Color de Acento</span>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={config.accent_color || '#f59e0b'}
+                    onChange={(e) => updateConfig({ accent_color: e.target.value })}
+                    className="w-12 h-12 p-0 border-0 rounded-lg cursor-pointer shadow-sm"
+                  />
+                  <input
+                    type="text"
+                    value={config.accent_color || '#f59e0b'}
+                    onChange={(e) => updateConfig({ accent_color: e.target.value })}
+                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 font-mono text-xs flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3">Vista Previa del Header</span>
+              <div className="rounded-xl overflow-hidden shadow-md border border-slate-200">
+                <div
+                  className="flex items-center justify-between px-4 py-3"
+                  style={{ backgroundColor: config.theme_color || '#6d28d9' }}
+                >
+                  <div className="flex items-center gap-2">
+                    {config.logo_url ? (
+                      <img src={config.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: config.secondary_color || '#1e293b' }}>
+                        {config.site_nombre?.[0] || 'F'}
+                      </div>
+                    )}
+                    <span className="text-white font-bold text-sm">{config.site_nombre || 'FoodApp'}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: config.accent_color || '#f59e0b' }}>🛒</div>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: config.secondary_color || '#1e293b' }}>🔔</div>
+                  </div>
+                </div>
+                <div className="flex gap-2 p-2 bg-white border-t border-slate-100">
+                  {['Inicio', 'Catálogo', 'Pedidos'].map(tab => (
+                    <div key={tab} className="px-3 py-1 rounded-full text-[10px] font-semibold" style={{ backgroundColor: tab === 'Inicio' ? (config.theme_color || '#6d28d9') + '20' : 'transparent', color: tab === 'Inicio' ? (config.theme_color || '#6d28d9') : '#64748b' }}>
+                      {tab}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                updateConfig({
+                  theme_color: config.theme_color || '#6d28d9',
+                  secondary_color: config.secondary_color || '#1e293b',
+                  accent_color: config.accent_color || '#f59e0b'
+                });
+                setToastTitle('🎨 Colores Guardados');
+                setToastMessage('La identidad visual de la tienda ha sido actualizada.');
+              }}
+              className="w-full bg-violet-600 hover:bg-violet-750 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-violet-200"
+            >
+              Guardar Colores de Branding
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- SUBSECTION: SEDES (MULTI-LOCATION) ----------------- */}
+      {adminSection === 'sedes' && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <div className="flex flex-col gap-4 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-xl">
+                <MapPin size={20} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Gestión de Sedes</h4>
+                <p className="text-[11px] text-slate-500">Administra las ubicaciones físicas de tu negocio.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {(config.sedes || []).map((sede) => (
+                <div key={sede.id} className={`p-4 border rounded-xl transition-all ${sede.es_principal ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-900">{sede.nombre}</span>
+                        {sede.es_principal && (
+                          <span className="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Principal</span>
+                        )}
+                        {!sede.activa && (
+                          <span className="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Inactiva</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-1">{sede.direccion}</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[10px] text-slate-500">
+                        <span>📞 {sede.telefono}</span>
+                        {sede.horario && <span>🕐 {sede.horario}</span>}
+                        <span>📍 {sede.coordenadas.lat.toFixed(4)}, {sede.coordenadas.lng.toFixed(4)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0 ml-3">
+                      <button
+                        onClick={() => {
+                          const updatedSedes = (config.sedes || []).map(s =>
+                            s.id === sede.id ? { ...s, activa: !s.activa } : s
+                          );
+                          updateConfig({ sedes: updatedSedes });
+                        }}
+                        className={`p-1.5 rounded-md transition-colors cursor-pointer ${sede.activa ? 'hover:bg-amber-50 text-amber-600' : 'hover:bg-emerald-50 text-emerald-600'}`}
+                        title={sede.activa ? 'Desactivar' : 'Activar'}
+                      >
+                        {sede.activa ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                      {!sede.es_principal && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`¿Marcar "${sede.nombre}" como sede principal?`)) {
+                              const updatedSedes = (config.sedes || []).map(s => ({
+                                ...s,
+                                es_principal: s.id === sede.id
+                              }));
+                              updateConfig({ sedes: updatedSedes });
+                            }
+                          }}
+                          className="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer"
+                          title="Marcar como principal"
+                        >
+                          <CheckCircle size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          const nuevoNombre = prompt('Editar nombre de la sede:', sede.nombre);
+                          if (nuevoNombre && nuevoNombre.trim()) {
+                            const updatedSedes = (config.sedes || []).map(s =>
+                              s.id === sede.id ? { ...s, nombre: nuevoNombre.trim() } : s
+                            );
+                            updateConfig({ sedes: updatedSedes });
+                          }
+                        }}
+                        className="p-1.5 rounded-md hover:bg-violet-50 text-violet-600 transition-colors cursor-pointer"
+                        title="Editar"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      {!sede.es_principal && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`¿Eliminar la sede "${sede.nombre}"? Esta acción no se puede deshacer.`)) {
+                              const updatedSedes = (config.sedes || []).filter(s => s.id !== sede.id);
+                              updateConfig({ sedes: updatedSedes });
+                            }
+                          }}
+                          className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
+                          title="Eliminar"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(!config.sedes || config.sedes.length === 0) && (
+                <p className="text-[11px] text-slate-400 italic text-center py-4">No hay sedes configuradas. Agrega una sede usando el formulario de abajo.</p>
+              )}
+            </div>
+
+            <div className="border-t border-slate-200 pt-4">
+              <h5 className="text-xs font-bold text-slate-800 mb-3">Agregar Nueva Sede</h5>
+              <SedeForm
+                onSave={(nuevaSede) => {
+                  const updatedSedes = [...(config.sedes || []), nuevaSede];
+                  updateConfig({ sedes: updatedSedes });
+                  setToastTitle('📍 Sede Agregada');
+                  setToastMessage(`"${nuevaSede.nombre}" ha sido añadida exitosamente.`);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- SUBSECTION: EXTRAS/OPTIONS MANAGEMENT ----------------- */}
+      {adminSection === 'extras' && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <div className="flex flex-col gap-4 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-100 text-amber-600 rounded-xl">
+                <SlidersHorizontal size={20} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Gestión de Extras / Opciones</h4>
+                <p className="text-[11px] text-slate-500">Configura los grupos de opciones (extras) para cada producto del catálogo.</p>
+              </div>
+            </div>
+
+            <ExtrasManager parts={parts} updatePart={updatePart} />
+          </div>
         </div>
       )}
 

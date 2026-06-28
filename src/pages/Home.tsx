@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { SEOHead } from '../components/SEOHead';
 import { BentoGrid } from '../components/BentoGrid';
 import { ProductCard } from '../components/ProductCard';
+import { getCategoryColor } from '../utils/categoryColors';
 
 interface HomeProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
@@ -38,6 +39,8 @@ export const Home: React.FC<HomeProps> = ({
   onInstallClick
 }) => {
   const { parts, config, addToCart, currentUser, requestPart } = useApp();
+
+  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
   const [activeBanner, setActiveBanner] = useState(0);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   const [suggestions, setSuggestions] = useState<Producto[]>([]);
@@ -177,7 +180,7 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       )}
       <SEOHead title={`Restaurante Delivery ${config.site_nombre || ''}`} type="home" />
-      <h1 className="sr-only">Restaurante Delivery Premium con Hamburguesas, Pastas y Postres</h1>
+      <h1 className="sr-only">Tu Restaurante Favorito con Hamburguesas, Pastas y Postres</h1>
 
       {/* Tasa de Cambio */}
       <div className="flex justify-end px-1 -mb-4">
@@ -212,7 +215,8 @@ export const Home: React.FC<HomeProps> = ({
               <button
                 type="button"
                 onClick={() => setTab('catalog')}
-                className="mt-3 text-white text-[12px] font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg uppercase tracking-wider flex items-center gap-1.5 cursor-pointer bg-orange-500 hover:bg-orange-600 active:scale-95"
+                className="mt-3 text-white text-[12px] font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg uppercase tracking-wider flex items-center gap-1.5 cursor-pointer active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB703, #E63946)' }}
               >
                 Ver Menú <ArrowRight size={14} />
               </button>
@@ -280,7 +284,12 @@ export const Home: React.FC<HomeProps> = ({
                   setSelectedCategory(cat.name);
                   setTab('catalog');
                 }}
-                className="shrink-0 snap-start flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm hover:shadow-md hover:bg-orange-50 hover:border-orange-200 active:scale-95 cursor-pointer text-orange-600"
+                className="shrink-0 snap-start flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
+                style={{
+                  borderColor: getCategoryColor(cat.name).primary + '30',
+                  backgroundColor: 'white',
+                  color: getCategoryColor(cat.name).primary,
+                }}
               >
                 <IconComponent size={14} className="shrink-0" />
                 <span>{cat.label}</span>
@@ -318,9 +327,9 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <Zap size={20} className="text-orange-500" /> Promos del Día
+              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB703)' }}><Zap size={16} className="text-white" /></span> Promos del Día
             </h3>
-            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-bold text-orange-500 cursor-pointer hover:text-orange-600">
+            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#FF6B35' }}>
               Ver todo
             </button>
           </div>
@@ -337,9 +346,9 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <Sparkles size={20} className="text-amber-500" /> Nuevos en el Menú
+              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}><Sparkles size={16} className="text-white" /></span> Nuevos en el Menú
             </h3>
-            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-bold text-orange-500 cursor-pointer hover:text-orange-600">
+            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#F59E0B' }}>
               Ver todo
             </button>
           </div>
@@ -356,9 +365,9 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-              <Flame size={20} className="text-red-500" /> Lo Más Pedido
+              <span className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #E63946, #FF6B6B)' }}><Flame size={16} className="text-white" /></span> Lo Más Pedido
             </h3>
-            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-bold text-orange-500 cursor-pointer hover:text-orange-600">
+            <button type="button" onClick={() => { setSelectedCategory(''); setTab('catalog'); }} className="text-[13px] font-extrabold cursor-pointer transition-colors" style={{ color: '#E63946' }}>
               Ver todo
             </button>
           </div>
@@ -415,7 +424,7 @@ export const Home: React.FC<HomeProps> = ({
           </button>
         </div>
         <a 
-          href={`https://wa.me/${config.telefono_soporte.replace(/[^0-9]/g, '')}`}
+          href={`https://wa.me/${getWhatsAppPhone().replace(/[^0-9]/g, '')}`}
           target="_blank"
           className="text-center text-xs font-semibold text-orange-600 underline mt-1 cursor-pointer hover:text-orange-700 text-[13px]"
         >
@@ -472,7 +481,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* FOOTER */}
       <footer className="mt-8 border-t border-zinc-200 pt-8 pb-4 px-1 text-zinc-600">
         <h2 className="text-sm font-black font-display text-zinc-900 uppercase tracking-widest mb-3">
-          Delivery de Comida Premium
+          Tu Restaurante Favorito
         </h2>
         <p className="text-xs leading-relaxed text-zinc-500 mb-3 font-sans">
           ¿Buscas la mejor comida para delivery? <strong>{config.site_nombre || 'FoodApp'}</strong> es tu restaurante favorito. Hamburguesas artesanales, pastas frescas, pizzas, postres y más. Ingredientes frescos del día y recetas originales del chef.

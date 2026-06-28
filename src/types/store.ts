@@ -7,27 +7,61 @@ export interface AppUser {
   createdAt: string;
 }
 
+// ========================
+// PRODUCT OPTIONS (EXTRAS)
+// ========================
+
+export interface ProductOption {
+  id: string;
+  nombre: string;
+  precio_usd: number;
+  activo?: boolean;
+}
+
+export interface ProductOptionGroup {
+  id: string;
+  nombre: string;
+  min_select: number;
+  max_select: number;
+  options: ProductOption[];
+}
+
+// ========================
+// PRODUCTO
+// ========================
+
 export interface Producto {
   id: string;
-  codigo: string;                // SKU del producto
+  codigo: string;
   nombre: string;
   descripcion: string;
-  categoria: string;             // Ej: 'Lácteos', 'Carnes', 'Panadería'
-  seccion: string;               // Pasillo del mercado. Ej: 'Pasillo 1 - Lácteos'
-  subseccion: string;            // Subsección. Ej: 'Leches y Cremas', 'Cortes Vacunos'
-  marca: string;                 // Marca del producto. Ej: 'Campestre', 'El Rey'
-  condicion: 'Nacional' | 'Importado'; // Origen
-  anio_inicio: number;           // Reutilizado en UI como "Vida Útil en Días"
-  anio_fin: number;              // Reutilizado en UI como "Temperatura Conservación °C"
+  categoria: string;
+  seccion: string;
+  subseccion: string;
+  marca: string;
+  condicion: 'Nacional' | 'Importado';
+  anio_inicio: number;
+  anio_fin: number;
   precio_usd: number;
   stock: number;
-  imagen_urls: string[];         // Múltiples imágenes del producto
+  imagen_urls: string[];
   es_promo: boolean;
   es_nuevo: boolean;
   es_mas_vendido: boolean;
   delivery_gratis?: boolean;
-  detalle_adicional?: string;    // Info extra del producto (origen, peso, etc.)
-  activo?: boolean;              // Si está visible/vendible en el catálogo
+  detalle_adicional?: string;
+  activo?: boolean;
+  option_groups?: ProductOptionGroup[];
+}
+
+// ========================
+// ORDER
+// ========================
+
+export interface SelectedOption {
+  group_name: string;
+  option_name: string;
+  precio_usd: number;
 }
 
 export interface OrderItem {
@@ -36,6 +70,8 @@ export interface OrderItem {
   codigo: string;
   precio_usd: number;
   cantidad: number;
+  selected_options?: SelectedOption[];
+  options_total_usd?: number;
 }
 
 export interface Order {
@@ -43,7 +79,7 @@ export interface Order {
   cliente_nombre: string;
   cliente_telefono: string;
   cliente_email?: string;
-  usuario_id?: string; // Link order to a registered user
+  usuario_id?: string;
   items: OrderItem[];
   subtotal_usd: number;
   costo_envio_usd: number;
@@ -57,10 +93,30 @@ export interface Order {
   direccion_envio: string;
   distancia_km: number;
   status: 'Pendiente' | 'Procesando' | 'Enviado' | 'En preparación' | 'En camino' | 'Entregado' | 'Cancelado';
-  tiempo_estimado_entrega?: string; // Delivery time set by admin
+  tiempo_estimado_entrega?: string;
   notas_admin?: string;
   fecha: string;
+  sede_id?: string;
 }
+
+// ========================
+// SEDE (MULTI-LOCATION)
+// ========================
+
+export interface Sede {
+  id: string;
+  nombre: string;
+  direccion: string;
+  telefono: string;
+  coordenadas: { lat: number; lng: number };
+  horario?: string;
+  activa: boolean;
+  es_principal: boolean;
+}
+
+// ========================
+// STORE CONFIG
+// ========================
 
 export interface StoreConfig {
   site_nombre: string;
@@ -71,7 +127,7 @@ export interface StoreConfig {
     lat: number;
     lng: number;
   };
-  banners: string[]; // exactly 3 urls
+  banners: string[];
   zelle_enabled: boolean;
   zelle_data: string;
   zelle_discount_percent: number;
@@ -84,8 +140,10 @@ export interface StoreConfig {
   transferencia_enabled: boolean;
   transferencia_data: string;
   transferencia_discount_percent: number;
-  tasa_cambio: number; // exchange rate (Bs per USD)
+  tasa_cambio: number;
   theme_color?: string;
+  secondary_color?: string;
+  accent_color?: string;
   delivery_gratis?: boolean;
   costo_delivery_km?: number;
   envio_nacional?: boolean;
@@ -99,7 +157,14 @@ export interface StoreConfig {
   mensaje_bienvenida?: string;
   push_webhook_url?: string;
   push_webhook_secret?: string;
+  sedes?: Sede[];
+  sede_activa_id?: string;
+  esta_abierta?: boolean;
 }
+
+// ========================
+// DELIVERY ZONE
+// ========================
 
 export interface DeliveryZone {
   id: string;
@@ -108,6 +173,10 @@ export interface DeliveryZone {
   minKm: number;
   maxKm: number;
 }
+
+// ========================
+// COUPON
+// ========================
 
 export interface Coupon {
   id: string;
@@ -120,15 +189,29 @@ export interface Coupon {
   created_at?: string;
 }
 
+// ========================
+// NOTIFICATION
+// ========================
+
 export interface InAppNotification {
   id: string;
   titulo: string;
   mensaje: string;
   fecha: string;
   tipo: 'todos' | 'personal' | 'admin' | 'request';
-  destinatario_telefono?: string; // Link to specific user's phone number
+  destinatario_telefono?: string;
   leida: boolean;
   imagen_url?: string;
   link_url?: string;
 }
 
+// ========================
+// CART ITEM (with extras)
+// ========================
+
+export interface CartItem {
+  item: Producto;
+  quantity: number;
+  selected_options?: SelectedOption[];
+  options_total_usd?: number;
+}
