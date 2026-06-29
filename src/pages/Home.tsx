@@ -26,7 +26,7 @@ const CATEGORY_HERO_BG: Record<string, string> = {
 };
 
 interface HomeProps {
-  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
   setSelectedCategory: (category: string) => void;
   onViewProductDetails: (food: FoodItem) => void;
   globalSearch: string;
@@ -43,6 +43,7 @@ export const Home: React.FC<HomeProps> = ({
   deferredPrompt, onInstallClick
 }) => {
   const { foodItems, config, addToCart } = useApp();
+  const themeColor = config.theme_color || '#E31837';
   const [activeBanner, setActiveBanner] = useState(0);
   const [suggestions, setSuggestions] = useState<FoodItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -103,76 +104,57 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       )}
 
-      {/* HERO BANNER */}
-      <div className="relative h-[280px] md:h-[380px] w-full overflow-hidden">
+      {/* HERO */}
+      <div className="relative h-[240px] md:h-[340px] w-full overflow-hidden bg-zinc-900">
         {config.banners.length > 0 ? config.banners.map((url, index) => (
-          <div
-            key={url}
-            className={`absolute inset-0 transition-all duration-700 ${index === activeBanner ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+          <div key={url}
+            className={`absolute inset-0 transition-all duration-700 ${index === activeBanner ? 'opacity-100' : 'opacity-0'}`}
           >
             <img src={url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6 z-10">
-              <span className="text-white/80 text-xs font-bold uppercase tracking-widest bg-pop-pink px-3 py-1 rounded-full inline-block mb-2">
-                {config.site_nombre || 'FoodPop'}
-              </span>
-              <h2 className="text-white text-3xl md:text-4xl font-display font-bold leading-tight max-w-md">
-                {config.banner_texts?.[index] || 'La Comida que Te Hace Feliz 🎉'}
-              </h2>
-              <button
-                onClick={() => setTab('catalog')}
-                className="mt-3 bg-white text-zinc-900 font-bold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                Ordenar Ahora <ArrowRight size={16} />
-              </button>
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           </div>
         )) : (
-          <div className="w-full h-full bg-gradient-to-br from-pop-pink via-pop-orange to-pop-purple flex items-end p-6">
-            <div>
-              <span className="text-white/80 text-xs font-bold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full inline-block mb-2">
-                {config.site_nombre || 'FoodPop'}
-              </span>
-              <h2 className="text-white text-3xl md:text-4xl font-display font-bold leading-tight">
-                ¡La Comida que Te Hace Feliz! 🎉
-              </h2>
-              <button
-                onClick={() => setTab('catalog')}
-                className="mt-3 bg-white text-zinc-900 font-bold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                Ordenar Ahora <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
+          <div className="w-full h-full bg-zinc-800" />
         )}
 
         {/* Banner dots */}
         {config.banners.length > 1 && (
-          <div className="absolute bottom-4 right-4 flex gap-1.5 z-10">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             {config.banners.map((_, i) => (
               <button key={i} onClick={() => setActiveBanner(i)}
-                className={`w-2 h-2 rounded-full transition-all cursor-pointer ${i === activeBanner ? 'bg-white w-6' : 'bg-white/50'}`}
+                className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${i === activeBanner ? 'w-5' : ''}`}
+                style={{ backgroundColor: i === activeBanner ? themeColor : 'rgba(255,255,255,0.5)' }}
               />
             ))}
           </div>
         )}
+
+        <div className="absolute bottom-5 left-5 right-5 z-10">
+          <h2 className="text-white text-2xl md:text-3xl font-bold leading-tight max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            {config.banner_texts?.[activeBanner] || 'La comida que te encanta'}
+          </h2>
+          <button onClick={() => setTab('catalog')}
+            className="mt-3 text-white font-bold text-sm px-6 py-2.5 rounded-lg inline-flex items-center gap-2 hover:opacity-90 transition-all cursor-pointer"
+            style={{ backgroundColor: themeColor }}
+          >
+            Ordenar Ahora <ArrowRight size={15} />
+          </button>
+        </div>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="px-4 -mt-6 relative z-20">
-        <div className="bg-white border-2 border-zinc-100 rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3">
-          <Search size={18} className="text-pop-pink shrink-0" />
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Buscar hamburguesas, pizzas, pollo..."
+      {/* SEARCH */}
+      <div className="px-4 -mt-5 relative z-20">
+        <div className="bg-white border border-zinc-200 rounded-xl shadow-sm px-4 py-2.5 flex items-center gap-3">
+          <Search size={16} style={{ color: themeColor }} />
+          <input ref={searchRef} type="text"
+            placeholder="Buscar en el menú..."
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400 font-medium"
+            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400"
           />
           {globalSearch && (
-            <button onClick={() => { setGlobalSearch(''); setSuggestions([]); }} className="text-zinc-400 hover:text-zinc-600">
-              <X size={16} />
+            <button onClick={() => { setGlobalSearch(''); setSuggestions([]); }} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
+              <X size={15} />
             </button>
           )}
         </div>
@@ -181,35 +163,30 @@ export const Home: React.FC<HomeProps> = ({
             {suggestions.map(p => (
               <button key={p.id}
                 onClick={() => { onViewProductDetails(p); setShowSuggestions(false); setGlobalSearch(''); }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-pop-orange-50 transition-colors text-left border-b border-zinc-50 last:border-0"
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-zinc-50 transition-colors text-left border-b border-zinc-100 last:border-0 cursor-pointer"
               >
-                <img src={p.imagen_urls[0]} alt="" className="w-12 h-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                <img src={p.imagen_urls[0]} alt="" className="w-10 h-10 rounded-lg object-cover" referrerPolicy="no-referrer" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-zinc-900 truncate">{p.nombre}</p>
-                  <p className="text-xs text-zinc-500">{p.categoria} • ${p.precio_usd.toFixed(2)}</p>
+                  <p className="text-xs text-zinc-500">{p.categoria}</p>
                 </div>
-                <span className="text-pop-pink font-bold text-sm">${p.precio_usd.toFixed(2)}</span>
+                <span className="font-bold text-sm" style={{ color: themeColor }}>${p.precio_usd.toFixed(2)}</span>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* CATEGORY PILLS */}
+      {/* CATEGORIES */}
       <div className="px-4 mt-6 overflow-x-auto no-scrollbar">
         <div className="flex gap-2 pb-2">
           {(config.categories || []).slice(0, 8).map(catName => {
-            const catColor = getCategoryColor(catName);
             const emoji = CATEGORY_EMOJIS[catName.toLowerCase()] || '🍽️';
             return (
               <button key={catName}
                 onClick={() => { setSelectedCategory(catName); setTab('catalog'); }}
-                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer border-2"
-                style={{
-                  borderColor: catColor.primary + '30',
-                  backgroundColor: catColor.light,
-                  color: catColor.textColor,
-                }}
+                className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer border bg-white hover:shadow-sm"
+                style={{ borderColor: themeColor + '30', color: themeColor }}
               >
                 <span className="text-base">{emoji}</span>
                 <span>{catName}</span>
@@ -219,66 +196,25 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      {/* PROMOS SECTION */}
+      {/* PROMOS */}
       {promoItems.length > 0 && (
-        <CategorySection
-          title="🔥 Promos del Día"
-          icon={<Zap size={16} className="text-pop-pink" />}
-          gradient="from-pop-pink to-pop-orange"
-          items={promoItems}
-          config={config}
-          onViewProductDetails={onViewProductDetails}
-          addToCart={addToCart}
-          isOffer
-          setTab={setTab}
-        />
+        <CategorySection title="Promos" items={promoItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} isOffer setTab={setTab} icon={null} gradient="" />
       )}
 
-      {/* NUEVOS SECTION */}
+      {/* NUEVOS */}
       {newItems.length > 0 && (
-        <CategorySection
-          title="✨ Nuevos en el Menú"
-          icon={<Sparkles size={16} className="text-pop-yellow" />}
-          gradient="from-pop-yellow to-pop-orange"
-          items={newItems}
-          config={config}
-          onViewProductDetails={onViewProductDetails}
-          addToCart={addToCart}
-          setTab={setTab}
-        />
+        <CategorySection title="Nuevos" items={newItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" />
       )}
 
-      {/* BESTSELLERS SECTION */}
+      {/* MÁS PEDIDOS */}
       {bestsellerItems.length > 0 && (
-        <CategorySection
-          title="🏆 Los Más Pedidos"
-          icon={<Flame size={16} className="text-pop-red" />}
-          gradient="from-pop-red to-pop-orange"
-          items={bestsellerItems}
-          config={config}
-          onViewProductDetails={onViewProductDetails}
-          addToCart={addToCart}
-          setTab={setTab}
-        />
+        <CategorySection title="Más Pedidos" items={bestsellerItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" />
       )}
 
-      {/* CATEGORY SECTIONS */}
-      {categorySections.map(section => {
-        const isPromo = section.name === 'Combos';
-        return (
-          <CategorySection
-            key={section.name}
-            title={`${CATEGORY_EMOJIS[section.name.toLowerCase()] || '🍽️'} ${section.name}`}
-            icon={null}
-            gradient="from-pop-purple to-pop-pink"
-            items={section.items}
-            config={config}
-            onViewProductDetails={onViewProductDetails}
-            addToCart={addToCart}
-            setTab={setTab}
-          />
-        );
-      })}
+      {/* CATEGORÍAS */}
+      {categorySections.map(section => (
+        <CategorySection key={section.name} title={section.name} items={section.items} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" />
+      ))}
 
       {/* PWA INSTALL */}
       <div className="px-4 mt-6">
@@ -370,10 +306,11 @@ interface CategorySectionProps {
   onViewProductDetails: (food: FoodItem) => void;
   addToCart: (item: FoodItem, qty?: number, opts?: any[], total?: number, removed?: string[]) => void;
   isOffer?: boolean;
-  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
 }
 
 const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient, items, config, onViewProductDetails, addToCart, isOffer, setTab }) => {
+  const themeColor = config.theme_color || '#E31837';
   const scrollId = `scroll-${title.replace(/\s+/g, '-')}`;
 
   const scroll = (dir: 'left' | 'right') => {
@@ -382,14 +319,15 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient
   };
 
   return (
-    <div className="px-4 mt-6">
+    <div className="px-4 mt-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-display font-bold text-zinc-900 flex items-center gap-2">
+        <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
           {icon}
           <span>{title}</span>
         </h3>
         <button onClick={() => setTab('catalog')}
-          className="text-xs font-bold text-pop-pink hover:text-pink-700 transition-colors cursor-pointer"
+          className="text-xs font-semibold transition-colors cursor-pointer"
+          style={{ color: themeColor }}
         >
           Ver todo →
         </button>
@@ -410,7 +348,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient
             </div>
           ))}
         </div>
-        {/* Scroll arrows (desktop) */}
         <button onClick={() => scroll('left')}
           className="hidden lg:flex absolute -left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-zinc-200 rounded-full shadow-lg items-center justify-center hover:bg-zinc-50 transition-all cursor-pointer z-10"
         >

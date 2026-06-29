@@ -32,6 +32,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   setDrawerOpen,
 }) => {
   const { cart, config, isAdminAuthenticated, logoutAdmin, currentUser, notifications } = useApp();
+  const themeColor = config.theme_color || '#E31837';
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const getWhatsAppPhone = () => {
@@ -90,9 +91,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                   onClick={() => setTab(link.tab)}
                   className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
                     isActive
-                      ? 'text-orange-600 bg-orange-50'
+                      ? ''
                       : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
                   }`}
+                  style={isActive ? { color: themeColor, backgroundColor: themeColor + '15' } : {}}
                 >
                   {link.label}
                 </button>
@@ -128,16 +130,18 @@ export const Navigation: React.FC<NavigationProps> = ({
       >
         {/* Nav: Inicio */}
         <button onClick={() => setTab('home')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'home' ? 'text-pop-pink' : 'text-zinc-400'}`}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'home' ? '' : 'text-zinc-400'}`}
+          style={currentTab === 'home' ? { color: themeColor } : {}}
         >
-          {currentTab === 'home' && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
+          {currentTab === 'home' && <span className="absolute top-0 w-6 h-[3px] rounded-full" style={{ backgroundColor: themeColor }} />}
           <Home size={20} strokeWidth={currentTab === 'home' ? 2.5 : 1.8} />
           <span className="text-[10px] mt-0.5 font-semibold">Inicio</span>
         </button>
 
         {/* Nav: Menú */}
         <button onClick={() => setDrawerOpen(true)}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'catalog' ? 'text-pop-pink' : 'text-zinc-400'}`}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'catalog' ? '' : 'text-zinc-400'}`}
+          style={currentTab === 'catalog' ? { color: themeColor } : {}}
         >
           <Grid size={20} strokeWidth={currentTab === 'catalog' ? 2.5 : 1.8} />
           <span className="text-[10px] mt-0.5 font-semibold">Menú</span>
@@ -145,13 +149,15 @@ export const Navigation: React.FC<NavigationProps> = ({
 
         {/* Nav: Carrito */}
         <button onClick={() => setTab('checkout')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'cart' || currentTab === 'checkout' ? 'text-pop-pink' : 'text-zinc-400'}`}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'cart' || currentTab === 'checkout' ? '' : 'text-zinc-400'}`}
+          style={(currentTab === 'cart' || currentTab === 'checkout') ? { color: themeColor } : {}}
         >
-          {(currentTab === 'cart' || currentTab === 'checkout') && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
+          {(currentTab === 'cart' || currentTab === 'checkout') && <span className="absolute top-0 w-6 h-[3px] rounded-full" style={{ backgroundColor: themeColor }} />}
           <div className="relative">
             <ShoppingCart size={20} strokeWidth={currentTab === 'cart' || currentTab === 'checkout' ? 2.5 : 1.8} />
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-pop-pink text-white text-[9px] font-bold px-1 leading-none shadow-lg">
+              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[9px] font-bold px-1 leading-none shadow-lg"
+                style={{ backgroundColor: themeColor }}>
                 {cartCount}
               </span>
             )}
@@ -161,9 +167,10 @@ export const Navigation: React.FC<NavigationProps> = ({
 
         {/* Nav: Perfil */}
         <button onClick={() => setTab('profile')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'profile' ? 'text-pop-pink' : 'text-zinc-400'}`}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'profile' ? '' : 'text-zinc-400'}`}
+          style={currentTab === 'profile' ? { color: themeColor } : {}}
         >
-          {currentTab === 'profile' && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
+          {currentTab === 'profile' && <span className="absolute top-0 w-6 h-[3px] rounded-full" style={{ backgroundColor: themeColor }} />}
           <div className="relative">
             <User size={20} strokeWidth={currentTab === 'profile' ? 2.5 : 1.8} />
             {unreadCount > 0 && (
