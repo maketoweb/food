@@ -6,7 +6,7 @@ import { LeafletMap } from '../components/LeafletMap';
 import { SEOHead } from '../components/SEOHead';
 
 interface CheckoutProps {
-  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {

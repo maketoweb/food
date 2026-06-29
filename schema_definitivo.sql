@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS products (
     delivery_gratis BOOLEAN NOT NULL DEFAULT FALSE,
     ingredientes TEXT[] DEFAULT ARRAY[]::TEXT[],
     option_groups JSONB DEFAULT '[]'::JSONB,
+    related_ids TEXT[] DEFAULT ARRAY[]::TEXT[],
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

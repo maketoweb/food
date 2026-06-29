@@ -24,6 +24,7 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
   const [formVendido, setFormVendido] = useState(false);
   const [formDeliveryGratis, setFormDeliveryGratis] = useState(false);
   const [formActivo, setFormActivo] = useState(true);
+  const [formRelatedIds, setFormRelatedIds] = useState<string[]>([]);
 
   // Local validation error state
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
@@ -41,6 +42,7 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       setFormVendido(!!part.es_mas_vendido);
       setFormDeliveryGratis(!!part.delivery_gratis);
       setFormActivo(part.activo !== undefined ? part.activo : true);
+      setFormRelatedIds(part.related_ids || []);
       setValidationErrors({});
     }
   }, [part]);
@@ -88,7 +90,8 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       es_nuevo: formNuevo,
       es_mas_vendido: formVendido,
       delivery_gratis: formDeliveryGratis,
-      activo: formActivo
+      activo: formActivo,
+      related_ids: formRelatedIds
     };
 
     onSubmit(updatedPart);
@@ -427,6 +430,32 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
                 <span className="text-[9px] text-[#a1a1aa] leading-none">Envío sin costo</span>
               </div>
             </label>
+          </div>
+
+          {/* Related Products Selector */}
+          <div className="col-span-2 flex flex-col gap-2 border-t border-[#27272a]/40 pt-3 mt-1">
+            <span className="font-semibold text-zinc-350 text-xs">Productos Recomendados</span>
+            <p className="text-[10px] text-[#a1a1aa]">Selecciona productos que se sugieran al ver este artículo</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 max-h-[160px] overflow-y-auto">
+              {foodItems.filter(f => f.id !== part.id).map(f => (
+                <label key={f.id} className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer transition-colors ${formRelatedIds.includes(f.id) ? 'border-emerald-500 bg-emerald-500/10' : 'border-[#27272a] hover:border-zinc-500'}`}>
+                  <input
+                    type="checkbox"
+                    checked={formRelatedIds.includes(f.id)}
+                    onChange={() => {
+                      setFormRelatedIds(prev =>
+                        prev.includes(f.id) ? prev.filter(id => id !== f.id) : [...prev, f.id]
+                      );
+                    }}
+                    className="accent-emerald-500"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-white truncate">{f.nombre}</p>
+                    <p className="text-[8px] text-zinc-500">{f.categoria}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
 
         </div>

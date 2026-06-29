@@ -8,7 +8,6 @@ import { UserProfile } from './pages/UserProfile';
 import { Navigation } from './components/Navigation';
 import { FoodItem, SelectedOption } from './types/store';
 import { PushNotificationModal } from './components/PushNotificationModal';
-import { CheckoutModal } from './components/CheckoutModal';
 import { ProductOptionsEditor } from './components/ProductOptionsEditor';
 import { 
   X, ShoppingCart, Landmark, ShieldCheck, Tag, Info, AlertOctagon, 
@@ -20,7 +19,7 @@ import { SEOHead } from './components/SEOHead';
 import { getCategoryColor } from './utils/categoryColors';
 
 function AppContent() {
-  const { cart, config, addToCart, isAdminAuthenticated, authenticateAdmin, logoutAdmin, currentUser, notifications, displayCurrency, toggleCurrency, isGlobalLoading } = useApp();
+  const { cart, config, addToCart, isAdminAuthenticated, authenticateAdmin, logoutAdmin, currentUser, notifications, displayCurrency, toggleCurrency, isGlobalLoading, foodItems } = useApp();
 
   // Cache-busting para el logo: fuerza recarga cuando cambia
   const logoUrl = useMemo(() => config.logo_url ? `${config.logo_url}?v=${encodeURIComponent(config.logo_url)}` : '', [config.logo_url]);
@@ -48,13 +47,13 @@ function AppContent() {
   };
 
   // Route/Tab controllers
-  const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile'>('home');
+  const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Custom Overlays & Modals
   const [selectedProductDetails, setSelectedProductDetails] = useState<FoodItem | null>(null);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+
   const [globalSearch, setGlobalSearch] = useState<string>('');
   const [headerSearchInput, setHeaderSearchInput] = useState<string>('');
 
@@ -258,11 +257,11 @@ function AppContent() {
 
                 <button
                   type="button"
-                  onClick={() => setTab('cart')}
-                  style={tab === 'cart' ? { backgroundColor: config.theme_color || '#7c3aed' } : {}}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs rounded-xl font-bold transition-all cursor-pointer ${tab === 'cart' ? 'text-white shadow-md shadow-violet-500/10' : 'text-zinc-750 hover:bg-zinc-200/50'}`}
+                  onClick={() => setTab('checkout')}
+                  style={tab === 'checkout' ? { backgroundColor: config.theme_color || '#7c3aed' } : {}}
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs rounded-xl font-bold transition-all cursor-pointer ${tab === 'checkout' ? 'text-white shadow-md shadow-violet-500/10' : 'text-zinc-750 hover:bg-zinc-200/50'}`}
                 >
-                  Carrito de compras
+                  Checkout
                   {cart.length > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono">
                       {cart.reduce((acc, ci) => acc + ci.quantity, 0)}
@@ -439,12 +438,12 @@ function AppContent() {
 
                 <button
                   type="button"
-                  onClick={() => setTab('cart')}
+                  onClick={() => setTab('checkout')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-white font-bold transition-all shadow-[0_2px_12px_rgba(0,0,0,0.15)] active:scale-95 cursor-pointer text-xs font-mono hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #F472B6, #A855F7)' }}
+                  style={{ background: config.theme_color || '#7c3aed' }}
                 >
                   <ShoppingCart size={15} />
-                  <span className="hidden sm:inline text-[11px]">Carrito</span>
+                  <span className="hidden sm:inline text-[11px]">Checkout</span>
                   <span className="bg-black/15 px-1.5 py-0.5 rounded text-[10px] font-bold">
                     {cart.reduce((acc, ci) => acc + ci.quantity, 0)}
                   </span>
@@ -540,34 +539,20 @@ function AppContent() {
           />
         )}
  
-        {tab === 'cart' && !showCheckoutModal && (
-          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-            <ShoppingBag size={48} className="text-pop-pink mb-4" />
-            <h2 className="text-xl font-display font-bold text-zinc-900 mb-2">Tu Pedido</h2>
-            <p className="text-zinc-500 text-sm mb-6">
-              {cart.length === 0
-                ? 'No has agregado nada al carrito aún.'
-                : `Tienes ${cart.reduce((a, c) => a + c.quantity, 0)} artículos en tu pedido.`}
-            </p>
-            {cart.length > 0 ? (
-              <button onClick={() => setShowCheckoutModal(true)}
-                className="bg-pop-pink hover:bg-pink-600 text-white font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm cursor-pointer shadow-xl"
-              >
-                Ir al Checkout
-              </button>
-            ) : (
-              <button onClick={() => setTab('catalog')}
-                className="bg-pop-orange hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm cursor-pointer"
-              >
-                Ver Menú
-              </button>
-            )}
-          </div>
-        )}
-
-        {showCheckoutModal && (
-          <CheckoutModal onClose={() => setShowCheckoutModal(false)} />
-        )}
+          {tab === 'checkout' && (
+            cart.length > 0 ? <Checkout setTab={setTab} /> : (
+              <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                <ShoppingBag size={48} className="text-zinc-300 mb-4" />
+                <h2 className="text-xl font-display font-bold text-zinc-900 mb-2">Carrito Vacío</h2>
+                <p className="text-zinc-500 text-sm mb-6">Agrega productos para iniciar el checkout.</p>
+                <button onClick={() => setTab('catalog')}
+                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm cursor-pointer"
+                >
+                  Ver Menú
+                </button>
+              </div>
+            )
+          )}
  
         {tab === 'admin' && (
           <Admin setTab={setTab} />
@@ -748,6 +733,36 @@ function AppContent() {
                     }}
                     themeColor={config.theme_color || '#FF6B35'}
                   />
+                </div>
+              )}
+
+              {/* RECOMMENDED PRODUCTS */}
+              {selectedProductDetails.related_ids && selectedProductDetails.related_ids.length > 0 && (
+                <div className="mb-4 pt-4 border-t border-zinc-100">
+                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Recomendados</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedProductDetails.related_ids.map(rid => {
+                      const rel = foodItems.find(f => f.id === rid);
+                      if (!rel) return null;
+                      return (
+                        <button
+                          key={rid}
+                          type="button"
+                          onClick={() => {
+                            addToCart(rel, 1);
+                            setSelectedProductDetails(null);
+                          }}
+                          className="flex items-center gap-2 p-2 rounded-xl border border-zinc-200 hover:border-zinc-900 hover:bg-zinc-50 transition-all text-left cursor-pointer"
+                        >
+                          <img src={rel.imagen_urls[0]} alt={rel.nombre} className="w-10 h-10 rounded-lg object-cover shrink-0" referrerPolicy="no-referrer" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-bold text-zinc-800 truncate">{rel.nombre}</p>
+                            <p className="text-[10px] text-zinc-500">+ ${rel.precio_usd.toFixed(2)}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

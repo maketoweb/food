@@ -17,8 +17,8 @@ import {
 import { useApp } from '../store/AppContext';
 
 interface NavigationProps {
-  currentTab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile';
-  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
+  currentTab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout';
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
   onTriggerAdminLogin: () => void;
   drawerOpen: boolean;
   setDrawerOpen: (value: boolean) => void;
@@ -105,7 +105,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* Cart Icon */}
             <button
               type="button"
-              onClick={() => setTab('cart')}
+              onClick={() => setTab('checkout')}
               className="relative p-2.5 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
               aria-label="Ver carrito"
             >
@@ -144,12 +144,12 @@ export const Navigation: React.FC<NavigationProps> = ({
         </button>
 
         {/* Nav: Carrito */}
-        <button onClick={() => setTab('cart')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'cart' ? 'text-pop-pink' : 'text-zinc-400'}`}
+        <button onClick={() => setTab('checkout')}
+          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'cart' || currentTab === 'checkout' ? 'text-pop-pink' : 'text-zinc-400'}`}
         >
-          {currentTab === 'cart' && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
+          {(currentTab === 'cart' || currentTab === 'checkout') && <span className="absolute top-0 w-6 h-[3px] rounded-full bg-pop-pink" />}
           <div className="relative">
-            <ShoppingCart size={20} strokeWidth={currentTab === 'cart' ? 2.5 : 1.8} />
+            <ShoppingCart size={20} strokeWidth={currentTab === 'cart' || currentTab === 'checkout' ? 2.5 : 1.8} />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-pop-pink text-white text-[9px] font-bold px-1 leading-none shadow-lg">
                 {cartCount}
@@ -242,9 +242,9 @@ export const Navigation: React.FC<NavigationProps> = ({
 
               <button
                 type="button"
-                onClick={() => { setTab('cart'); setDrawerOpen(false); }}
+                onClick={() => { setTab('checkout'); setDrawerOpen(false); }}
                 className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                  currentTab === 'cart' ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
+                  (currentTab === 'cart' || currentTab === 'checkout') ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
                 }`}
               >
                 <ShoppingCart size={16} /> Mi Pedido

@@ -37,6 +37,7 @@ export interface FoodItem {
   ingredientes?: string[];
   activo?: boolean;
   option_groups?: FoodOptionGroup[];
+  related_ids?: string[];
 }
 
 export interface SelectedOption {
