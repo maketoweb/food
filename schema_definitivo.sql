@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS usuarios_clientes (
 -- ----------------------------------------------------------------------------
 -- 3. food_items (antes products)
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS food_items (
+CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nombre TEXT NOT NULL,
     descripcion TEXT DEFAULT '',
@@ -83,17 +83,18 @@ CREATE TABLE IF NOT EXISTS food_items (
     es_mas_vendido BOOLEAN NOT NULL DEFAULT FALSE,
     delivery_gratis BOOLEAN NOT NULL DEFAULT FALSE,
     ingredientes TEXT[] DEFAULT ARRAY[]::TEXT[],
+    option_groups JSONB DEFAULT '[]'::JSONB,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Migrar datos existentes si la tabla vieja existe
+-- Migrar datos desde tabla legacy food_items si existe
 DO $$
 BEGIN
-    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'products') THEN
-        INSERT INTO food_items (id, nombre, descripcion, categoria, precio_usd, stock, imagen_urls, es_promo, es_nuevo, es_mas_vendido, delivery_gratis, activo)
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'food_items') THEN
+        INSERT INTO products (id, nombre, descripcion, categoria, precio_usd, stock, imagen_urls, es_promo, es_nuevo, es_mas_vendido, delivery_gratis, activo)
         SELECT id, nombre, descripcion, categoria, precio_usd, stock, imagen_urls, es_promo, es_nuevo, es_mas_vendido, delivery_gratis, activo
-        FROM products
+        FROM food_items
         ON CONFLICT (id) DO NOTHING;
     END IF;
 END $$;
@@ -103,7 +104,7 @@ END $$;
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS food_item_options (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    food_item_id UUID REFERENCES food_items(id) ON DELETE CASCADE,
+    food_item_id UUID REFERENCES products(id) ON DELETE CASCADE,
     group_name TEXT NOT NULL,
     min_select INTEGER NOT NULL DEFAULT 0,
     max_select INTEGER NOT NULL DEFAULT 1,

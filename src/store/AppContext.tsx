@@ -1617,7 +1617,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         productsQuery = productsQuery.eq('activo', true);
       }
       const { data: dbProducts } = await productsQuery;
-      if (dbProducts) setProducts(dbProducts as FoodItem[]);
+      if (dbProducts) {
+        const merged = (dbProducts as FoodItem[]).map(p => {
+          const hasDbOptions = Array.isArray(p.option_groups) && p.option_groups.length > 0;
+          if (hasDbOptions) return p;
+          const fallback = DEFAULT_PRODUCTS.find(d => d.nombre === p.nombre && d.categoria === p.categoria);
+          return { ...p, option_groups: fallback?.option_groups || [] };
+        });
+        setProducts(merged);
+      }
       
       // Cargar configuración COMPLETA de la tienda
       const { data: dbConfig } = await supabase.from('store_config').select('*').single();

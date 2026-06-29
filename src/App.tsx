@@ -783,7 +783,7 @@ function AppContent() {
                     setRemovedIngredients(new Set());
                   }}
                   className="flex-1 h-12 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98] hover:opacity-90 shadow-lg"
-                  style={{ background: getCategoryColor(selectedProductDetails.categoria).gradient, boxShadow: `0 4px 20px ${getCategoryColor(selectedProductDetails.categoria).primary}33` }}
+                  style={{ background: config.theme_color || '#FF6B35', boxShadow: `0 4px 20px ${(config.theme_color || '#FF6B35')}44` }}
                 >
                   <ShoppingCart size={16} />
                   Agregar al Carrito · ${(selectedProductDetails.precio_usd * microModalQuantity + optionsTotal * microModalQuantity).toFixed(2)}

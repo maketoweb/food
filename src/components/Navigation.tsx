@@ -117,17 +117,6 @@ export const Navigation: React.FC<NavigationProps> = ({
               )}
             </button>
 
-            {/* WhatsApp */}
-            <a
-              href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
-              target="_blank"
-              referrerPolicy="no-referrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors shadow-sm"
-              aria-label="Contactar por WhatsApp"
-            >
-              <MessageCircle size={16} />
-              <span className="hidden xl:inline">WhatsApp</span>
-            </a>
           </div>
         </div>
       </header>
