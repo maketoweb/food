@@ -1211,7 +1211,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                       <span className="text-3xl mt-1"></span>
                       <p className="font-semibold text-zinc-700">Tu bandeja de avisos está limpia</p>
                       <p className="text-[11px] text-zinc-400 max-w-xs mt-0.5 leading-relaxed">
-                        Aquí enviaremos ofertas inmediatas en quesos, carnes frescas, embutidos y cupones de despacho gratuito en el Gran Valencia.
+                        Aquí recibirás notificaciones de tus pedidos, ofertas especiales y cupones de descuento.
                       </p>
                     </div>
                   ) : (

@@ -526,7 +526,7 @@ ${productosDetailText}
             <div className="text-center py-16 flex flex-col items-center justify-center p-6 bg-zinc-50/50 border border-zinc-200 rounded-lg">
               <ListOrdered size={36} className="text-zinc-400 mb-2" />
               <p className="text-xs font-bold font-display text-zinc-800">Tu carrito esta vacio</p>
-              <p className="text-[11px] text-zinc-500 mt-1 max-w-xs leading-relaxed">Explora nuestros pasillos premium para agregar quesos, carnes, despensa y licores.</p>
+              <p className="text-[11px] text-zinc-500 mt-1 max-w-xs leading-relaxed">Agrega hamburguesas, pizzas, pollo, papas, postres y bebidas a tu carrito.</p>
               <button
                 type="button"
                 onClick={() => setTab('catalog')}
