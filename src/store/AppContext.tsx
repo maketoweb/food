@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption } from '../types/store';
+import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
@@ -72,6 +72,16 @@ interface AppContextProps {
   
   // App State
   isGlobalLoading: boolean;
+  
+  // Reviews
+  reviews: ProductReview[];
+  addReview: (productId: string, rating: number, comment?: string) => Promise<boolean>;
+  getProductReviews: (productId: string) => ProductReview[];
+  getProductAverageRating: (productId: string) => number;
+  
+  // Flash Sales
+  flashSales: FlashSale[];
+  getActiveFlashSale: (productId: string) => FlashSale | null;
   
   // Auth
   authenticateAdmin: (email: string, pass: string) => Promise<boolean>;
@@ -1201,6 +1211,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [reviews, setReviews] = useState<ProductReview[]>(() => {
+    const saved = localStorage.getItem('trv_reviews');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [flashSales, setFlashSales] = useState<FlashSale[]>(() => {
+    const saved = localStorage.getItem('trv_flash_sales');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // --- MOTOR DE TIEMPO REAL (SUPABASE CHANNELS) ---
   const currentUserRef = useRef<AppUser | null>(currentUser);
   const isAdminAuthenticatedRef = useRef(isAdminAuthenticated);
@@ -1234,29 +1254,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   }, [isGlobalLoading]);
 
-  const playNotificationSound = (type: 'new' | 'update', status?: Order['status']) => {
+  const playNotificationSound = (type: 'new' | 'update' | 'addToCart' | 'error' | 'swipe', status?: Order['status']) => {
     const soundUrl = type === 'new'
       ? 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'
+      : type === 'addToCart'
+      ? 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'
       : 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
-    // Reproducir directamente en el cliente (contexto de ventana, NO de SW)
     const audio = new Audio(soundUrl);
     audio.volume = 0.8;
     audio.play().catch((err) => {
       if (err.name === 'NotAllowedError') {
-        console.warn('📢 Marketo: Audio bloqueado — se necesita interacción previa del usuario.');
+        console.warn('📢 Audio bloqueado — se necesita interacción previa del usuario.');
       } else {
-        console.warn('📢 Marketo: Error al reproducir audio:', err.message);
+        console.warn('📢 Error al reproducir audio:', err.message);
       }
     });
 
     if (hapticEnabledRef.current && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      if (type === 'update' && status === 'En camino') {
-        navigator.vibrate(100);
-      }
-      if (type === 'new') {
-        navigator.vibrate([200, 100, 200]);
-      }
+      const patterns: Record<string, number | number[]> = {
+        addToCart: 50,
+        orderConfirmed: [100, 50, 100],
+        error: 200,
+        swipe: 30,
+        new: [200, 100, 200],
+        update: status === 'En camino' ? 100 : 50
+      };
+      navigator.vibrate(patterns[type] || 50);
     }
   };
 
@@ -1530,6 +1554,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('trv_favorites', JSON.stringify(favorites));
   }, [favorites]);
 
+  useEffect(() => {
+    localStorage.setItem('trv_reviews', JSON.stringify(reviews));
+  }, [reviews]);
+
+  useEffect(() => {
+    localStorage.setItem('trv_flash_sales', JSON.stringify(flashSales));
+  }, [flashSales]);
+
   // Daily Exchange Rate Update Routine (BCV Oficial)
   const fetchExchangeRate = async (retryCount = 0): Promise<boolean> => {
     const MAX_RETRIES = 2;
@@ -1673,6 +1705,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { data: dbCoupons } = await supabase.from('coupons').select('*');
       if (dbCoupons) setCoupons(dbCoupons as Coupon[]);
 
+      // Cargar reviews
+      const { data: dbReviews } = await supabase.from('product_reviews').select('*').order('created_at', { ascending: false });
+      if (dbReviews) setReviews(dbReviews as ProductReview[]);
+
+      // Cargar flash sales activas
+      const { data: dbFlashSales } = await supabase.from('flash_sales').select('*').eq('active', true);
+      if (dbFlashSales) setFlashSales(dbFlashSales as FlashSale[]);
+
       if (isAdmin) {
         setIsAdminAuthenticated(true);
         // Cargar TODO para el admin ignorando filtros de usuario
@@ -1748,6 +1788,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isFavorite = (itemId: string) => {
     return favorites.includes(itemId);
+  };
+
+  // --- REVIEWS ---
+  const addReview = async (productId: string, rating: number, comment?: string): Promise<boolean> => {
+    if (!currentUser) return false;
+    
+    const newReview: ProductReview = {
+      id: `rev-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      product_id: productId,
+      user_id: currentUser.id,
+      user_name: currentUser.nombre,
+      rating,
+      comment: comment || undefined,
+      created_at: new Date().toISOString()
+    };
+
+    // Save to Supabase
+    const { error } = await supabase.from('product_reviews').insert({
+      id: newReview.id,
+      product_id: newReview.product_id,
+      user_id: newReview.user_id,
+      user_name: newReview.user_name,
+      rating: newReview.rating,
+      comment: newReview.comment
+    });
+
+    if (error) {
+      console.error('Error adding review:', error);
+      return false;
+    }
+
+    setReviews(prev => [...prev, newReview]);
+    
+    addNotification(
+      'Nueva Reseña ⭐',
+      `${currentUser.nombre} calificó un producto con ${rating} estrella${rating !== 1 ? 's' : ''}.`,
+      'admin'
+    );
+    
+    return true;
+  };
+
+  const getProductReviews = (productId: string): ProductReview[] => {
+    return reviews.filter(r => r.product_id === productId);
+  };
+
+  const getProductAverageRating = (productId: string): number => {
+    const productReviews = reviews.filter(r => r.product_id === productId);
+    if (productReviews.length === 0) return 0;
+    const sum = productReviews.reduce((acc, r) => acc + r.rating, 0);
+    return sum / productReviews.length;
+  };
+
+  // --- FLASH SALES ---
+  const getActiveFlashSale = (productId: string): FlashSale | null => {
+    const now = new Date().toISOString();
+    return flashSales.find(
+      fs => fs.product_id === productId && fs.active && fs.end_date > now
+    ) || null;
   };
 
   const requestPart = async (nombre: string, telefono: string, descripcion: string, imagenUrl?: string): Promise<boolean> => {
@@ -1998,6 +2097,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       distancia_km: newOrder.distancia_km,
       status: newOrder.status,
       tiempo_estimado_entrega: newOrder.tiempo_estimado_entrega,
+      guest_phone: orderData.guest_phone || null,
       fecha: new Date().toISOString()
     }]);
 
@@ -2009,6 +2109,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
+
+    // Guest checkout: store guest phone for future account creation
+    if (orderData.crear_cuenta && orderData.guest_phone && !currentUser) {
+      localStorage.setItem('foodpop_guest_phone', orderData.guest_phone);
+      localStorage.setItem('foodpop_guest_name', orderData.cliente_nombre);
+    }
 
     // BROADCAST: Enviar señal inmediata al Admin sin esperar a la DB
     supabase.channel('marketo_realtime_system').send({
@@ -2696,7 +2802,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       displayCurrency,
       toggleCurrency,
       hapticEnabled,
-      toggleHaptic
+      toggleHaptic,
+      reviews,
+      addReview,
+      getProductReviews,
+      getProductAverageRating,
+      flashSales,
+      getActiveFlashSale
     }}>
       {children}
     </AppContext.Provider>

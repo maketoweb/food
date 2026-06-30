@@ -4,6 +4,8 @@ import { FoodItem } from '../types/store';
 import { ArrowRight, ShoppingCart, Search, Sparkles, Flame, Zap, Bell, Smartphone, Clock, Star, X, ChefHat, MessageSquare } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { ProductCard } from '../components/ProductCard';
+import { PremiumProductCard } from '../components/PremiumProductCard';
+import { FlashSaleTimer } from '../components/FlashSaleTimer';
 import { getCategoryColor } from '../utils/categoryColors';
 
 const CATEGORY_EMOJIS: Record<string, string> = {
@@ -42,7 +44,7 @@ export const Home: React.FC<HomeProps> = ({
   navigateToCatalog,
   deferredPrompt, onInstallClick
 }) => {
-  const { foodItems, config, addToCart } = useApp();
+  const { foodItems, config, addToCart, getProductAverageRating, getProductReviews, getActiveFlashSale } = useApp();
   const themeColor = config.theme_color || '#E31837';
   const [activeBanner, setActiveBanner] = useState(0);
   const [suggestions, setSuggestions] = useState<FoodItem[]>([]);
@@ -53,6 +55,24 @@ export const Home: React.FC<HomeProps> = ({
   const promoItems = useMemo(() => activeItems.filter(p => p.es_promo), [activeItems]);
   const newItems = useMemo(() => activeItems.filter(p => p.es_nuevo), [activeItems]);
   const bestsellerItems = useMemo(() => activeItems.filter(p => p.es_mas_vendido), [activeItems]);
+  
+  // Top ordered items for social proof
+  const topOrderedItems = useMemo(() => {
+    return [...activeItems]
+      .filter(p => (p.order_count || 0) > 0)
+      .sort((a, b) => (b.order_count || 0) - (a.order_count || 0))
+      .slice(0, 5);
+  }, [activeItems]);
+  
+  // Active flash sales
+  const activeFlashSales = useMemo(() => {
+    return activeItems
+      .map(p => {
+        const fs = getActiveFlashSale(p.id);
+        return fs ? { product: p, flashSale: fs } : null;
+      })
+      .filter(Boolean) as { product: FoodItem; flashSale: NonNullable<ReturnType<typeof getActiveFlashSale>> }[];
+  }, [activeItems, getActiveFlashSale]);
 
   // Category sections (for display, skip empty ones)
   const categorySections = useMemo(() => {
@@ -196,24 +216,78 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      {/* PROMOS */}
+      {/* FLASH SALES */}
+      {activeFlashSales.length > 0 && (
+        <div className="px-4 mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-lg bg-red-500 flex items-center justify-center">
+              <Zap size={12} className="text-white" />
+            </div>
+            <h3 className="text-base font-bold text-zinc-900">Oferta Flash</h3>
+            <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full animate-pulse">AHORA</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {activeFlashSales.slice(0, 2).map(({ product, flashSale }) => (
+              <FlashSaleTimer
+                key={flashSale.id}
+                endDate={flashSale.end_date}
+                discountPercent={flashSale.discount_percent}
+                productName={product.nombre}
+                originalPrice={product.precio_usd}
+                themeColor={themeColor}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* LO QUE TODOS PIDEN - Premium */}
+      {topOrderedItems.length > 0 && (
+        <div className="px-4 mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg">
+              <Flame size={14} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-zinc-900">Lo que todos piden</h3>
+              <p className="text-[10px] text-zinc-400 font-medium">Los favoritos de nuestros clientes</p>
+            </div>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:grid-cols-5">
+            {topOrderedItems.map(item => (
+              <div key={item.id} className="shrink-0 w-[180px] sm:w-[200px] lg:w-auto snap-start">
+                <PremiumProductCard
+                  item={item}
+                  config={config}
+                  onViewProductDetails={onViewProductDetails}
+                  addToCart={(food) => addToCart(food)}
+                  averageRating={getProductAverageRating(item.id)}
+                  reviewCount={getProductReviews(item.id).length}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* PROMOS - Premium */}
       {promoItems.length > 0 && (
-        <CategorySection title="Promos" items={promoItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} isOffer setTab={setTab} icon={null} gradient="" />
+        <CategorySection title="Promos" items={promoItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} isOffer setTab={setTab} icon={null} gradient="" getProductAverageRating={getProductAverageRating} getProductReviews={getProductReviews} usePremium />
       )}
 
-      {/* NUEVOS */}
+      {/* NUEVOS - Premium */}
       {newItems.length > 0 && (
-        <CategorySection title="Nuevos" items={newItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" />
+        <CategorySection title="Nuevos" items={newItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" getProductAverageRating={getProductAverageRating} getProductReviews={getProductReviews} usePremium />
       )}
 
-      {/* MÁS PEDIDOS */}
+      {/* MÁS PEDIDOS - Premium */}
       {bestsellerItems.length > 0 && (
-        <CategorySection title="Más Pedidos" items={bestsellerItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" />
+        <CategorySection title="Más Pedidos" items={bestsellerItems} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" getProductAverageRating={getProductAverageRating} getProductReviews={getProductReviews} usePremium />
       )}
 
       {/* CATEGORÍAS */}
       {categorySections.map(section => (
-        <CategorySection key={section.name} title={section.name} items={section.items} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" />
+        <CategorySection key={section.name} title={section.name} items={section.items} config={config} onViewProductDetails={onViewProductDetails} addToCart={addToCart} setTab={setTab} icon={null} gradient="" getProductAverageRating={getProductAverageRating} getProductReviews={getProductReviews} />
       ))}
 
       {/* PWA INSTALL */}
@@ -307,9 +381,12 @@ interface CategorySectionProps {
   addToCart: (item: FoodItem, qty?: number, opts?: any[], total?: number, removed?: string[]) => void;
   isOffer?: boolean;
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
+  getProductAverageRating?: (productId: string) => number;
+  getProductReviews?: (productId: string) => any[];
+  usePremium?: boolean;
 }
 
-const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient, items, config, onViewProductDetails, addToCart, isOffer, setTab }) => {
+const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient, items, config, onViewProductDetails, addToCart, isOffer, setTab, getProductAverageRating, getProductReviews, usePremium = false }) => {
   const themeColor = config.theme_color || '#E31837';
   const scrollId = `scroll-${title.replace(/\s+/g, '-')}`;
 
@@ -338,13 +415,26 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient
         >
           {items.map(item => (
             <div key={item.id} className="shrink-0 w-[180px] sm:w-[200px] lg:w-auto snap-start">
-              <ProductCard
-                item={item}
-                config={config}
-                onViewProductDetails={onViewProductDetails}
-                addToCart={(food) => addToCart(food)}
-                isOffer={isOffer}
-              />
+              {usePremium ? (
+                <PremiumProductCard
+                  item={item}
+                  config={config}
+                  onViewProductDetails={onViewProductDetails}
+                  addToCart={(food) => addToCart(food)}
+                  averageRating={getProductAverageRating?.(item.id) || 0}
+                  reviewCount={getProductReviews?.(item.id)?.length || 0}
+                />
+              ) : (
+                <ProductCard
+                  item={item}
+                  config={config}
+                  onViewProductDetails={onViewProductDetails}
+                  addToCart={(food) => addToCart(food)}
+                  isOffer={isOffer}
+                  averageRating={getProductAverageRating?.(item.id) || 0}
+                  reviewCount={getProductReviews?.(item.id)?.length || 0}
+                />
+              )}
             </div>
           ))}
         </div>

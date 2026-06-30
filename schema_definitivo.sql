@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS usuarios_clientes (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     nombre TEXT NOT NULL,
     email TEXT UNIQUE,
-    telefono VARCHAR(20) UNIQUE NOT NULL,
+    telefono VARCHAR(20) UNIQUE,
     contrasena TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -240,7 +240,7 @@ BEGIN
         NEW.id::text,
         COALESCE(NEW.raw_user_meta_data->>'nombre', 'Usuario Nuevo'),
         NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'telefono', ''),
+        NULLIF(COALESCE(NEW.raw_user_meta_data->>'telefono', ''), ''),
         'auth_managed'
     )
     ON CONFLICT (id) DO NOTHING;
@@ -713,6 +713,79 @@ INSERT INTO products (nombre, descripcion, categoria, precio_usd, stock, imagen_
 ('Sundae de Chocolate', 'Helado de chocolate con crema batida, salsa de chocolate, nueces y cereza.', 'Postres', 4.00, 35, ARRAY['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=500'], false, false, false, false, true),
 ('Flan Casero', 'Flan de caramelo casero, suave y cremoso. Receta tradicional de la abuela.', 'Postres', 3.50, 30, ARRAY['https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=500'], false, false, false, false, true),
 ('Helado Artesanal 2 bolas', '2 bolas de helado artesanal a tu elección: vainilla, chocolate, fresa o mantecado.', 'Postres', 3.50, 40, ARRAY['https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&q=80&w=500'], false, false, false, false, true);
+
+-- ----------------------------------------------------------------------------
+-- 8. product_reviews (SISTEMA DE CALIFICACIONES)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS product_reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
+
+-- Policies for product_reviews
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='product_reviews' AND policyname='reviews_select_public') THEN
+        CREATE POLICY "reviews_select_public" ON product_reviews FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='product_reviews' AND policyname='reviews_insert_auth') THEN
+        CREATE POLICY "reviews_insert_auth" ON product_reviews FOR INSERT TO authenticated WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='product_reviews' AND policyname='reviews_insert_anon') THEN
+        CREATE POLICY "reviews_insert_anon" ON product_reviews FOR INSERT TO anon WITH CHECK (true);
+    END IF;
+END $$;
+
+GRANT SELECT, INSERT ON product_reviews TO anon, authenticated;
+
+-- Index for fast lookups
+CREATE INDEX IF NOT EXISTS idx_product_reviews_product_id ON product_reviews(product_id);
+
+-- ----------------------------------------------------------------------------
+-- 9. flash_sales (SISTEMA DE OFERTAS FLASH)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS flash_sales (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    discount_percent INTEGER NOT NULL CHECK (discount_percent > 0 AND discount_percent <= 100),
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    max_quantity INTEGER,
+    sold_quantity INTEGER DEFAULT 0,
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE flash_sales ENABLE ROW LEVEL SECURITY;
+
+-- Policies for flash_sales
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='flash_sales' AND policyname='flash_sales_select_public') THEN
+        CREATE POLICY "flash_sales_select_public" ON flash_sales FOR SELECT USING (active = true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='flash_sales' AND policyname='flash_sales_admin_all') THEN
+        CREATE POLICY "flash_sales_admin_all" ON flash_sales FOR ALL TO authenticated
+        USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+        WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+    END IF;
+END $$;
+
+GRANT SELECT ON flash_sales TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON flash_sales TO authenticated;
+
+-- Index for active flash sales
+CREATE INDEX IF NOT EXISTS idx_flash_sales_active ON flash_sales(active, end_date);
+CREATE INDEX IF NOT EXISTS idx_flash_sales_product ON flash_sales(product_id);
+
+-- Agregar columnas faltantes a products si no existen
+ALTER TABLE products ADD COLUMN IF NOT EXISTS estimated_prep_time INTEGER;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS order_count INTEGER DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS promo_end_date TIMESTAMP WITH TIME ZONE;
 
 -- ==========================================================================
 -- CONFIGURACIÓN DE REALTIME (COMPATIBLE CON PLAN GRATUITO)

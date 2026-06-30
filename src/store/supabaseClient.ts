@@ -40,7 +40,7 @@ const createMockClient = (): SupabaseClient => {
     limit: () => mock,
     range: () => mock,
     upsert: () => mock,
-    then: (cb: Function) => cb({ data: [], error: null }),
+    then: (cb: (result: { data: unknown[]; error: null }) => void) => cb({ data: [], error: null }),
     storage: {
       from: () => ({
         upload: async () => ({ error: null }),

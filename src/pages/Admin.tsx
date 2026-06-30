@@ -787,7 +787,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
 
       // Analizador robusto de CSV que maneja valores entrecomillados
       const parseCSV = (str: string) => {
-        const rows = [];
+        const rows: string[][] = [];
         let row: string[] = [];
         let col = '';
         let inQuotes = false;

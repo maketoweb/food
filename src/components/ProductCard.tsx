@@ -1,6 +1,6 @@
 import React from 'react';
-import { FoodItem, StoreConfig } from '../types/store';
-import { ShoppingCart, Plus } from 'lucide-react';
+import { FoodItem, StoreConfig, ProductReview } from '../types/store';
+import { ShoppingCart, Plus, Star, Users, Flame, Clock, AlertTriangle } from 'lucide-react';
 
 interface ProductCardProps {
   item: FoodItem;
@@ -8,6 +8,8 @@ interface ProductCardProps {
   onViewProductDetails: (item: FoodItem) => void;
   addToCart: (item: FoodItem) => void;
   isOffer?: boolean;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -15,10 +17,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   config,
   onViewProductDetails,
   addToCart,
-  isOffer
+  isOffer,
+  averageRating = 0,
+  reviewCount = 0
 }) => {
   const isAgotado = item.stock <= 0;
   const themeColor = config.theme_color || '#E31837';
+  const isLowStock = item.stock > 0 && item.stock < (config.stock_alert_threshold || 5);
+  const hasPromoEnd = item.promo_end_date && new Date(item.promo_end_date) > new Date();
 
   return (
     <div className="shrink-0 w-[170px] sm:w-[215px] flex flex-col bg-white rounded-xl overflow-hidden transition-all duration-300 group relative border border-zinc-100 hover:border-zinc-200 hover:shadow-lg cursor-pointer"
@@ -54,6 +60,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               AGOTADO
             </span>
           )}
+          {isLowStock && !isAgotado && (
+            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-sm animate-pulse">
+              ¡Solo quedan {item.stock}!
+            </span>
+          )}
+          {hasPromoEnd && !isAgotado && (
+            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-red-500 text-white shadow-sm">
+              ⏰ Oferta limitada
+            </span>
+          )}
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); addToCart(item); }}
@@ -71,6 +87,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <p className="text-[10px] text-zinc-400 line-clamp-1 leading-tight">
           {item.descripcion}
         </p>
+        
+        {/* Social Proof Badges */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {averageRating > 0 && (
+            <span className="flex items-center gap-0.5 text-[9px] font-bold text-amber-500">
+              <Star size={9} fill="currentColor" strokeWidth={0} />
+              {averageRating.toFixed(1)}
+              {reviewCount > 0 && <span className="text-zinc-400 font-normal">({reviewCount})</span>}
+            </span>
+          )}
+          {item.order_count !== undefined && item.order_count > 0 && (
+            <span className="flex items-center gap-0.5 text-[9px] text-zinc-400">
+              <Users size={8} />
+              {item.order_count} pedidos
+            </span>
+          )}
+          {item.estimated_prep_time && (
+            <span className="flex items-center gap-0.5 text-[9px] text-zinc-400">
+              <Clock size={8} />
+              ~{item.estimated_prep_time} min
+            </span>
+          )}
+        </div>
+        
         <div className="mt-auto flex items-center justify-between pt-1.5">
           <span className="text-base font-black" style={{ color: themeColor }}>
             ${item.precio_usd.toFixed(2)}

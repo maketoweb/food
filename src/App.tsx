@@ -3,7 +3,7 @@ import { AppProvider, useApp } from './store/AppContext';
 import { Home } from './pages/Home';
 import { Catalog } from './pages/Catalog';
 import { Checkout } from './pages/Checkout';
-import { Admin } from './pages/Admin';
+import Admin from './pages/admin/index';
 import { UserProfile } from './pages/UserProfile';
 import { Navigation } from './components/Navigation';
 import { FoodItem, SelectedOption } from './types/store';
@@ -16,10 +16,13 @@ import {
   Search, ArrowRight, Download, Check
 } from 'lucide-react';
 import { SEOHead } from './components/SEOHead';
+import { ProductReviews } from './components/ProductReviews';
+import { SplashScreen } from './components/SplashScreen';
+import { OfflineBanner } from './components/OfflineBanner';
 import { getCategoryColor } from './utils/categoryColors';
 
 function AppContent() {
-  const { cart, config, addToCart, isAdminAuthenticated, authenticateAdmin, logoutAdmin, currentUser, notifications, displayCurrency, toggleCurrency, isGlobalLoading, foodItems } = useApp();
+  const { cart, config, addToCart, isAdminAuthenticated, authenticateAdmin, logoutAdmin, currentUser, notifications, displayCurrency, toggleCurrency, isGlobalLoading, foodItems, getProductReviews, getProductAverageRating, addReview } = useApp();
 
   // Cache-busting para el logo: fuerza recarga cuando cambia
   const logoUrl = useMemo(() => config.logo_url ? `${config.logo_url}?v=${encodeURIComponent(config.logo_url)}` : '', [config.logo_url]);
@@ -69,6 +72,7 @@ function AppContent() {
   const [selectedProductOptions, setSelectedProductOptions] = useState<SelectedOption[]>([]);
   const [optionsTotal, setOptionsTotal] = useState(0);
   const [removedIngredients, setRemovedIngredients] = useState<Set<number>>(new Set());
+  const [showSplash, setShowSplash] = useState(true);
 
   const resetAllFilters = () => {
     setSelectedCategory('');
@@ -119,62 +123,14 @@ function AppContent() {
     setTab('catalog');
   };
 
-  if (isGlobalLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-white relative overflow-hidden" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <div className="z-10 flex flex-col items-center">
-          <style>{`
-            @keyframes logoZoomIn {
-              0% { transform: scale(0.2); opacity: 0; }
-              60% { transform: scale(1.15); opacity: 1; }
-              80% { transform: scale(0.95); }
-              100% { transform: scale(1); opacity: 1; }
-            }
-            @keyframes nameSlideUp {
-              0% { transform: translateY(20px); opacity: 0; }
-              100% { transform: translateY(0); opacity: 1; }
-            }
-            @keyframes pulseGlow {
-              0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.3); }
-              50% { box-shadow: 0 0 40px rgba(255,255,255,0.6); }
-            }
-          `}</style>
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={config.site_nombre || 'Tienda'}
-              className="w-28 h-28 object-contain rounded-3xl mb-5"
-              style={{ animation: 'logoZoomIn 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards, pulseGlow 2s ease-in-out infinite 0.8s' }}
-            />
-          ) : (
-            <div
-              className="w-28 h-28 rounded-3xl flex items-center justify-center mb-5"
-              style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff', animation: 'logoZoomIn 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards, pulseGlow 2s ease-in-out infinite 0.8s' }}
-            >
-              <ShoppingBag size={48} />
-            </div>
-          )}
-          <h1
-            className="text-3xl font-extrabold font-display tracking-tight"
-            style={{ animation: 'nameSlideUp 0.6s ease-out 0.4s both' }}
-          >
-            {config.site_nombre || 'BurgerPop'}
-          </h1>
-          <p
-            className="text-violet-200 font-mono text-xs uppercase tracking-widest mt-2"
-            style={{ animation: 'nameSlideUp 0.6s ease-out 0.6s both' }}
-          >
-            Cargando menú...
-          </p>
-        </div>
-      </div>
-    );
+  if (isGlobalLoading || showSplash) {
+    return <SplashScreen config={config} onComplete={() => setShowSplash(false)} />;
   }
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 w-full flex justify-center">
       <SEOHead />
+      <OfflineBanner />
       <PushNotificationModal />
 
       {/* Main Grid Wrapper */}
@@ -765,6 +721,21 @@ function AppContent() {
                   </div>
                 </div>
               )}
+
+              {/* REVIEWS SECTION */}
+              <ProductReviews
+                reviews={getProductReviews(selectedProductDetails.id)}
+                averageRating={getProductAverageRating(selectedProductDetails.id)}
+                totalReviews={getProductReviews(selectedProductDetails.id).length}
+                productId={selectedProductDetails.id}
+                productName={selectedProductDetails.nombre}
+                themeColor={config.theme_color || '#FF6B35'}
+                canReview={!!currentUser}
+                onSubmitReview={async (rating, comment) => {
+                  await addReview(selectedProductDetails.id, rating, comment);
+                }}
+                userReview={getProductReviews(selectedProductDetails.id).find(r => r.user_id === currentUser?.id) || null}
+              />
 
               {/* QUANTITY + ADD TO CART */}
               <div className="flex items-center gap-4 pt-5 border-t border-zinc-100">

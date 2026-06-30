@@ -38,6 +38,9 @@ export interface FoodItem {
   activo?: boolean;
   option_groups?: FoodOptionGroup[];
   related_ids?: string[];
+  estimated_prep_time?: number;
+  order_count?: number;
+  promo_end_date?: string;
 }
 
 export interface SelectedOption {
@@ -62,6 +65,8 @@ export interface Order {
   cliente_telefono: string;
   cliente_email?: string;
   usuario_id?: string;
+  guest_phone?: string;
+  crear_cuenta?: boolean;
   items: OrderItem[];
   subtotal_usd: number;
   costo_envio_usd: number;
@@ -92,6 +97,65 @@ export interface Sede {
   horario?: string;
   activa: boolean;
   es_principal: boolean;
+}
+
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  cost: number;
+  minKm: number;
+  maxKm: number;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discount_percent: number;
+  active: boolean;
+  usage_limit?: number;
+  usage_count: number;
+  valid_until?: string;
+  created_at?: string;
+}
+
+export interface InAppNotification {
+  id: string;
+  titulo: string;
+  mensaje: string;
+  fecha: string;
+  tipo: 'todos' | 'personal' | 'admin' | 'request';
+  destinatario_telefono?: string;
+  leida: boolean;
+  imagen_url?: string;
+  link_url?: string;
+}
+
+export interface CartItem {
+  item: FoodItem;
+  quantity: number;
+  selected_options?: SelectedOption[];
+  options_total_usd?: number;
+  ingredientes_removidos?: string[];
+}
+
+export interface ProductReview {
+  id: string;
+  product_id: string;
+  user_id: string;
+  user_name: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+}
+
+export interface FlashSale {
+  id: string;
+  product_id: string;
+  discount_percent: number;
+  end_date: string;
+  max_quantity?: number;
+  sold_quantity: number;
+  active: boolean;
 }
 
 export interface StoreConfig {
@@ -138,43 +202,7 @@ export interface StoreConfig {
   esta_abierta?: boolean;
   tiene_mesas?: boolean;
   total_mesas?: number;
-}
-
-export interface DeliveryZone {
-  id: string;
-  name: string;
-  cost: number;
-  minKm: number;
-  maxKm: number;
-}
-
-export interface Coupon {
-  id: string;
-  code: string;
-  discount_percent: number;
-  active: boolean;
-  usage_limit?: number;
-  usage_count: number;
-  valid_until?: string;
-  created_at?: string;
-}
-
-export interface InAppNotification {
-  id: string;
-  titulo: string;
-  mensaje: string;
-  fecha: string;
-  tipo: 'todos' | 'personal' | 'admin' | 'request';
-  destinatario_telefono?: string;
-  leida: boolean;
-  imagen_url?: string;
-  link_url?: string;
-}
-
-export interface CartItem {
-  item: FoodItem;
-  quantity: number;
-  selected_options?: SelectedOption[];
-  options_total_usd?: number;
-  ingredientes_removidos?: string[];
+  secondary_logo_url?: string;
+  stock_alert_threshold?: number;
+  categories_colors?: Record<string, { primary: string; light: string; textColor: string }>;
 }
