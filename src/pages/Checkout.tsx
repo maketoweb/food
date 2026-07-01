@@ -5,6 +5,7 @@ import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, Info, X, Rocket,
 import { LeafletMap } from '../components/LeafletMap';
 import { SEOHead } from '../components/SEOHead';
 import { CartUpsell } from '../components/CartUpsell';
+import { OrderTracker } from '../components/OrderTracker';
 import { FoodItem } from '../types/store';
 
 interface CheckoutProps {
@@ -327,102 +328,11 @@ ${productosDetailText}
 
   if (processedOrder) {
     return (
-      <>
-      <div className="flex flex-col items-center justify-center p-6 text-center py-16 gap-4 text-zinc-900 bg-white rounded-lg border border-zinc-200 shadow-sm">
-        <SEOHead title="Pedido Confirmado" />
-        <div className="w-16 h-16 rounded-full border font-bold flex items-center justify-center text-3xl animate-bounce shadow-sm" style={{ backgroundColor: `${config.theme_color || '#0f5d34'}15`, borderColor: `${config.theme_color || '#0f5d34'}60`, color: config.theme_color || '#0f5d34' }}>
-          <CheckCircle size={32} />
-        </div>
-        <h3 className="text-[21px] font-bold font-display text-zinc-900">¡Compra Procesada!</h3>
-        <p className="text-[13px] text-zinc-600 max-w-sm leading-relaxed">
-          Pedido <strong>{processedOrder.id}</strong> recibido. Envíe su factura por WhatsApp.
-        </p>
-        <div className="w-full max-w-sm bg-zinc-50 border border-zinc-200 p-4 rounded-lg text-left text-xs text-zinc-700 flex flex-col gap-2 font-mono mt-2">
-          <span className="font-bold font-display text-[15px] tracking-tight border-b border-zinc-200 pb-1 block" style={{ color: config.theme_color || '#0f5d34' }}>Recibo</span>
-          <div>ID: <span className="text-zinc-900 font-bold">{processedOrder.id}</span></div>
-          <div>Cliente: <span className="text-zinc-900">{processedOrder.cliente_nombre}</span></div>
-          <div>Total: <span className="font-bold" style={{ color: config.theme_color || '#0f5d34' }}>${(processedOrder.total_usd || 0).toFixed(2)} / {(processedOrder.total_bs || 0).toFixed(2)} Bs</span></div>
-          <div>Metodo: <span className="text-zinc-900 font-bold">{processedOrder.metodo_pago}</span></div>
-        </div>
-        <div className="flex flex-col gap-2 w-full max-w-xs mt-4">
-          <button type="button" onClick={() => {
-              let details = '';
-              processedOrder.items.forEach((it: any) => { details += `- ${it.quantity || it.cantidad}x ${it.nombre} - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`; });
-              const msg = `*Nuevo Pedido en ${config.site_nombre || 'BurgerPop'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion:* ${processedOrder.direccion_envio}\n*Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n\n*Productos:*\n${details}\n*Total:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Pago:* ${processedOrder.metodo_pago}`;
-              let phone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
-              if (phone.startsWith('0')) phone = '58' + phone.substring(1);
-              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-            }}
-            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-          >Enviar a WhatsApp</button>
-          <button type="button" onClick={() => { if (onClose) onClose(); else setTab('home'); }} className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200 text-xs py-2 rounded-lg cursor-pointer font-medium">
-            Ir a la Tienda
-          </button>
-        </div>
-      </div>
-
-      {/* Registration Modal */}
-      {showRegistrationModal && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center lg:items-center lg:p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowRegistrationModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-            <div className="flex justify-center pt-3 pb-1 lg:hidden"><div className="w-10 h-1 rounded-full bg-zinc-300" /></div>
-            {!regSuccess ? (
-              <div className="p-6 flex flex-col items-center gap-4">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: `${config.theme_color || '#0f5d34'}15` }}>
-                  <Shield size={28} style={{ color: config.theme_color || '#0f5d34' }} />
-                </div>
-                <h3 className="text-lg font-bold text-zinc-900 text-center">Crea tu Cuenta</h3>
-                <p className="text-xs text-zinc-500 text-center leading-relaxed">
-                  Regístrate para hacer pedidos más rápido en el futuro. Tu contraseña será tu número de teléfono.
-                </p>
-                <div className="w-full flex flex-col gap-3 mt-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><User size={9} /> Nombre</span>
-                    <input type="text" value={clientName} readOnly className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none text-zinc-800" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><Phone size={9} /> Telefono (tu contraseña)</span>
-                    <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-lg overflow-hidden">
-                      <input type="text" value={clientPhone.replace(/[\s\-()]/g, '')} readOnly className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none text-zinc-800" />
-                      <CopyButton text={clientPhone.replace(/[\s\-()]/g, '')} fieldId="reg-phone" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><Mail size={9} /> Correo electronico</span>
-                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="tu@email.com" className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-violet-500" />
-                  </div>
-                </div>
-                {regError && <p className="text-xs text-red-500 text-center">{regError}</p>}
-                <button type="button" onClick={handleCreateAccount} disabled={regLoading} className="w-full text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
-                  {regLoading ? 'Creando...' : <>Crear mi Cuenta <ArrowRight size={14} /></>}
-                </button>
-                <button type="button" onClick={() => setShowRegistrationModal(false)} className="text-xs text-zinc-400 hover:text-zinc-600 cursor-pointer">
-                  Ahora no, gracias
-                </button>
-              </div>
-            ) : (
-              <div className="p-6 flex flex-col items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <CheckCircle size={28} className="text-emerald-500" />
-                </div>
-                <h3 className="text-lg font-bold text-zinc-900 text-center">¡Cuenta Creada!</h3>
-                <p className="text-xs text-zinc-500 text-center leading-relaxed">
-                  Ya puedes iniciar sesión con tu teléfono y la contraseña es la misma que tu número.
-                </p>
-                <div className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-4 flex flex-col gap-2 font-mono text-xs">
-                  <div className="flex items-center justify-between"><span className="text-zinc-500">Correo:</span><span className="font-bold text-zinc-800">{regEmail}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-zinc-500">Contraseña:</span><span className="font-bold text-zinc-800">{clientPhone.replace(/[\s\-()]/g, '')}</span></div>
-                </div>
-                <button type="button" onClick={() => { setShowRegistrationModal(false); if (onClose) onClose(); else setTab('home'); }} className="w-full text-white font-bold py-3 rounded-xl text-sm cursor-pointer" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
-                  Entendido
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      </>
+      <OrderTracker
+        order={processedOrder}
+        onClose={() => { setProcessedOrder(null); if (onClose) onClose(); else setTab('home'); }}
+        onContinueShopping={() => { setProcessedOrder(null); setTab('catalog'); }}
+      />
     );
   }
 

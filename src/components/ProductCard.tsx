@@ -138,7 +138,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <h4 className="text-[13px] font-bold text-zinc-900 line-clamp-2 leading-tight min-h-[2rem]">
           {item.nombre}
         </h4>
-        <p className="text-[10px] text-zinc-400 line-clamp-1 leading-tight">
+        <p className="text-[10px] text-zinc-400 line-clamp-2 leading-tight">
           {item.descripcion}
         </p>
 
@@ -188,7 +188,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="text-[10px] font-bold uppercase tracking-wider hover:underline cursor-pointer flex items-center gap-1"
             style={{ color: themeColor }}
           >
-            <Eye size={10} /> Personalizar
+            Ordenar
           </button>
         </div>
       </div>

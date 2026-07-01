@@ -21,7 +21,6 @@ import { SplashScreen } from './components/SplashScreen';
 import { OfflineBanner } from './components/OfflineBanner';
 import { getCategoryColor } from './utils/categoryColors';
 import { FreeDeliveryBar } from './components/FreeDeliveryBar';
-import { StickyCart } from './components/StickyCart';
 import { ProductModal } from './components/ProductModal';
 
 function AppContent() {
@@ -547,9 +546,6 @@ function AppContent() {
         drawerOpen={drawerOpen}
         setDrawerOpen={setDrawerOpen}
       />
-
-      {/* STICKY MINI CART (Mobile only) */}
-      <StickyCart onOpenCart={() => setTab('cart')} />
 
       {/* --------------------------------------------------------------------------------
       A. PRODUCT MODAL - Professional Food Delivery Style

@@ -36,6 +36,7 @@ export interface FoodItem {
   delivery_gratis?: boolean;
   ingredientes?: string[];
   alergenos?: string[];
+  calorias?: number;
   activo?: boolean;
   option_groups?: FoodOptionGroup[];
   related_ids?: string[];
@@ -44,6 +45,14 @@ export interface FoodItem {
   promo_end_date?: string;
   precio_anterior_usd?: number;
   combo_ids?: string[];
+  sizes?: PizzaSize[];
+}
+
+export interface PizzaSize {
+  id: string;
+  name: string;
+  price_usd: number;
+  description?: string;
 }
 
 export interface SelectedOption {

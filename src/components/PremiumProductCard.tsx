@@ -139,6 +139,9 @@ export const PremiumProductCard: React.FC<PremiumProductCardProps> = ({
         <h4 className="text-[13px] font-bold text-zinc-900 line-clamp-2 leading-tight min-h-[2rem] group-hover:text-zinc-700 transition-colors">
           {item.nombre}
         </h4>
+        <p className="text-[10px] text-zinc-400 line-clamp-2 leading-tight">
+          {item.descripcion}
+        </p>
 
         {/* Social proof */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -180,7 +183,7 @@ export const PremiumProductCard: React.FC<PremiumProductCardProps> = ({
             className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md hover:bg-zinc-50 transition-colors cursor-pointer flex items-center gap-1"
             style={{ color: themeColor }}
           >
-            <Eye size={10} /> Ver
+            Ordenar
           </button>
         </div>
       </div>

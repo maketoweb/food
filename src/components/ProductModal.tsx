@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Plus, Minus, AlertTriangle, Flame, ShoppingCart, Star, Clock, Users, Check } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, ChevronLeft, ChevronRight, Plus, Minus, AlertTriangle, Flame, ShoppingCart, Star, Clock, Users, Check, Zap, Utensils } from 'lucide-react';
 import { FoodItem, StoreConfig, SelectedOption } from '../types/store';
 import { ProductOptionsEditor } from './ProductOptionsEditor';
 import { ProductReviews } from './ProductReviews';
@@ -30,25 +30,40 @@ const ALLERGEN_COLORS: Record<string, string> = {
   'Altramuces': '#7C3AED',
 };
 
+const COMBO_ITEMS: Record<string, { included: string[]; icon: string }> = {
+  'hamburguesas': { included: ['Papas fritas', 'Refresco 400ml'], icon: '🍔' },
+  'pizzas': { included: ['Refresco 400ml'], icon: '🍕' },
+  'pollo': { included: ['Papas fritas', 'Refresco 400ml'], icon: '🍗' },
+};
+
 export const ProductModal: React.FC<ProductModalProps> = ({
   product,
   isOpen,
   onClose,
   onAddToCart,
 }) => {
-  const { config, getActiveFlashSale, getProductAverageRating, getProductReviews } = useApp();
+  const { config, getActiveFlashSale, getProductAverageRating, getProductReviews, foodItems } = useApp();
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
   const [optionsTotal, setOptionsTotal] = useState(0);
   const [removedIngredients, setRemovedIngredients] = useState<Set<number>>(new Set());
-  const [activeComboTab, setActiveComboTab] = useState<'info' | 'combos'>('info');
+  const [selectedSize, setSelectedSize] = useState<string>('');
 
   const themeColor = config.theme_color || '#E31837';
   const flashSale = product ? getActiveFlashSale(product.id) : null;
-  const combos = config.combos?.filter(c =>
-    c.active && product?.combo_ids?.includes(c.id)
-  ) || [];
+
+  const recommendedItems = useMemo(() => {
+    if (!product?.related_ids?.length) return [];
+    return foodItems
+      .filter(p => product.related_ids!.includes(p.id) && p.id !== product.id && p.activo !== false)
+      .slice(0, 4);
+  }, [product, foodItems]);
+
+  const isPizza = product?.categoria?.toLowerCase() === 'pizzas';
+  const isComboCategory = ['hamburguesas', 'pizzas', 'pollo'].includes(product?.categoria?.toLowerCase() || '');
+  const comboInfo = isComboCategory ? COMBO_ITEMS[product!.categoria.toLowerCase()] : null;
+
   const avgRating = product ? getProductAverageRating(product.id) : 0;
   const reviewCount = product ? getProductReviews(product.id).length : 0;
 
@@ -59,23 +74,30 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setSelectedOptions([]);
       setOptionsTotal(0);
       setRemovedIngredients(new Set());
-      setActiveComboTab('info');
+      setSelectedSize(product.sizes?.[0]?.id || '');
     }
   }, [product?.id]);
 
   if (!product || !isOpen) return null;
 
   const isAgotado = product.stock <= 0;
+  const activeSize = product.sizes?.find(s => s.id === selectedSize);
+  const sizePrice = activeSize?.price_usd || 0;
   const basePrice = flashSale
     ? product.precio_usd * (1 - flashSale.discount_percent / 100)
     : product.precio_usd;
-  const totalPrice = basePrice * quantity + optionsTotal * quantity;
+  const finalBasePrice = sizePrice > 0 ? sizePrice : basePrice;
+  const totalPrice = finalBasePrice * quantity + optionsTotal * quantity;
 
   const handleAddToCart = () => {
     const ingredientNames = Array.from(removedIngredients).map(
       (idx: number) => product.ingredientes?.[idx] || ''
     ).filter(Boolean);
-    onAddToCart(product, quantity, selectedOptions, optionsTotal, ingredientNames);
+    const optsWithSize = [
+      ...selectedOptions,
+      ...(activeSize ? [{ group_name: 'Tamaño', option_name: activeSize.name, precio_usd: 0 }] : []),
+    ];
+    onAddToCart(product, quantity, optsWithSize.length > 0 ? optsWithSize : selectedOptions, optionsTotal, ingredientNames);
     onClose();
   };
 
@@ -179,8 +201,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <h2 className="text-xl font-black text-zinc-900 mb-1">{product.nombre}</h2>
             <p className="text-sm text-zinc-500 mb-3">{product.descripcion}</p>
 
-            {/* Rating & stats */}
-            <div className="flex items-center gap-4 mb-4">
+            {/* Rating, stats & calories */}
+            <div className="flex items-center gap-4 mb-4 flex-wrap">
               {avgRating > 0 && (
                 <div className="flex items-center gap-1">
                   <Star size={14} fill="#F59E0B" stroke="none" />
@@ -198,6 +220,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   <Users size={12} /> {product.order_count} pedidos
                 </div>
               )}
+              {product.calorias !== undefined && product.calorias > 0 && (
+                <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full font-bold">
+                  <Zap size={11} /> {product.calorias} cal
+                </div>
+              )}
             </div>
 
             {/* Price */}
@@ -208,7 +235,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </span>
               )}
               <span className="text-2xl font-black" style={{ color: themeColor }}>
-                ${basePrice.toFixed(2)}
+                ${finalBasePrice.toFixed(2)}
               </span>
               {optionsTotal > 0 && (
                 <span className="text-xs text-zinc-500">
@@ -217,161 +244,146 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               )}
             </div>
 
-            {/* Tabs: Info / Combos */}
-            {combos.length > 0 && (
-              <div className="flex gap-2 mb-4 border-b border-zinc-100 pb-2">
-                <button
-                  onClick={() => setActiveComboTab('info')}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
-                    activeComboTab === 'info'
-                      ? 'text-white'
-                      : 'text-zinc-500 hover:bg-zinc-50'
-                  }`}
-                  style={activeComboTab === 'info' ? { backgroundColor: themeColor } : {}}
-                >
-                  Detalles
-                </button>
-                <button
-                  onClick={() => setActiveComboTab('combos')}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
-                    activeComboTab === 'combos'
-                      ? 'text-white'
-                      : 'text-zinc-500 hover:bg-zinc-50'
-                  }`}
-                  style={activeComboTab === 'combos' ? { backgroundColor: themeColor } : {}}
-                >
-                  🎁 Combos ({combos.length})
-                </button>
-              </div>
-            )}
-
-            {activeComboTab === 'info' ? (
-              <>
-                {/* Allergens */}
-                {product.alergenos && product.alergenos.length > 0 && (
-                  <div className="mb-5">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <AlertTriangle size={14} className="text-amber-500" />
-                      <span className="text-xs font-bold text-zinc-700">Alérgenos</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {product.alergenos.map((alergeno) => (
-                        <span
-                          key={alergeno}
-                          className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white"
-                          style={{ backgroundColor: ALLERGEN_COLORS[alergeno] || '#6B7280' }}
-                        >
-                          {alergeno}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Ingredients */}
-                {product.ingredientes && product.ingredientes.length > 0 && (
-                  <div className="mb-5">
-                    <span className="text-xs font-bold text-zinc-700 block mb-2">🧾 Ingredientes</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {product.ingredientes.map((ing, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => toggleIngredient(idx)}
-                          className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
-                            removedIngredients.has(idx)
-                              ? 'bg-red-50 border-red-200 text-red-600 line-through'
-                              : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-zinc-300'
-                          }`}
-                        >
-                          {removedIngredients.has(idx) ? (
-                            <span className="flex items-center gap-1"><X size={10} /> {ing}</span>
-                          ) : (
-                            <span className="flex items-center gap-1"><Check size={10} /> {ing}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Options / Extras */}
-                {product.option_groups && product.option_groups.length > 0 && (
-                  <div className="mb-5">
-                    <span className="text-xs font-bold text-zinc-700 block mb-2">✨ Personaliza tu pedido</span>
-                    <ProductOptionsEditor
-                      optionGroups={product.option_groups}
-                      selectedOptions={selectedOptions}
-                      onSelectionChange={(opts, total) => {
-                        setSelectedOptions(opts);
-                        setOptionsTotal(total);
-                      }}
-                      themeColor={themeColor}
-                    />
-                  </div>
-                )}
-
-                {/* Reviews */}
-                <div className="mb-5">
-                  <ProductReviews
-                    productId={product.id}
-                    productName={product.nombre}
-                    themeColor={themeColor}
-                    reviews={getProductReviews(product.id)}
-                    averageRating={getProductAverageRating(product.id)}
-                    totalReviews={getProductReviews(product.id).length}
-                  />
-                </div>
-              </>
-            ) : (
-              /* Combos tab */
-              <div className="flex flex-col gap-3 mb-5">
-                {combos.map((combo) => {
-                  const comboProducts = combo.product_ids
-                    .map(id => config.combos?.length ? null : null) // Would need foodItems from context
-                    .filter(Boolean);
-                  const comboOriginalPrice = basePrice * 1.5; // Estimate
-                  const comboDiscountedPrice = comboOriginalPrice * (1 - combo.discount_percent / 100);
-
-                  return (
-                    <div
-                      key={combo.id}
-                      className="p-4 rounded-xl border-2 transition-all hover:shadow-md"
-                      style={{ borderColor: `${themeColor}30` }}
+            {/* Pizza Sizes */}
+            {isPizza && product.sizes && product.sizes.length > 0 && (
+              <div className="mb-5">
+                <span className="text-xs font-bold text-zinc-700 block mb-2">📐 Elige tu tamaño</span>
+                <div className="flex gap-2">
+                  {product.sizes.map(size => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.id)}
+                      className={`flex-1 p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                        selectedSize === size.id
+                          ? 'border-current shadow-md'
+                          : 'border-zinc-200 hover:border-zinc-300'
+                      }`}
+                      style={selectedSize === size.id ? { borderColor: themeColor, backgroundColor: `${themeColor}08` } : {}}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="text-sm font-bold text-zinc-900">{combo.nombre}</h4>
-                          <p className="text-xs text-zinc-500">{combo.descripcion}</p>
-                        </div>
-                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-                          -{combo.discount_percent}%
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-black" style={{ color: themeColor }}>
-                            ${comboDiscountedPrice.toFixed(2)}
-                          </span>
-                          <span className="text-xs text-zinc-400 line-through">
-                            ${comboOriginalPrice.toFixed(2)}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            // Add combo to cart logic
-                            onClose();
-                          }}
-                          className="text-[10px] font-bold px-3 py-1.5 rounded-lg text-white transition-all hover:opacity-90"
-                          style={{ backgroundColor: themeColor }}
-                        >
-                          Agregar Combo
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                      <span className="text-xs font-bold block" style={selectedSize === size.id ? { color: themeColor } : {}}>{size.name}</span>
+                      <span className="text-[10px] text-zinc-400 block mt-0.5">${size.price_usd.toFixed(2)}</span>
+                      {size.description && <span className="text-[9px] text-zinc-400 block mt-0.5">{size.description}</span>}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
+
+            {/* Combo Info (included items) */}
+            {comboInfo && (
+              <div className="mb-5 p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Utensils size={14} className="text-amber-600" />
+                  <span className="text-xs font-bold text-amber-800">Incluye en tu combo</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {comboInfo.included.map((item, i) => (
+                    <span key={i} className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-white border border-amber-200 text-amber-700">
+                      ✓ {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Allergens */}
+            {product.alergenos && product.alergenos.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <AlertTriangle size={14} className="text-amber-500" />
+                  <span className="text-xs font-bold text-zinc-700">Alérgenos</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.alergenos.map((alergeno) => (
+                    <span
+                      key={alergeno}
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white"
+                      style={{ backgroundColor: ALLERGEN_COLORS[alergeno] || '#6B7280' }}
+                    >
+                      {alergeno}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ingredients */}
+            {product.ingredientes && product.ingredientes.length > 0 && (
+              <div className="mb-5">
+                <span className="text-xs font-bold text-zinc-700 block mb-2">🧾 Ingredientes</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.ingredientes.map((ing, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => toggleIngredient(idx)}
+                      className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+                        removedIngredients.has(idx)
+                          ? 'bg-red-50 border-red-200 text-red-600 line-through'
+                          : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-zinc-300'
+                      }`}
+                    >
+                      {removedIngredients.has(idx) ? (
+                        <span className="flex items-center gap-1"><X size={10} /> {ing}</span>
+                      ) : (
+                        <span className="flex items-center gap-1"><Check size={10} /> {ing}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Options / Extras */}
+            {product.option_groups && product.option_groups.length > 0 && (
+              <div className="mb-5">
+                <span className="text-xs font-bold text-zinc-700 block mb-2">✨ Agrega tus extras</span>
+                <ProductOptionsEditor
+                  optionGroups={product.option_groups}
+                  selectedOptions={selectedOptions}
+                  onSelectionChange={(opts, total) => {
+                    setSelectedOptions(opts);
+                    setOptionsTotal(total);
+                  }}
+                  themeColor={themeColor}
+                />
+              </div>
+            )}
+
+            {/* Recommended Products */}
+            {recommendedItems.length > 0 && (
+              <div className="mb-5">
+                <span className="text-xs font-bold text-zinc-700 block mb-3">🔥 Te puede gustar también</span>
+                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                  {recommendedItems.map(item => (
+                    <div
+                      key={item.id}
+                      onClick={() => { onClose(); setTimeout(() => { /* would need callback to open new modal */ }, 300); }}
+                      className="shrink-0 w-[140px] bg-zinc-50 rounded-xl overflow-hidden border border-zinc-100 hover:border-zinc-200 transition-all cursor-pointer"
+                    >
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <img src={item.imagen_urls[0]} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="p-2">
+                        <p className="text-[11px] font-bold text-zinc-900 truncate">{item.nombre}</p>
+                        <p className="text-[10px] font-black mt-0.5" style={{ color: themeColor }}>${item.precio_usd.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reviews */}
+            <div className="mb-5">
+              <ProductReviews
+                productId={product.id}
+                productName={product.nombre}
+                themeColor={themeColor}
+                reviews={getProductReviews(product.id)}
+                averageRating={getProductAverageRating(product.id)}
+                totalReviews={getProductReviews(product.id).length}
+              />
+            </div>
           </div>
         </div>
 

@@ -8,6 +8,7 @@ import {
   Copy, Check, X, Smartphone, MessageSquare, Send, ExternalLink, Trash2
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
+import { OrderTracker } from '../components/OrderTracker';
 
 interface UserProfileProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile') => void;
@@ -447,173 +448,28 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
         </div>
       )}
 
-      {/* Delivery Timeline Modal (llamativo, animado) */}
+      {/* Delivery Timeline Modal */}
       {showOrderTimelineModal && modalOrder && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
-
-          <motion.div
-            initial={{ opacity: 0, y: 22, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 14, scale: 0.98 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden"
-          >
-            <div className="p-5 bg-gradient-to-br from-violet-600 to-violet-800 text-white flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="w-11 h-11 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-                  <Truck size={18} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black uppercase tracking-wider">
-                    Seguimiento de Pedido
-                  </h3>
-                  <p className="text-[11px] text-white/80 mt-0.5 font-mono">
-                    ID: <span className="font-bold">{modalOrder.id}</span>
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.removeItem('trv_active_order_id');
-                  setActiveOrderModalId(null);
-                  setShowOrderTimelineModal(false);
-                }}
-                className="text-white/90 hover:text-white transition cursor-pointer rounded-lg p-1.5 bg-white/10 border border-white/15"
-                aria-label="Cerrar"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="p-5 flex flex-col gap-4 text-xs text-zinc-800">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 font-mono">
-                    Estado actual
-                  </span>
-                  <span className="mt-1 text-sm font-black">
-                    {modalOrder.status === 'En camino' ? 'En camino / Despachado' : modalOrder.status}
-                  </span>
-                </div>
-
-                <span
-                  className={`text-[10px] font-bold px-3 py-1 rounded-full font-mono border ${
-                    modalOrder.status === 'Pendiente' ? 'bg-amber-100 text-amber-800 border-amber-300' :
-                    modalOrder.status === 'Procesando' ? 'bg-blue-100 text-blue-800 border-blue-300' :
-                    modalOrder.status === 'En preparación' ? 'bg-indigo-100 text-indigo-800 border-indigo-300' :
-                    modalOrder.status === 'En camino' ? 'bg-violet-100 text-violet-800 border-violet-400 animate-pulse' :
-                    'bg-zinc-100 text-zinc-850 border border-zinc-300'
-                  }`}
-                >
-                  {modalOrder.status === 'En camino' ? 'En camino / Despachado' : modalOrder.status}
-                </span>
-              </div>
-
-              {/* Timeline blocks */}
-              <div className="p-4 bg-zinc-50/60 border border-zinc-200 rounded-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
-                    Línea de tiempo
-                  </span>
-                  <span className="text-[10px] text-zinc-400 font-mono">
-                    Se actualiza en tiempo real
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-4 gap-3 font-mono text-[9px]">
-                  {[
-                    { label: 'Pendiente', target: ['Pendiente'] },
-                    { label: 'Preparación', target: ['En preparación', 'Procesando'] },
-                    { label: 'En Camino', target: ['En camino'] },
-                    { label: 'Entregado', target: ['Entregado'] },
-                  ].map((stepObj, idx) => {
-                    const statusOrder = ['Pendiente', 'Procesando', 'En preparación', 'En camino', 'Entregado'];
-                    const currentPower = statusOrder.indexOf(modalOrder.status);
-                    let isStepPassed = false;
-                    if (stepObj.label === 'Pendiente') isStepPassed = currentPower >= 0;
-                    if (stepObj.label === 'Preparación') isStepPassed = currentPower >= 1;
-                    if (stepObj.label === 'En Camino') isStepPassed = currentPower >= 3;
-                    if (stepObj.label === 'Entregado') isStepPassed = currentPower >= 5;
-
-                    const isCurrent = stepObj.target.includes(modalOrder.status);
-
-                    return (
-                      <div key={idx} className="flex flex-col items-center relative">
-                        {modalOrder.status === 'En camino' && stepObj.label === 'En Camino' && (
-                          <motion.div
-                            initial={{ x: '-40%' }}
-                            animate={{ x: '40%' }}
-                            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
-                            className="absolute -top-6 text-violet-600 drop-shadow-sm"
-                          >
-                            <Truck size={16} />
-                          </motion.div>
-                        )}
-
-                        <div
-                          className={`h-[4px] w-full rounded-full transition-all ${
-                            isCurrent ? 'bg-violet-600 ring-2 ring-violet-400/30 animate-pulse' :
-                            isStepPassed ? 'bg-zinc-800' : 'bg-zinc-200'
-                          }`}
-                        />
-                        <span
-                          className={`mt-2 text-[8px] font-medium ${
-                            isCurrent ? 'text-violet-600 font-bold' :
-                            isStepPassed ? 'text-zinc-900 font-semibold' : 'text-zinc-400'
-                          }`}
-                        >
-                          {stepObj.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Estimated time */}
-              {modalOrder.status !== 'Entregado' && (
-                <div className="p-3 bg-violet-50/50 border border-violet-100 rounded-lg text-violet-900 text-[11px] leading-relaxed">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-bold text-violet-800">Tiempo estimado de entrega:</span>
-                    <span className="font-black underline text-violet-700">
-                      {modalOrder.tiempo_estimado_entrega || 'En asignación por tienda'}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="button"
-                  onClick={() => {
-                    localStorage.removeItem('trv_active_order_id');
-                    setActiveOrderModalId(null);
-                    setShowOrderTimelineModal(false);
-                    setActiveSubTab('orders');
-                  }}
-                  className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 px-3 rounded-lg text-[11px] transition-colors cursor-pointer uppercase tracking-wider flex items-center justify-center gap-2 w-full sm:w-auto"
-                >
-                  <CheckCircle size={14} /> Ver mi pedido
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    localStorage.removeItem('trv_active_order_id');
-                    setActiveOrderModalId(null);
-                    setShowOrderTimelineModal(false);
-                  }}
-                  className="bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 font-bold py-2.5 px-3 rounded-lg text-[11px] transition-colors cursor-pointer w-full sm:w-auto uppercase tracking-wider"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+        <OrderTracker
+          order={modalOrder}
+          onClose={() => {
+            if (modalOrder.status !== 'Entregado') {
+              // Keep tracking persistent - don't remove from localStorage until delivered
+            } else {
+              localStorage.removeItem('trv_active_order_id');
+            }
+            setActiveOrderModalId(null);
+            setShowOrderTimelineModal(false);
+          }}
+          onContinueShopping={() => {
+            if (modalOrder.status === 'Entregado') {
+              localStorage.removeItem('trv_active_order_id');
+            }
+            setActiveOrderModalId(null);
+            setShowOrderTimelineModal(false);
+            setTab('catalog');
+          }}
+        />
       )}
 
       {/* Title */}

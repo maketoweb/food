@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import { FoodItem } from '../types/store';
-import { ArrowRight, ShoppingCart, Search, Sparkles, Flame, Zap, Bell, Smartphone, Clock, Star, X, ChefHat, MessageSquare, TrendingUp } from 'lucide-react';
+import { ArrowRight, ShoppingCart, Sparkles, Flame, Zap, Bell, Smartphone, Clock, Star, ChefHat, MessageSquare, TrendingUp } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { ProductCard } from '../components/ProductCard';
 import { PremiumProductCard } from '../components/PremiumProductCard';
@@ -49,9 +49,6 @@ export const Home: React.FC<HomeProps> = ({
   const { foodItems, config, addToCart, getProductAverageRating, getProductReviews, getActiveFlashSale } = useApp();
   const themeColor = config.theme_color || '#E31837';
   const [activeBanner, setActiveBanner] = useState(0);
-  const [suggestions, setSuggestions] = useState<FoodItem[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const activeItems = useMemo(() => foodItems.filter(p => p.activo !== false), [foodItems]);
   const promoItems = useMemo(() => activeItems.filter(p => p.es_promo), [activeItems]);
@@ -91,24 +88,6 @@ export const Home: React.FC<HomeProps> = ({
     return () => clearInterval(interval);
   }, [config.banners.length]);
 
-  useEffect(() => {
-    if (globalSearch.trim().length > 1) {
-      const filtered = activeItems
-        .filter(p =>
-          p.nombre.toLowerCase().includes(globalSearch.toLowerCase()) ||
-          p.descripcion.toLowerCase().includes(globalSearch.toLowerCase()) ||
-          p.categoria.toLowerCase().includes(globalSearch.toLowerCase()) ||
-          (p.ingredientes || []).some(i => i.toLowerCase().includes(globalSearch.toLowerCase()))
-        )
-        .slice(0, 6);
-      setSuggestions(filtered);
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [globalSearch, activeItems]);
-
   return (
     <div className="flex flex-col gap-0 pb-28 max-w-7xl mx-auto">
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
@@ -125,6 +104,16 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       )}
+
+      {/* H1 TITLE */}
+      <div className="px-4 pt-5 pb-2">
+        <h1 className="text-2xl md:text-3xl font-black text-zinc-900 leading-tight">
+          {config.site_nombre || 'FoodPop'}
+          <span className="block text-sm md:text-base font-semibold text-zinc-500 mt-1">
+            {config.mensaje_bienvenida || 'Tu comida favorita, rápida y deliciosa'}
+          </span>
+        </h1>
+      </div>
 
       {/* HERO */}
       <div className="relative h-[240px] md:h-[340px] w-full overflow-hidden bg-zinc-900">
@@ -178,41 +167,6 @@ export const Home: React.FC<HomeProps> = ({
             Ordenar Ahora <ArrowRight size={15} />
           </button>
         </div>
-      </div>
-
-      {/* SEARCH - Glassmorphism */}
-      <div className="px-4 -mt-6 relative z-20">
-        <div className="glass-card rounded-2xl px-4 py-3 flex items-center gap-3 shadow-lg">
-          <Search size={16} style={{ color: themeColor }} />
-          <input ref={searchRef} type="text"
-            placeholder="¿Qué se te antoja hoy?"
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400 font-medium"
-          />
-          {globalSearch && (
-            <button onClick={() => { setGlobalSearch(''); setSuggestions([]); }} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
-              <X size={15} />
-            </button>
-          )}
-        </div>
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-4 right-4 bg-white border border-zinc-100 rounded-2xl mt-2 shadow-2xl z-30 overflow-hidden max-w-xl">
-            {suggestions.map(p => (
-              <button key={p.id}
-                onClick={() => { onViewProductDetails(p); setShowSuggestions(false); setGlobalSearch(''); }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-zinc-50 transition-colors text-left border-b border-zinc-100 last:border-0 cursor-pointer"
-              >
-                <img src={p.imagen_urls[0]} alt="" className="w-10 h-10 rounded-lg object-cover" referrerPolicy="no-referrer" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-zinc-900 truncate">{p.nombre}</p>
-                  <p className="text-xs text-zinc-500">{p.categoria}</p>
-                </div>
-                <span className="font-bold text-sm" style={{ color: themeColor }}>${p.precio_usd.toFixed(2)}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* CATEGORIES - Premium with images */}
@@ -367,9 +321,16 @@ export const Home: React.FC<HomeProps> = ({
       </div>
 
       {/* FAQ */}
-      {config.faq_items && config.faq_items.length > 0 && (
-        <FAQSection items={config.faq_items} themeColor={themeColor} />
-      )}
+      <FAQSection
+        items={config.faq_items && config.faq_items.length > 0 ? config.faq_items : [
+          { id: 'faq-1', question: '¿Cuánto tarda el delivery?', answer: 'Nuestro tiempo promedio de entrega es de 25 a 45 minutos dependiendo de tu zona. Puedes verificar el tiempo estimado al hacer tu pedido.' },
+          { id: 'faq-2', question: '¿Cuáles son las formas de pago?', answer: 'Aceptamos Pago Móvil, Zelle, Transferencia bancaria y Efectivo. Cada método tiene sus propios descuentos disponibles.' },
+          { id: 'faq-3', question: '¿Hacen pedidos para eventos?', answer: '¡Sí! Contáctanos por WhatsApp con los detalles de tu evento (número de personas, fecha, tipo de comida) y te prepararemos una cotización personalizada.' },
+          { id: 'faq-4', question: '¿Puedo modificar mi pedido después de hacerlo?', answer: 'Puedes modificar tu pedido mientras esté en estado "Pendiente". Una vez que cambie a "Procesando" ya no será posible hacer cambios.' },
+          { id: 'faq-5', question: '¿Tienen delivery gratis?', answer: 'Sí, ofrecemos delivery gratis en pedidos mayores a $15. También puedes verificar las zonas con delivery gratis en tu zona.' },
+        ]}
+        themeColor={themeColor}
+      />
 
       {/* FOOTER */}
       <footer className="px-4 mt-8 pt-8 border-t border-zinc-100">
