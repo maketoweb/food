@@ -23,7 +23,8 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "strictNullChecks": true,
-    "noImplicitAny": false,
-    "strictFunctionTypes": false
+    "noImplicitAny": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true
   }
 }

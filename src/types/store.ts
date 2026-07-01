@@ -35,12 +35,15 @@ export interface FoodItem {
   es_mas_vendido: boolean;
   delivery_gratis?: boolean;
   ingredientes?: string[];
+  alergenos?: string[];
   activo?: boolean;
   option_groups?: FoodOptionGroup[];
   related_ids?: string[];
   estimated_prep_time?: number;
   order_count?: number;
   promo_end_date?: string;
+  precio_anterior_usd?: number;
+  combo_ids?: string[];
 }
 
 export interface SelectedOption {
@@ -66,6 +69,7 @@ export interface Order {
   cliente_email?: string;
   usuario_id?: string;
   guest_phone?: string;
+  guest_email?: string;
   crear_cuenta?: boolean;
   items: OrderItem[];
   subtotal_usd: number;
@@ -74,7 +78,7 @@ export interface Order {
   cupon_codigo?: string;
   total_usd: number;
   total_bs: number;
-  metodo_pago: 'Pago Móvil' | 'Zelle' | 'Efectivo' | 'Transferencia';
+  metodo_pago: 'Pago Móvil' | 'Zelle' | 'Efectivo' | 'Transferencia' | 'Otro';
   tipo_entrega: 'delivery' | 'mesa';
   numero_mesa?: number;
   lat: number;
@@ -158,6 +162,55 @@ export interface FlashSale {
   active: boolean;
 }
 
+export interface ProductCombo {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  product_ids: string[];
+  discount_percent: number;
+  imagen_url?: string;
+  active: boolean;
+}
+
+export interface Promotion {
+  id: string;
+  title: string;
+  message: string;
+  image_url?: string;
+  product_id?: string;
+  discount_type: 'percent' | 'fixed' | '2x1' | 'combo';
+  discount_value: number;
+  coupon_code?: string;
+  start_date: string;
+  end_date: string;
+  start_time?: string;
+  end_time?: string;
+  audience: 'all' | 'returning' | 'new' | 'by_category' | 'by_zone';
+  audience_config?: Record<string, unknown>;
+  channel: 'push' | 'in_app' | 'both';
+  status: 'draft' | 'scheduled' | 'active' | 'finished' | 'paused';
+  scheduled_at?: string;
+  sent_at?: string;
+  max_uses?: number;
+  current_uses: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  created_at?: string;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export const ALLERGEN_OPTIONS = [
+  'Gluten', 'Lácteos', 'Frutos secos', 'Mariscos', 'Soja',
+  'Huevos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos',
+  'Cacahuetes', 'Moluscos', 'Crustáceos', 'Altramuces'
+];
+
 export interface StoreConfig {
   site_nombre: string;
   telefono_soporte: string;
@@ -185,15 +238,15 @@ export interface StoreConfig {
   secondary_color?: string;
   accent_color?: string;
   delivery_gratis?: boolean;
+  delivery_gratis_threshold?: number;
   costo_delivery_km?: number;
-  envio_nacional?: boolean;
-  costo_envio_nacional?: number;
   recogida_en_local?: boolean;
   entrega_por_zonas?: boolean;
   delivery_zonas?: DeliveryZone[];
   favicon_url?: string;
   banner_texts?: string[];
   categories?: string[];
+  categories_images?: Record<string, string>;
   mensaje_bienvenida?: string;
   push_webhook_url?: string;
   push_webhook_secret?: string;
@@ -204,5 +257,9 @@ export interface StoreConfig {
   total_mesas?: number;
   secondary_logo_url?: string;
   stock_alert_threshold?: number;
+  envio_nacional?: boolean;
+  costo_envio_nacional?: number;
   categories_colors?: Record<string, { primary: string; light: string; textColor: string }>;
+  combos?: ProductCombo[];
+  faq_items?: FAQItem[];
 }

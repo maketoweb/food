@@ -25,6 +25,29 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           orientation: 'portrait',
           prefer_related_applications: false,
+          shortcuts: [
+            {
+              name: 'Hacer Pedido',
+              short_name: 'Pedir',
+              description: 'Ver el catálogo y hacer un pedido',
+              url: '/catalog',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Mis Pedidos',
+              short_name: 'Pedidos',
+              description: 'Ver el historial de pedidos',
+              url: '/profile',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Carrito',
+              short_name: 'Carrito',
+              description: 'Ver el carrito de compras',
+              url: '/cart',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            }
+          ],
           icons: [
             {
               src: 'pwa-192x192.png',
@@ -40,6 +63,8 @@ export default defineConfig(({mode}) => {
         },
         workbox: {
           importScripts: ['/sw-push.js'],
+          navigateFallback: '/offline.html',
+          navigateFallbackDenylist: [/^\/api\//, /^\/admin\//],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../store/AppContext';
 import { FoodItem } from '../types/store';
-import { ArrowRight, ShoppingCart, Search, Sparkles, Flame, Zap, Bell, Smartphone, Clock, Star, X, ChefHat, MessageSquare } from 'lucide-react';
+import { ArrowRight, ShoppingCart, Search, Sparkles, Flame, Zap, Bell, Smartphone, Clock, Star, X, ChefHat, MessageSquare, TrendingUp } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { ProductCard } from '../components/ProductCard';
 import { PremiumProductCard } from '../components/PremiumProductCard';
 import { FlashSaleTimer } from '../components/FlashSaleTimer';
 import { getCategoryColor } from '../utils/categoryColors';
+import { FAQSection } from '../components/FAQSection';
+import { AnimatedCounter } from '../components/AnimatedCounter';
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   'hamburguesas': '🍔',
@@ -153,24 +155,40 @@ export const Home: React.FC<HomeProps> = ({
           <h2 className="text-white text-2xl md:text-3xl font-bold leading-tight max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             {config.banner_texts?.[activeBanner] || 'La comida que te encanta'}
           </h2>
+
+          {/* Social proof inmediato */}
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-1 text-white/90">
+              <Star size={12} fill="#FBBF24" stroke="none" />
+              <span className="text-[11px] font-bold">4.9</span>
+            </div>
+            <div className="w-px h-3 bg-white/30" />
+            <div className="flex items-center gap-1 text-white/90">
+              <TrendingUp size={11} />
+              <span className="text-[11px] font-bold">
+                <AnimatedCounter target={2847} duration={2000} /> pedidos
+              </span>
+            </div>
+          </div>
+
           <button onClick={() => setTab('catalog')}
-            className="mt-3 text-white font-bold text-sm px-6 py-2.5 rounded-lg inline-flex items-center gap-2 hover:opacity-90 transition-all cursor-pointer"
-            style={{ backgroundColor: themeColor }}
+            className="mt-3 text-white font-bold text-sm px-6 py-2.5 rounded-xl inline-flex items-center gap-2 transition-all cursor-pointer animate-glow-pulse"
+            style={{ backgroundColor: themeColor, boxShadow: `0 4px 20px ${themeColor}66` }}
           >
             Ordenar Ahora <ArrowRight size={15} />
           </button>
         </div>
       </div>
 
-      {/* SEARCH */}
-      <div className="px-4 -mt-5 relative z-20">
-        <div className="bg-white border border-zinc-200 rounded-xl shadow-sm px-4 py-2.5 flex items-center gap-3">
+      {/* SEARCH - Glassmorphism */}
+      <div className="px-4 -mt-6 relative z-20">
+        <div className="glass-card rounded-2xl px-4 py-3 flex items-center gap-3 shadow-lg">
           <Search size={16} style={{ color: themeColor }} />
           <input ref={searchRef} type="text"
-            placeholder="Buscar en el menú..."
+            placeholder="¿Qué se te antoja hoy?"
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400"
+            className="flex-1 text-sm outline-none bg-transparent placeholder:text-zinc-400 font-medium"
           />
           {globalSearch && (
             <button onClick={() => { setGlobalSearch(''); setSuggestions([]); }} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
@@ -197,19 +215,33 @@ export const Home: React.FC<HomeProps> = ({
         )}
       </div>
 
-      {/* CATEGORIES */}
+      {/* CATEGORIES - Premium with images */}
       <div className="px-4 mt-6 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 pb-2">
-          {(config.categories || []).slice(0, 8).map(catName => {
+        <div className="flex gap-3 pb-2">
+          {(config.categories || []).slice(0, 8).map((catName, idx) => {
             const emoji = CATEGORY_EMOJIS[catName.toLowerCase()] || '🍽️';
+            const bgImage = config.categories_images?.[catName] || CATEGORY_HERO_BG[catName.toLowerCase()];
             return (
               <button key={catName}
                 onClick={() => { setSelectedCategory(catName); setTab('catalog'); }}
-                className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer border bg-white hover:shadow-sm"
-                style={{ borderColor: themeColor + '30', color: themeColor }}
+                className="shrink-0 relative w-[100px] h-[100px] rounded-2xl overflow-hidden group transition-all active:scale-95 cursor-pointer"
+                style={{
+                  opacity: 0,
+                  animation: `fadeInScale 0.4s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 60}ms forwards`,
+                }}
               >
-                <span className="text-base">{emoji}</span>
-                <span>{catName}</span>
+                {bgImage ? (
+                  <>
+                    <img src={bgImage} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)` }} />
+                )}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl mb-1">{emoji}</span>
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider drop-shadow-lg">{catName}</span>
+                </div>
               </button>
             );
           })}
@@ -254,7 +286,7 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:grid-cols-5">
-            {topOrderedItems.map(item => (
+            {topOrderedItems.map((item, idx) => (
               <div key={item.id} className="shrink-0 w-[180px] sm:w-[200px] lg:w-auto snap-start">
                 <PremiumProductCard
                   item={item}
@@ -263,6 +295,7 @@ export const Home: React.FC<HomeProps> = ({
                   addToCart={(food) => addToCart(food)}
                   averageRating={getProductAverageRating(item.id)}
                   reviewCount={getProductReviews(item.id).length}
+                  index={idx}
                 />
               </div>
             ))}
@@ -332,6 +365,11 @@ export const Home: React.FC<HomeProps> = ({
           </button>
         </div>
       </div>
+
+      {/* FAQ */}
+      {config.faq_items && config.faq_items.length > 0 && (
+        <FAQSection items={config.faq_items} themeColor={themeColor} />
+      )}
 
       {/* FOOTER */}
       <footer className="px-4 mt-8 pt-8 border-t border-zinc-100">
@@ -413,7 +451,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient
         <div id={scrollId}
           className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth no-scrollbar lg:grid lg:overflow-visible lg:pb-0 lg:grid-cols-4 xl:grid-cols-5"
         >
-          {items.map(item => (
+          {items.map((item, idx) => (
             <div key={item.id} className="shrink-0 w-[180px] sm:w-[200px] lg:w-auto snap-start">
               {usePremium ? (
                 <PremiumProductCard
@@ -423,6 +461,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient
                   addToCart={(food) => addToCart(food)}
                   averageRating={getProductAverageRating?.(item.id) || 0}
                   reviewCount={getProductReviews?.(item.id)?.length || 0}
+                  index={idx}
                 />
               ) : (
                 <ProductCard
@@ -433,6 +472,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, icon, gradient
                   isOffer={isOffer}
                   averageRating={getProductAverageRating?.(item.id) || 0}
                   reviewCount={getProductReviews?.(item.id)?.length || 0}
+                  index={idx}
                 />
               )}
             </div>

@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { uploadFileToStorage, compressImage } from '../../../store/supabaseClient';
-import { DeliveryZone, Sede, FoodOptionGroup, FoodOption } from '../../../types/store';
+import { DeliveryZone, Sede, FoodOptionGroup, FoodOption, FAQItem } from '../../../types/store';
 import {
   Send, Bell, Package, X, MessageSquare, MessageCircle, ExternalLink, Upload,
   Trash2, RefreshCcw, FileJson, Settings, Palette, MapPin, SlidersHorizontal, Eye, EyeOff,
-  CheckCircle, Edit, Plus, Check, Search, User, AlertTriangle
+  CheckCircle, Edit, Plus, Check, Search, User, AlertTriangle, HelpCircle, GripVertical
 } from 'lucide-react';
 
 interface SettingsSectionProps {
@@ -122,7 +122,7 @@ const ExtrasManager: React.FC<{ foodItems: any[]; updateFoodItem: (id: string, u
   const [editingOptionPrice, setEditingOptionPrice] = useState(0);
 
   const selectedProduct = foodItems.find(p => p.id === selectedProductId);
-  const optionGroups = selectedProduct?.option_groups || [];
+  const optionGroups: FoodOptionGroup[] = selectedProduct?.option_groups || [];
 
   const saveGroups = (groups: FoodOptionGroup[]) => {
     if (selectedProduct) {
@@ -263,7 +263,7 @@ const ExtrasManager: React.FC<{ foodItems: any[]; updateFoodItem: (id: string, u
 };
 
 const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
-  const [adminSection, setAdminSection] = useState<'settings' | 'branding' | 'sedes' | 'extras' | 'notifications'>('settings');
+  const [adminSection, setAdminSection] = useState<'settings' | 'branding' | 'sedes' | 'extras' | 'notifications' | 'faq'>('settings');
   const {
     foodItems, config, notifications, currentUser, searchItems,
     updateFoodItem, updateConfig, updateExchangeRate, syncPushSubscription,
@@ -300,6 +300,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
   const [newZoneCost, setNewZoneCost] = useState(0);
   const [newZoneMinKm, setNewZoneMinKm] = useState(0);
   const [newZoneMaxKm, setNewZoneMaxKm] = useState(0);
+  const [faqQuestion, setFaqQuestion] = useState('');
+  const [faqAnswer, setFaqAnswer] = useState('');
+  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
 
   const pickerFilteredProducts = foodItems.slice(0, 5).filter(p =>
     !pickerSearch.trim() || p.nombre.toLowerCase().includes(pickerSearch.toLowerCase())
@@ -441,6 +444,43 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
     if (e.target) e.target.value = '';
   };
 
+  const handleAddFaq = () => {
+    if (!faqQuestion.trim() || !faqAnswer.trim()) return;
+    const newFaq: FAQItem = {
+      id: `faq-${Date.now()}`,
+      question: faqQuestion.trim(),
+      answer: faqAnswer.trim(),
+    };
+    const updatedFaqs = [...(config.faq_items || []), newFaq];
+    updateConfig({ faq_items: updatedFaqs });
+    setFaqQuestion('');
+    setFaqAnswer('');
+  };
+
+  const handleEditFaq = (faq: FAQItem) => {
+    setEditingFaqId(faq.id);
+    setFaqQuestion(faq.question);
+    setFaqAnswer(faq.answer);
+  };
+
+  const handleSaveEditFaq = () => {
+    if (!editingFaqId || !faqQuestion.trim() || !faqAnswer.trim()) return;
+    const updatedFaqs = (config.faq_items || []).map(f =>
+      f.id === editingFaqId ? { ...f, question: faqQuestion.trim(), answer: faqAnswer.trim() } : f
+    );
+    updateConfig({ faq_items: updatedFaqs });
+    setEditingFaqId(null);
+    setFaqQuestion('');
+    setFaqAnswer('');
+  };
+
+  const handleDeleteFaq = (id: string) => {
+    if (confirm('¿Eliminar esta pregunta?')) {
+      const updatedFaqs = (config.faq_items || []).filter(f => f.id !== id);
+      updateConfig({ faq_items: updatedFaqs });
+    }
+  };
+
   const handleSendReply = async () => {
     if (!activeChatPhone || !replyMessage.trim() || notifCatFilter !== 'clientes') return;
     const success = await addNotification(`Re: Tu mensaje`, replyMessage.trim(), 'personal', activeChatPhone, '', '');
@@ -485,6 +525,16 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
     return msgs[msgs.length - 1];
   };
 
+  const SETTINGS_TABS = [
+    { id: 'settings' as const, label: 'General', icon: Settings },
+    { id: 'branding' as const, label: 'Branding', icon: Palette },
+    { id: 'sedes' as const, label: 'Sucursales', icon: MapPin },
+    { id: 'extras' as const, label: 'Extras', icon: SlidersHorizontal },
+    { id: 'notifications' as const, label: 'Notificaciones', icon: Bell },
+    { id: 'faq' as const, label: 'FAQ', icon: HelpCircle },
+  ];
+
+  const renderSubSection = () => {
   if (adminSection === 'notifications') {
     return (
       <div className="flex flex-col gap-4">
@@ -805,6 +855,40 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
                 </div>
               ))}
             </div>
+
+            {/* Category Images */}
+            <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 mt-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Imágenes de Categorías (Fondo)</span>
+              <p className="text-[10px] text-slate-400">Sube una imagen de fondo para cada categoría (aparece como tarjeta en Home).</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 mt-2">
+                {(config.categories || []).map((cat) => (
+                  <div key={cat} className="flex flex-col gap-1.5 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                    <span className="text-[10px] font-bold text-slate-700 truncate" title={cat}>{cat}</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const compressed = await compressImage(file, { maxWidth: 400, format: 'image/jpeg' });
+                            const url = await uploadFileToStorage(compressed, 'categories', `${cat.replace(/\s+/g, '-').toLowerCase()}.jpg`);
+                            updateConfig({ categories_images: { ...(config.categories_images || {}), [cat]: url } });
+                          } catch (err) {
+                            alert('Error al subir imagen: ' + (err as any).message);
+                          }
+                        }}
+                        className="bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-violet-500 text-[10px] w-full"
+                      />
+                      {(config.categories_images || {})[cat] && (
+                        <img src={(config.categories_images || {})[cat]} alt={cat} className="w-10 h-10 rounded object-cover border border-slate-200" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -921,17 +1005,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
               </div>
 
               <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="font-bold text-slate-800">Opciones de Envío Nacional</span>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={config.envio_nacional || false} onChange={(e) => updateConfig({ envio_nacional: e.target.checked })} className="accent-violet-600 h-4 w-4 rounded" />
-                  <span>Ofrecer Envío Nacional</span>
-                </label>
-                {config.envio_nacional && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span>Costo de Envío Fijo ($):</span>
-                    <input type="number" min="0" step="0.5" value={config.costo_envio_nacional || 0} onChange={(e) => updateConfig({ costo_envio_nacional: parseFloat(e.target.value) || 0 })} className="bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-violet-500 w-24" />
-                  </div>
-                )}
+                <span className="font-bold text-slate-800">Opciones de Envío</span>
               </div>
 
               <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
@@ -1196,7 +1270,117 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
     );
   }
 
+  if (adminSection === 'faq') {
+    return (
+      <div className="flex flex-col gap-5 animate-fade-in">
+        <div className="flex flex-col gap-4 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-100 text-blue-600 rounded-xl"><HelpCircle size={20} /></div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">Gestión de Preguntas Frecuentes</h4>
+              <p className="text-[11px] text-slate-500">Administra las preguntas frecuentes que verán los clientes.</p>
+            </div>
+          </div>
+
+          {/* Add/Edit FAQ Form */}
+          <div className="flex flex-col gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <h5 className="text-xs font-bold text-slate-800">{editingFaqId ? 'Editar Pregunta' : 'Nueva Pregunta'}</h5>
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                value={faqQuestion}
+                onChange={(e) => setFaqQuestion(e.target.value)}
+                placeholder="Pregunta (ej: ¿Cuáles son los horarios?)"
+                className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:border-violet-500"
+              />
+              <textarea
+                value={faqAnswer}
+                onChange={(e) => setFaqAnswer(e.target.value)}
+                placeholder="Respuesta..."
+                className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:border-violet-500 min-h-[80px]"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={editingFaqId ? handleSaveEditFaq : handleAddFaq}
+                  disabled={!faqQuestion.trim() || !faqAnswer.trim()}
+                  className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                >
+                  {editingFaqId ? 'Guardar Cambios' : 'Agregar'}
+                </button>
+                {editingFaqId && (
+                  <button
+                    onClick={() => { setEditingFaqId(null); setFaqQuestion(''); setFaqAnswer(''); }}
+                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-300 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* FAQ List */}
+          <div className="flex flex-col gap-2">
+            {(config.faq_items || []).length === 0 && (
+              <p className="text-xs text-slate-400 italic text-center py-4">No hay preguntas frecuentes configuradas.</p>
+            )}
+            {(config.faq_items || []).map((faq) => (
+              <div key={faq.id} className="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
+                <GripVertical size={14} className="text-slate-300 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-800">{faq.question}</p>
+                  <p className="text-[10px] text-slate-500 mt-1 line-clamp-2">{faq.answer}</p>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={() => handleEditFaq(faq)}
+                    className="p-1.5 rounded-md hover:bg-violet-50 text-violet-600 transition-colors cursor-pointer"
+                    title="Editar"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteFaq(faq.id)}
+                    className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return null;
+  };
+
+  return (
+    <div className="flex flex-col gap-4 animate-fade-in">
+      <div className="flex overflow-x-auto gap-1 p-1 bg-slate-100 rounded-xl no-scrollbar">
+        {SETTINGS_TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = adminSection === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setAdminSection(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                isActive ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+              }`}
+            >
+              <Icon size={13} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      {renderSubSection()}
+    </div>
+  );
 };
 
 export default SettingsSection;

@@ -5,7 +5,7 @@ import { DeliveryZone } from '../types/store';
 interface LeafletMapProps {
   onLocationSelected: (lat: number, lng: number, distance: number, cost: number, zoneName: string) => void;
   shopCoords: { lat: number; lng: number };
-  config?: { delivery_gratis?: boolean; costo_delivery_km?: number; envio_nacional?: boolean; costo_envio_nacional?: number; site_nombre?: string; delivery_zonas?: DeliveryZone[] };
+  config?: { delivery_gratis?: boolean; costo_delivery_km?: number; site_nombre?: string; delivery_zonas?: DeliveryZone[] };
 }
 
 // Zonas de Valencia predefinidas (fallback si no hay zonas configuradas)
@@ -47,9 +47,6 @@ export const calculateShippingCostSymbolic = (distanceKm: number, config?: Leafl
 
   // National shipping for distances beyond configured zones
   if (distanceKm > 18) {
-    if (config?.envio_nacional) {
-       return { cost: config.costo_envio_nacional || 0, zone: 'Envío Nacional Estándar' };
-    }
     return { cost: 0, zone: 'Fuera de Valencia (Cobro a Destino)' };
   }
   

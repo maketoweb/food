@@ -1,8 +1,18 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ProductCard } from '../ProductCard';
 import { FoodItem, StoreConfig } from '../../types/store';
+
+vi.mock('../../store/AppContext', () => ({
+  useApp: () => ({
+    toggleFavorite: vi.fn(),
+    isFavorite: vi.fn(() => false),
+    config: {
+      theme_color: '#E31837',
+    },
+  }),
+}));
 
 const mockConfig: StoreConfig = {
   site_nombre: 'TestStore',
@@ -89,7 +99,9 @@ describe('ProductCard', () => {
 
   it('deshabilita botón + cuando agotado', () => {
     render(<ProductCard {...defaultProps} item={{ ...mockItem, stock: 0 }} />);
-    const addButton = screen.getByRole('button', { name: '' });
+    const buttons = screen.getAllByRole('button');
+    const addButton = buttons.find(b => b.querySelector('.lucide-plus'));
+    expect(addButton).toBeDefined();
     expect(addButton).toBeDisabled();
   });
 
@@ -102,8 +114,10 @@ describe('ProductCard', () => {
 
   it('click en botón + llama a addToCart', () => {
     render(<ProductCard {...defaultProps} />);
-    const addButton = screen.getAllByRole('button')[0];
-    fireEvent.click(addButton);
+    const buttons = screen.getAllByRole('button');
+    const addButton = buttons.find(b => b.querySelector('.lucide-plus'));
+    expect(addButton).toBeDefined();
+    fireEvent.click(addButton!);
     expect(defaultProps.addToCart).toHaveBeenCalledWith(mockItem);
   });
 

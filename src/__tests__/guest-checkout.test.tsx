@@ -32,7 +32,6 @@ describe('FASE 2 - Guest Checkout', () => {
     delivery_gratis: false,
     recogida_en_local: true,
     entrega_por_zonas: true,
-    envio_nacional: false,
     esta_abierta: true,
   };
 

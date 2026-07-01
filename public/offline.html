@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sin Conexión - FoodApp</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #FFF8F0;
+      color: #1A1A2E;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      text-align: center;
+      max-width: 400px;
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background: #FF2D95;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.9; }
+    .features {
+      margin-top: 32px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    .feature {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>Sin Conexión</h1>
+    <p>No hay conexión a internet. Los pedidos se enviarán automáticamente cuando vuelva la conexión.</p>
+    <button class="btn" onclick="window.location.reload()">Reintentar</button>
+    <div class="features">
+      <div class="feature">🍔 Catálogo guardado</div>
+      <div class="feature">🛒 Carrito local</div>
+      <div class="feature">📱 Pedidos offline</div>
+    </div>
+  </div>
+</body>
+</html>

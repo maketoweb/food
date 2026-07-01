@@ -20,6 +20,9 @@ import { ProductReviews } from './components/ProductReviews';
 import { SplashScreen } from './components/SplashScreen';
 import { OfflineBanner } from './components/OfflineBanner';
 import { getCategoryColor } from './utils/categoryColors';
+import { FreeDeliveryBar } from './components/FreeDeliveryBar';
+import { StickyCart } from './components/StickyCart';
+import { ProductModal } from './components/ProductModal';
 
 function AppContent() {
   const { cart, config, addToCart, isAdminAuthenticated, authenticateAdmin, logoutAdmin, currentUser, notifications, displayCurrency, toggleCurrency, isGlobalLoading, foodItems, getProductReviews, getProductAverageRating, addReview } = useApp();
@@ -469,6 +472,9 @@ function AppContent() {
             </div>
           </div>
 
+          {/* FREE DELIVERY PROGRESS BAR */}
+          <FreeDeliveryBar currentTotal={cart.reduce((sum, item) => sum + item.item.precio_usd * item.quantity, 0)} threshold={config.delivery_gratis_threshold || 0} themeColor={config.theme_color || '#FF2D95'} />
+
       {/* 2. BODY PAGES VIEW DELEGATOR */}
       <main className="flex-1 px-4 lg:px-8 pt-4 lg:pt-6 overflow-y-auto max-w-7xl mx-auto w-full">
         {tab === 'home' && (
@@ -495,19 +501,27 @@ function AppContent() {
           />
         )}
  
-          {tab === 'checkout' && (
-            cart.length > 0 ? <Checkout setTab={setTab} /> : (
-              <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                <ShoppingBag size={48} className="text-zinc-300 mb-4" />
-                <h2 className="text-xl font-display font-bold text-zinc-900 mb-2">Carrito Vacío</h2>
-                <p className="text-zinc-500 text-sm mb-6">Agrega productos para iniciar el checkout.</p>
-                <button onClick={() => setTab('catalog')}
-                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold px-8 py-3 rounded-xl transition-all active:scale-95 text-sm cursor-pointer"
-                >
-                  Ver Menú
-                </button>
+          {tab === 'checkout' && cart.length > 0 && (
+            <div className="fixed inset-0 z-[100] flex items-end justify-center lg:items-center lg:p-4">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setTab('home')} />
+              <div className="relative w-full max-w-lg bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl max-h-[92vh] lg:max-h-[90vh] overflow-y-auto no-scrollbar">
+                <div className="flex justify-center pt-3 pb-1 lg:hidden"><div className="w-10 h-1 rounded-full bg-zinc-300" /></div>
+                <button type="button" onClick={() => setTab('home')} className="absolute top-3 right-3 z-20 w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-full flex items-center justify-center cursor-pointer"><X size={14} className="text-zinc-500" /></button>
+                <Checkout setTab={setTab} onClose={() => setTab('home')} />
               </div>
-            )
+            </div>
+          )}
+          {tab === 'checkout' && cart.length === 0 && (
+            <div className="fixed inset-0 z-[100] flex items-end justify-center lg:items-center lg:p-4">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setTab('home')} />
+              <div className="relative w-full max-w-sm bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl p-8 text-center">
+                <button type="button" onClick={() => setTab('home')} className="absolute top-3 right-3 z-20 w-8 h-8 bg-zinc-100 hover:bg-zinc-200 rounded-full flex items-center justify-center cursor-pointer"><X size={14} className="text-zinc-500" /></button>
+                <ShoppingBag size={40} className="text-zinc-300 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-zinc-900 mb-1">Carrito Vacío</h3>
+                <p className="text-xs text-zinc-500 mb-4">Agrega productos para continuar.</p>
+                <button onClick={() => setTab('catalog')} className="w-full text-white font-bold py-2.5 rounded-xl text-xs cursor-pointer" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>Ver Menú</button>
+              </div>
+            </div>
           )}
  
         {tab === 'admin' && (
@@ -534,251 +548,25 @@ function AppContent() {
         setDrawerOpen={setDrawerOpen}
       />
 
+      {/* STICKY MINI CART (Mobile only) */}
+      <StickyCart onOpenCart={() => setTab('cart')} />
+
       {/* --------------------------------------------------------------------------------
       A. PRODUCT MODAL - Professional Food Delivery Style
       -------------------------------------------------------------------------------- */}
-      {selectedProductDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 lg:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <SEOHead 
-            type="product" 
-            product={selectedProductDetails} 
-          />
-          
-          <div className="w-full max-w-4xl bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl relative max-h-[95vh] lg:max-h-[90vh] overflow-y-auto no-scrollbar text-zinc-900 animate-slide-up">
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => { setSelectedProductDetails(null); setMicroModalQuantity(1); setSelectedProductOptions([]); setOptionsTotal(0); }}
-              className="absolute top-4 right-4 z-20 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer"
-            >
-              <X size={16} className="text-zinc-600" />
-            </button>
-
-            {/* IMAGE SECTION */}
-            <div className="relative w-full aspect-[16/7] lg:aspect-[16/6] overflow-hidden bg-zinc-100">
-              <img 
-                src={selectedProductDetails.imagen_urls[activeImageIdx] || selectedProductDetails.imagen_urls[0]} 
-                alt={selectedProductDetails.nombre} 
-                className="w-full h-full object-cover" 
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-              
-              {/* Image Navigation */}
-              {selectedProductDetails.imagen_urls.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImageIdx(prev => (prev === 0 ? selectedProductDetails.imagen_urls.length - 1 : prev - 1))}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-all cursor-pointer"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImageIdx(prev => (prev === selectedProductDetails.imagen_urls.length - 1 ? 0 : prev + 1))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-all cursor-pointer"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {selectedProductDetails.imagen_urls.map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setActiveImageIdx(idx)}
-                        className={`w-2 h-2 rounded-full transition-all ${activeImageIdx === idx ? 'bg-white w-5' : 'bg-white/50'}`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex gap-2">
-                {selectedProductDetails.es_promo && (
-                  <span className="px-3 py-1 bg-red-500 text-white text-[11px] font-black uppercase rounded-full shadow">Promo</span>
-                )}
-                {selectedProductDetails.es_nuevo && (
-                  <span className="px-3 py-1 bg-emerald-500 text-white text-[11px] font-black uppercase rounded-full shadow">Nuevo</span>
-                )}
-                {selectedProductDetails.es_mas_vendido && !selectedProductDetails.es_promo && (
-                  <span className="px-3 py-1 bg-orange-500 text-white text-[11px] font-black uppercase rounded-full shadow">Top</span>
-                )}
-              </div>
-            </div>
-
-            {/* CONTENT SECTION */}
-            <div className="p-5 lg:p-8">
-              {/* Header */}
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full" style={{ backgroundColor: getCategoryColor(selectedProductDetails.categoria).light, color: getCategoryColor(selectedProductDetails.categoria).textColor }}>
-                      {selectedProductDetails.categoria}
-                    </span>
-                    {selectedProductDetails.delivery_gratis && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Delivery Gratis</span>
-                    )}
-                  </div>
-                  <h2 className="text-2xl lg:text-3xl font-black text-zinc-900 leading-tight">{selectedProductDetails.nombre}</h2>
-                  <p className="text-sm text-zinc-500 mt-1 leading-relaxed">{selectedProductDetails.descripcion}</p>
-                </div>
-                <div className="lg:text-right shrink-0">
-                  <div className="text-3xl font-black" style={{ color: getCategoryColor(selectedProductDetails.categoria).primary }}>
-                    ${(selectedProductDetails.precio_usd + optionsTotal).toFixed(2)}
-                  </div>
-                  <div className="text-sm text-zinc-400 font-mono">
-                    {((selectedProductDetails.precio_usd + optionsTotal) * config.tasa_cambio).toFixed(2)} Bs
-                  </div>
-                  {optionsTotal > 0 && (
-                    <div className="text-xs text-orange-500 font-semibold mt-1">+${optionsTotal.toFixed(2)} en extras</div>
-                  )}
-                </div>
-              </div>
-
-              {/* INGREDIENTS SECTION */}
-              {selectedProductDetails.ingredientes && selectedProductDetails.ingredientes.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-bold text-zinc-800 mb-3 flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-[10px]">🧀</span>
-                    Ingredientes
-                    <span className="text-[10px] font-normal text-zinc-400 ml-1">(quita los que no quieras)</span>
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProductDetails.ingredientes.map((ing, idx) => {
-                      const isRemoved = removedIngredients.has(idx);
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            const newSet = new Set(removedIngredients);
-                            if (newSet.has(idx)) newSet.delete(idx);
-                            else newSet.add(idx);
-                            setRemovedIngredients(newSet);
-                          }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border cursor-pointer ${
-                            isRemoved 
-                              ? 'bg-red-50 text-red-500 border-red-200 line-through opacity-60' 
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                          }`}
-                        >
-                          {isRemoved ? <X size={12} /> : <Check size={12} />}
-                          {ing}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* EXTRAS / OPTIONS SECTION */}
-              {selectedProductDetails.option_groups && selectedProductDetails.option_groups.length > 0 && (
-                <div className="mb-6 pt-5 border-t border-zinc-100">
-                  <h3 className="text-sm font-bold text-zinc-800 mb-3 flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-[10px]">+</span>
-                    Personaliza tu pedido
-                  </h3>
-                  <ProductOptionsEditor
-                    optionGroups={selectedProductDetails.option_groups}
-                    selectedOptions={selectedProductOptions}
-                    onSelectionChange={(opts, total) => {
-                      setSelectedProductOptions(opts);
-                      setOptionsTotal(total);
-                    }}
-                    themeColor={config.theme_color || '#FF6B35'}
-                  />
-                </div>
-              )}
-
-              {/* RECOMMENDED PRODUCTS */}
-              {selectedProductDetails.related_ids && selectedProductDetails.related_ids.length > 0 && (
-                <div className="mb-4 pt-4 border-t border-zinc-100">
-                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Recomendados</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedProductDetails.related_ids.map(rid => {
-                      const rel = foodItems.find(f => f.id === rid);
-                      if (!rel) return null;
-                      return (
-                        <button
-                          key={rid}
-                          type="button"
-                          onClick={() => {
-                            addToCart(rel, 1);
-                            setSelectedProductDetails(null);
-                          }}
-                          className="flex items-center gap-2 p-2 rounded-xl border border-zinc-200 hover:border-zinc-900 hover:bg-zinc-50 transition-all text-left cursor-pointer"
-                        >
-                          <img src={rel.imagen_urls[0]} alt={rel.nombre} className="w-10 h-10 rounded-lg object-cover shrink-0" referrerPolicy="no-referrer" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[11px] font-bold text-zinc-800 truncate">{rel.nombre}</p>
-                            <p className="text-[10px] text-zinc-500">+ ${rel.precio_usd.toFixed(2)}</p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* REVIEWS SECTION */}
-              <ProductReviews
-                reviews={getProductReviews(selectedProductDetails.id)}
-                averageRating={getProductAverageRating(selectedProductDetails.id)}
-                totalReviews={getProductReviews(selectedProductDetails.id).length}
-                productId={selectedProductDetails.id}
-                productName={selectedProductDetails.nombre}
-                themeColor={config.theme_color || '#FF6B35'}
-                canReview={!!currentUser}
-                onSubmitReview={async (rating, comment) => {
-                  await addReview(selectedProductDetails.id, rating, comment);
-                }}
-                userReview={getProductReviews(selectedProductDetails.id).find(r => r.user_id === currentUser?.id) || null}
-              />
-
-              {/* QUANTITY + ADD TO CART */}
-              <div className="flex items-center gap-4 pt-5 border-t border-zinc-100">
-                <div className="flex items-center border-2 border-zinc-200 rounded-xl overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setMicroModalQuantity(prev => Math.max(1, prev - 1))}
-                    className="w-11 h-11 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all text-lg font-bold cursor-pointer"
-                  >
-                    −
-                  </button>
-                  <span className="w-11 h-11 flex items-center justify-center text-base font-bold text-zinc-900 border-x-2 border-zinc-200">{microModalQuantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => setMicroModalQuantity(prev => prev + 1)}
-                    className="w-11 h-11 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all text-lg font-bold cursor-pointer"
-                  >
-                    +
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const removedIngredientNames = Array.from(removedIngredients).map(idx => selectedProductDetails.ingredientes?.[idx]).filter(Boolean) as string[];
-                    addToCart(selectedProductDetails, microModalQuantity, selectedProductOptions, optionsTotal, removedIngredientNames);
-                    setSelectedProductDetails(null);
-                    setMicroModalQuantity(1);
-                    setSelectedProductOptions([]);
-                    setOptionsTotal(0);
-                    setRemovedIngredients(new Set());
-                  }}
-                  className="flex-1 h-12 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98] hover:opacity-90 shadow-lg"
-                  style={{ background: config.theme_color || '#FF6B35', boxShadow: `0 4px 20px ${(config.theme_color || '#FF6B35')}44` }}
-                >
-                  <ShoppingCart size={16} />
-                  Agregar al Carrito · ${(selectedProductDetails.precio_usd * microModalQuantity + optionsTotal * microModalQuantity).toFixed(2)}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProductModal
+        product={selectedProductDetails}
+        isOpen={!!selectedProductDetails}
+        onClose={() => { setSelectedProductDetails(null); setMicroModalQuantity(1); setSelectedProductOptions([]); setOptionsTotal(0); }}
+        onAddToCart={(item, qty, opts, total, removed) => {
+          addToCart(item, qty || 1, opts || [], total || 0, removed || []);
+          setSelectedProductDetails(null);
+          setMicroModalQuantity(1);
+          setSelectedProductOptions([]);
+          setOptionsTotal(0);
+          setRemovedIngredients(new Set());
+        }}
+      />
 
       {/* --------------------------------------------------------------------------------
       C. ADMINISTRATIVE SECURITY PORTAL LOGIN MODAL

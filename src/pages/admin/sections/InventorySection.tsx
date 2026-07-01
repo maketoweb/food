@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { FoodItem } from '../../../types/store';
 import { uploadFileToStorage, compressImage, getPublicUrl } from '../../../store/supabaseClient';
-import { Plus, Edit, Trash2, Search, Upload, FileSpreadsheet, Mic } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Upload, FileSpreadsheet, Mic, Pause, PackageX, CheckCircle } from 'lucide-react';
 
 interface InventorySectionProps {
   openEditor: (part: FoodItem | null) => void;
@@ -228,7 +228,22 @@ const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config 
               </div>
             </div>
 
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
+              <button 
+                type="button"
+                onClick={() => {
+                  const newDisponibilidad = (part as any).disponibilidad === 'Disponible' ? 'Agotado' : 'Disponible';
+                  updateFoodItem(part.id, { disponibilidad: newDisponibilidad } as any);
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  (part as any).disponibilidad === 'Agotado' 
+                    ? 'text-amber-600 bg-amber-100 hover:bg-amber-200' 
+                    : 'text-slate-500 hover:text-amber-600 bg-slate-100 hover:bg-amber-50'
+                }`}
+                title={(part as any).disponibilidad === 'Agotado' ? 'Marcar Disponible' : 'Marcar Agotado'}
+              >
+                {part.activo === false ? <PackageX size={13} /> : (part as any).disponibilidad === 'Agotado' ? <Pause size={13} /> : <CheckCircle size={13} />}
+              </button>
               <button 
                 type="button"
                 onClick={() => openEditor(part)}

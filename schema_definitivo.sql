@@ -138,9 +138,15 @@ CREATE TABLE IF NOT EXISTS orders (
     status VARCHAR(30) NOT NULL DEFAULT 'Pendiente',
     tiempo_estimado_entrega TEXT DEFAULT '',
     notas_admin TEXT DEFAULT '',
+    guest_email TEXT,
     fecha TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Indices para busquedas rapidas por email y telefono
+CREATE INDEX IF NOT EXISTS idx_orders_cliente_email ON orders (cliente_email) WHERE cliente_email IS NOT NULL AND cliente_email != '';
+CREATE INDEX IF NOT EXISTS idx_orders_guest_email ON orders (guest_email) WHERE guest_email IS NOT NULL AND guest_email != '';
+CREATE INDEX IF NOT EXISTS idx_orders_cliente_telefono ON orders (cliente_telefono);
 
 -- ----------------------------------------------------------------------------
 -- 4.6 push_subscriptions (SISTEMA DE NOTIFICACIONES PUSH)
@@ -786,6 +792,83 @@ CREATE INDEX IF NOT EXISTS idx_flash_sales_product ON flash_sales(product_id);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS estimated_prep_time INTEGER;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS order_count INTEGER DEFAULT 0;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS promo_end_date TIMESTAMP WITH TIME ZONE;
+
+-- ----------------------------------------------------------------------------
+-- 10. user_carts (CARRITO PERSISTENTE POR USUARIO)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS user_carts (
+    user_id TEXT PRIMARY KEY,
+    cart_data JSONB NOT NULL DEFAULT '[]'::JSONB,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE user_carts ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='user_carts' AND policyname='user_carts_select_own') THEN
+        CREATE POLICY "user_carts_select_own" ON user_carts FOR SELECT TO authenticated USING (auth.uid()::text = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='user_carts' AND policyname='user_carts_upsert_own') THEN
+        CREATE POLICY "user_carts_upsert_own" ON user_carts FOR INSERT TO authenticated WITH CHECK (auth.uid()::text = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='user_carts' AND policyname='user_carts_update_own') THEN
+        CREATE POLICY "user_carts_update_own" ON user_carts FOR UPDATE TO authenticated USING (auth.uid()::text = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='user_carts' AND policyname='user_carts_delete_own') THEN
+        CREATE POLICY "user_carts_delete_own" ON user_carts FOR DELETE TO authenticated USING (auth.uid()::text = user_id);
+    END IF;
+END $$;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON user_carts TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 11. promotions (SISTEMA DE PROMOCIONES COMPLETO)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS promotions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    image_url TEXT,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    discount_type TEXT NOT NULL DEFAULT 'percent',
+    discount_value NUMERIC(10,2) DEFAULT 0,
+    coupon_code TEXT,
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    audience TEXT DEFAULT 'all',
+    audience_config JSONB DEFAULT '{}'::JSONB,
+    channel TEXT DEFAULT 'both',
+    status TEXT DEFAULT 'draft',
+    scheduled_at TIMESTAMP WITH TIME ZONE,
+    sent_at TIMESTAMP WITH TIME ZONE,
+    max_uses INTEGER,
+    current_uses INTEGER DEFAULT 0,
+    impressions INTEGER DEFAULT 0,
+    clicks INTEGER DEFAULT 0,
+    conversions INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE promotions ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='promotions_select_public') THEN
+        CREATE POLICY "promotions_select_public" ON promotions FOR SELECT USING (status = 'active');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='promotions_admin_all') THEN
+        CREATE POLICY "promotions_admin_all" ON promotions FOR ALL TO authenticated
+        USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+        WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+    END IF;
+END $$;
+
+GRANT SELECT ON promotions TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON promotions TO authenticated;
+
+CREATE INDEX IF NOT EXISTS idx_promotions_status ON promotions(status, start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_promotions_product ON promotions(product_id);
 
 -- ==========================================================================
 -- CONFIGURACIÓN DE REALTIME (COMPATIBLE CON PLAN GRATUITO)

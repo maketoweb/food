@@ -1,6 +1,8 @@
-import React from 'react';
-import { FoodItem, StoreConfig, ProductReview } from '../types/store';
-import { ShoppingCart, Plus, Star, Users, Flame, Clock, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { FoodItem, StoreConfig } from '../types/store';
+import { Plus, Star, Users, Flame, Clock, Heart, Eye, AlertTriangle, TrendingUp } from 'lucide-react';
+import { useApp } from '../store/AppContext';
+import { RippleButton } from './RippleButton';
 
 interface ProductCardProps {
   item: FoodItem;
@@ -10,6 +12,7 @@ interface ProductCardProps {
   isOffer?: boolean;
   averageRating?: number;
   reviewCount?: number;
+  index?: number;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -19,15 +22,40 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   addToCart,
   isOffer,
   averageRating = 0,
-  reviewCount = 0
+  reviewCount = 0,
+  index = 0,
 }) => {
+  const { toggleFavorite, isFavorite } = useApp();
+  const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
+  const [showAddedToast, setShowAddedToast] = useState(false);
   const isAgotado = item.stock <= 0;
   const themeColor = config.theme_color || '#E31837';
   const isLowStock = item.stock > 0 && item.stock < (config.stock_alert_threshold || 5);
   const hasPromoEnd = item.promo_end_date && new Date(item.promo_end_date) > new Date();
+  const isFav = isFavorite(item.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isAgotado) return;
+    addToCart(item);
+    setShowAddedToast(true);
+    setTimeout(() => setShowAddedToast(false), 1500);
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsAnimatingHeart(true);
+    toggleFavorite(item.id);
+    setTimeout(() => setIsAnimatingHeart(false), 600);
+  };
 
   return (
-    <div className="shrink-0 w-[170px] sm:w-[215px] flex flex-col bg-white rounded-xl overflow-hidden transition-all duration-300 group relative border border-zinc-100 hover:border-zinc-200 hover:shadow-lg cursor-pointer"
+    <div
+      className="shrink-0 w-[170px] sm:w-[215px] flex flex-col bg-white rounded-xl overflow-hidden group relative border border-zinc-100 hover:border-zinc-200 cursor-pointer premium-hover"
+      style={{
+        opacity: 0,
+        animation: `fadeInScale 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${index * 80}ms forwards`,
+      }}
       onClick={() => onViewProductDetails(item)}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-zinc-50">
@@ -37,6 +65,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isAgotado ? 'grayscale opacity-50' : ''}`}
           referrerPolicy="no-referrer"
         />
+
+        {/* Heart button */}
+        <button
+          onClick={handleToggleFavorite}
+          className={`absolute top-2 right-2 z-20 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+            isFav
+              ? 'bg-red-500 text-white shadow-lg'
+              : 'bg-white/80 backdrop-blur-sm text-zinc-600 hover:bg-white hover:text-red-500'
+          } ${isAnimatingHeart ? 'animate-heart-beat' : ''}`}
+        >
+          <Heart size={12} fill={isFav ? 'currentColor' : 'none'} strokeWidth={2} />
+        </button>
+
+        {/* Badges */}
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
           {item.es_promo && (
             <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider text-white shadow-sm"
@@ -51,8 +93,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
           {item.es_mas_vendido && !item.es_promo && !item.es_nuevo && (
-            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-sm">
-              TOP
+            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-sm flex items-center gap-0.5">
+              <TrendingUp size={8} /> TOP
             </span>
           )}
           {isAgotado && (
@@ -71,15 +113,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+
+        {/* Quick add button */}
+        <RippleButton
+          onClick={handleAddToCart}
           disabled={isAgotado}
-          className="absolute bottom-2 right-2 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-90 hover:scale-110"
+          className="absolute bottom-2 right-2 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-90 hover:scale-110 disabled:opacity-50"
           style={{ backgroundColor: themeColor }}
         >
           <Plus size={16} className="text-white" />
-        </button>
+        </RippleButton>
+
+        {/* Added toast */}
+        {showAddedToast && (
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-full text-[10px] font-bold shadow-xl animate-fade-in-scale flex items-center gap-1">
+              ✓ ¡Agregado!
+            </div>
+          </div>
+        )}
       </div>
+
       <div className="p-3 flex flex-col gap-1.5 flex-1">
         <h4 className="text-[13px] font-bold text-zinc-900 line-clamp-2 leading-tight min-h-[2rem]">
           {item.nombre}
@@ -87,7 +141,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <p className="text-[10px] text-zinc-400 line-clamp-1 leading-tight">
           {item.descripcion}
         </p>
-        
+
         {/* Social Proof Badges */}
         <div className="flex items-center gap-2 flex-wrap">
           {averageRating > 0 && (
@@ -110,17 +164,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
         </div>
-        
-        <div className="mt-auto flex items-center justify-between pt-1.5">
-          <span className="text-base font-black" style={{ color: themeColor }}>
-            ${item.precio_usd.toFixed(2)}
+
+        {/* Delivery gratis */}
+        {item.delivery_gratis && (
+          <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full w-fit">
+            🚚 Delivery Gratis
           </span>
+        )}
+
+        <div className="mt-auto flex items-center justify-between pt-1.5">
+          <div className="flex flex-col">
+            {item.es_promo && item.precio_anterior_usd && item.precio_anterior_usd > item.precio_usd && (
+              <span className="text-[10px] text-zinc-400 line-through font-medium">
+                ${item.precio_anterior_usd.toFixed(2)}
+              </span>
+            )}
+            <span className="text-base font-black" style={{ color: themeColor }}>
+              ${item.precio_usd.toFixed(2)}
+            </span>
+          </div>
           <button
             onClick={(e) => { e.stopPropagation(); onViewProductDetails(item); }}
-            className="text-[10px] font-bold uppercase tracking-wider hover:underline cursor-pointer"
+            className="text-[10px] font-bold uppercase tracking-wider hover:underline cursor-pointer flex items-center gap-1"
             style={{ color: themeColor }}
           >
-            Personalizar
+            <Eye size={10} /> Personalizar
           </button>
         </div>
       </div>

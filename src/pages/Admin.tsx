@@ -1249,7 +1249,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                   <BarChart data={monthlyComparisonData}>
                     <XAxis dataKey="period" stroke="#64748b" />
                     <YAxis stroke="#64748b" />
-                    <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ventas']} />
+                    <Tooltip formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'Ventas']} />
                     <Bar dataKey="total" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={60} />
                   </BarChart>
                 </ResponsiveContainer>

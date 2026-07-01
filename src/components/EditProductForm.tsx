@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FoodItem } from '../types/store';
-import { X, Upload, Camera, Plus, Trash2 } from 'lucide-react';
+import { FoodItem, ALLERGEN_OPTIONS } from '../types/store';
+import { X, Upload, Camera, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { uploadFileToStorage, compressImage } from '../store/supabaseClient';
 
@@ -25,6 +25,9 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
   const [formDeliveryGratis, setFormDeliveryGratis] = useState(false);
   const [formActivo, setFormActivo] = useState(true);
   const [formRelatedIds, setFormRelatedIds] = useState<string[]>([]);
+  const [formAlergenos, setFormAlergenos] = useState<string[]>([]);
+  const [formPrecioAnterior, setFormPrecioAnterior] = useState<string>('');
+  const [formComboIds, setFormComboIds] = useState<string[]>([]);
 
   // Local validation error state
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
@@ -43,6 +46,9 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       setFormDeliveryGratis(!!part.delivery_gratis);
       setFormActivo(part.activo !== undefined ? part.activo : true);
       setFormRelatedIds(part.related_ids || []);
+      setFormAlergenos(part.alergenos || []);
+      setFormPrecioAnterior(part.precio_anterior_usd != null ? String(part.precio_anterior_usd) : '');
+      setFormComboIds(part.combo_ids || []);
       setValidationErrors({});
     }
   }, [part]);
@@ -91,7 +97,10 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
       es_mas_vendido: formVendido,
       delivery_gratis: formDeliveryGratis,
       activo: formActivo,
-      related_ids: formRelatedIds
+      related_ids: formRelatedIds,
+      alergenos: formAlergenos,
+      precio_anterior_usd: formPrecioAnterior ? Number(formPrecioAnterior) : undefined,
+      combo_ids: formComboIds.length > 0 ? formComboIds : undefined,
     };
 
     onSubmit(updatedPart);
@@ -430,6 +439,86 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({ part, onSubmit
                 <span className="text-[9px] text-[#a1a1aa] leading-none">Envío sin costo</span>
               </div>
             </label>
+          </div>
+
+          {/* Allergens Selector */}
+          <div className="col-span-2 flex flex-col gap-2 border-t border-[#27272a]/40 pt-3 mt-1">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={14} className="text-amber-500" />
+              <span className="font-semibold text-zinc-350 text-xs">Alérgenos</span>
+            </div>
+            <p className="text-[10px] text-[#a1a1aa]">Selecciona los alérgenos que contiene este producto</p>
+            <div className="flex flex-wrap gap-1.5">
+              {ALLERGEN_OPTIONS.map(alergeno => (
+                <button
+                  key={alergeno}
+                  type="button"
+                  onClick={() => {
+                    setFormAlergenos(prev =>
+                      prev.includes(alergeno)
+                        ? prev.filter(a => a !== alergeno)
+                        : [...prev, alergeno]
+                    );
+                  }}
+                  className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                    formAlergenos.includes(alergeno)
+                      ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                      : 'bg-[#09090b] border-[#27272a] text-zinc-400 hover:border-zinc-500'
+                  }`}
+                >
+                  {alergeno}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Precio Anterior (Strikethrough price) */}
+          <div className="col-span-2 flex flex-col gap-1 border-t border-[#27272a]/40 pt-3 mt-1">
+            <span className="font-semibold text-zinc-350 text-xs">Precio Anterior (tachado, opcional)</span>
+            <p className="text-[10px] text-[#a1a1aa]">Si se establece, se muestra como precio original tachado junto al actual</p>
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400 text-sm">$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formPrecioAnterior}
+                onChange={(e) => setFormPrecioAnterior(e.target.value)}
+                placeholder="Ej: 12.99"
+                className="bg-[#09090b] border border-[#27272a] rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-500 flex-1 text-white font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Combos Selector */}
+          <div className="col-span-2 flex flex-col gap-2 border-t border-[#27272a]/40 pt-3 mt-1">
+            <span className="font-semibold text-zinc-350 text-xs">Combos Asociados</span>
+            <p className="text-[10px] text-[#a1a1aa]">Selecciona los combos en los que aparece este producto</p>
+            <div className="flex flex-wrap gap-1.5">
+              {(config.combos || []).length === 0 && (
+                <p className="text-[10px] text-zinc-500 italic">No hay combos creados. Créalos en la sección Combos del admin.</p>
+              )}
+              {(config.combos || []).map(combo => (
+                <button
+                  key={combo.id}
+                  type="button"
+                  onClick={() => {
+                    setFormComboIds(prev =>
+                      prev.includes(combo.id)
+                        ? prev.filter(id => id !== combo.id)
+                        : [...prev, combo.id]
+                    );
+                  }}
+                  className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                    formComboIds.includes(combo.id)
+                      ? 'bg-violet-500/20 border-violet-500/50 text-violet-400'
+                      : 'bg-[#09090b] border-[#27272a] text-zinc-400 hover:border-zinc-500'
+                  }`}
+                >
+                  {combo.nombre} ({combo.discount_percent}% off)
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Related Products Selector */}

@@ -1069,8 +1069,6 @@ const DEFAULT_CONFIG: StoreConfig = {
   mensaje_bienvenida: 'La mejor hamburguesería con delivery express. Hamburguesas smash, pizzas artesanales, pollo, papas, postres y más.',
   delivery_gratis: false,
   costo_delivery_km: 1.5,
-  envio_nacional: true,
-  costo_envio_nacional: 5.0,
   recogida_en_local: true,
   entrega_por_zonas: true,
   delivery_zonas: [
@@ -1339,7 +1337,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       mainChannel
         // Escuchar cambios en Configuración
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'store_config' }, payload => {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'store_config' }, (payload: Record<string, unknown>) => {
           const newRow = (payload as any)?.new;
           if (newRow) {
             setConfig(prev => ({
@@ -1354,7 +1352,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         })
         // Escuchar cambios en Pedidos (CDC)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload: Record<string, unknown>) => {
           const updated = payload.new as Order;
           const old = payload.old as Order;
 
@@ -1422,7 +1420,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         })
         // Escuchar Notificaciones (CDC)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload: Record<string, unknown>) => {
           const newNotif = payload.new as InAppNotification;
           
           // Validar si es para todos o específicamente para el usuario actual
@@ -1459,7 +1457,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'products' },
-          payload => {
+          (payload: Record<string, unknown>) => {
             const inserted = (payload as any)?.new;
             if (!inserted?.id) return;
 
@@ -1478,7 +1476,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'products' },
-          payload => {
+          (payload: Record<string, unknown>) => {
             const updated = (payload as any)?.new;
             if (!updated?.id) return;
 
@@ -1498,7 +1496,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .on(
           'postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'products' },
-          payload => {
+          (payload: Record<string, unknown>) => {
             const deleted = (payload as any)?.old;
             if (!deleted) return;
 
@@ -1693,8 +1691,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           mensaje_bienvenida: dbConfig.mensaje_bienvenida || prev.mensaje_bienvenida,
           delivery_gratis: dbConfig.delivery_gratis ?? prev.delivery_gratis,
           costo_delivery_km: dbConfig.costo_delivery_km ?? prev.costo_delivery_km,
-          envio_nacional: dbConfig.envio_nacional ?? prev.envio_nacional,
-          costo_envio_nacional: dbConfig.costo_envio_nacional ?? prev.costo_envio_nacional,
           recogida_en_local: dbConfig.recogida_en_local ?? prev.recogida_en_local,
           entrega_por_zonas: dbConfig.entrega_por_zonas ?? prev.entrega_por_zonas,
           delivery_zonas: dbConfig.delivery_zonas ?? prev.delivery_zonas
@@ -2098,6 +2094,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: newOrder.status,
       tiempo_estimado_entrega: newOrder.tiempo_estimado_entrega,
       guest_phone: orderData.guest_phone || null,
+      guest_email: (!currentUser && orderData.cliente_email) ? orderData.cliente_email : null,
+      notas_admin: orderData.notas_admin || '',
       fecha: new Date().toISOString()
     }]);
 
@@ -2110,10 +2108,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
 
-    // Guest checkout: store guest phone for future account creation
+    // Guest checkout: store guest data for future account creation
     if (orderData.crear_cuenta && orderData.guest_phone && !currentUser) {
       localStorage.setItem('foodpop_guest_phone', orderData.guest_phone);
       localStorage.setItem('foodpop_guest_name', orderData.cliente_nombre);
+      if (orderData.cliente_email) {
+        localStorage.setItem('foodpop_guest_email', orderData.cliente_email);
+      }
     }
 
     // BROADCAST: Enviar señal inmediata al Admin sin esperar a la DB

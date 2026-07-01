@@ -1,9 +1,10 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useState, useCallback } from 'react';
 import { useApp } from '../../store/AppContext';
 import { useAdminStore } from '../../store/stores/adminStore';
+import { Order, FoodItem } from '../../types/store';
 import {
   BarChart3, ShoppingBag, Utensils, Grid, User, Ticket, Settings,
-  Menu, X
+  Menu, X, Bell, MessageSquare, Megaphone, Package
 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 
@@ -14,6 +15,10 @@ const TablesSection = lazy(() => import('./sections/TablesSection'));
 const CustomersSection = lazy(() => import('./sections/CustomersSection'));
 const CouponsSection = lazy(() => import('./sections/CouponsSection'));
 const SettingsSection = lazy(() => import('./sections/SettingsSection'));
+const NotificationsSection = lazy(() => import('./sections/NotificationsSection'));
+const ChatSection = lazy(() => import('./sections/ChatSection'));
+const PromosSection = lazy(() => import('./sections/PromosSection'));
+const CombosSection = lazy(() => import('./sections/CombosSection'));
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -32,8 +37,12 @@ const ADMIN_SECTIONS = [
   { id: 'reports', label: 'Dashboard', icon: BarChart3 },
   { id: 'orders', label: 'Pedidos', icon: ShoppingBag },
   { id: 'inventory', label: 'Menú', icon: Utensils },
+  { id: 'promos', label: 'Promociones', icon: Megaphone },
+  { id: 'combos', label: 'Combos', icon: Package },
   { id: 'tables', label: 'Mesas', icon: Grid },
   { id: 'customers', label: 'Clientes', icon: User },
+  { id: 'notifications', label: 'Notificaciones', icon: Bell },
+  { id: 'chat', label: 'Mensajes', icon: MessageSquare },
   { id: 'coupons', label: 'Cupónes', icon: Ticket },
   { id: 'settings', label: 'Configuración', icon: Settings },
 ];
@@ -43,6 +52,24 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
   const { activeSection, setActiveSection, sidebarOpen, setSidebarOpen } = useAdminStore();
   const themeColor = config.theme_color || '#7c3aed';
 
+  const [openOrderDetailIds, setOpenOrderDetailIds] = useState<string[]>([]);
+  const [editingOrderItems, setEditingOrderItems] = useState<Order | null>(null);
+  const [openEditor, setOpenEditor] = useState<FoodItem | null>(null);
+  const [sendMsgTitle, setSendMsgTitle] = useState('');
+  const [sendMsgBody, setSendMsgBody] = useState('');
+  const [sendMsgModal, setSendMsgModal] = useState<{ user: unknown } | null>(null);
+  const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+
+  const toggleOrderDetail = useCallback((orderId: string) => {
+    setOpenOrderDetailIds(prev =>
+      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+    );
+  }, []);
+
+  const handleStatusAdvance = useCallback((_order: Order) => {
+    // Status advance is handled by the OrdersSection component
+  }, []);
+
   const sidebarSections = ADMIN_SECTIONS.filter(s => s.id !== 'tables' || config.tiene_mesas);
 
   const sectionLabel = sidebarSections.find(s => s.id === activeSection)?.label || 'Dashboard';
@@ -50,12 +77,36 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
   const renderSection = () => {
     switch (activeSection) {
       case 'reports': return <DashboardSection />;
-      case 'orders': return <OrdersSection />;
-      case 'inventory': return <InventorySection />;
-      case 'tables': return <TablesSection />;
-      case 'customers': return <CustomersSection />;
+      case 'orders': return (
+        <OrdersSection
+          openOrderDetailIds={openOrderDetailIds}
+          toggleOrderDetail={toggleOrderDetail}
+          editingOrderItems={editingOrderItems}
+          setEditingOrderItems={setEditingOrderItems}
+          setPrintingOrder={setPrintingOrder}
+          handleStatusAdvance={handleStatusAdvance}
+        />
+      );
+      case 'inventory': return <InventorySection openEditor={setOpenEditor} config={config} />;
+      case 'tables': return (
+        <TablesSection
+          openOrderDetailIds={openOrderDetailIds}
+          toggleOrderDetail={toggleOrderDetail}
+        />
+      );
+      case 'customers': return (
+        <CustomersSection
+          setSendMsgTitle={setSendMsgTitle}
+          setSendMsgBody={setSendMsgBody}
+          setSendMsgModal={setSendMsgModal}
+        />
+      );
       case 'coupons': return <CouponsSection />;
       case 'settings': return <SettingsSection setTab={setTab} />;
+      case 'notifications': return <NotificationsSection />;
+      case 'chat': return <ChatSection />;
+      case 'promos': return <PromosSection />;
+      case 'combos': return <CombosSection />;
       default: return <DashboardSection />;
     }
   };
@@ -85,7 +136,7 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
             return (
               <button
                 key={section.id}
-                onClick={() => { setActiveSection(section.id as any); setSidebarOpen(false); }}
+                onClick={() => { setActiveSection(section.id as never); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   isActive ? 'text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
                 }`}

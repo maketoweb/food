@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, Info, X, Rocket } from 'lucide-react';
+import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, Info, X, Rocket, Copy, Check, Mail, Key, ArrowRight, Shield } from 'lucide-react';
 import { LeafletMap } from '../components/LeafletMap';
 import { SEOHead } from '../components/SEOHead';
 import { CartUpsell } from '../components/CartUpsell';
@@ -9,10 +9,11 @@ import { FoodItem } from '../types/store';
 
 interface CheckoutProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
+  onClose?: () => void;
 }
 
-export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
-  const { cart, config, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon } = useApp();
+export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
+  const { cart, config, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon, registerUser } = useApp();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPopupHelp, setShowPopupHelp] = useState(false);
@@ -28,10 +29,24 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
   // Guest form fields
   const [clientName, setClientName] = useState(currentUser?.nombre || '');
   const [clientPhone, setClientPhone] = useState(currentUser?.telefono || '');
+  const [clientEmail, setClientEmail] = useState(currentUser?.email || '');
   const [orderNotes, setOrderNotes] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState<'Pago Móvil' | 'Zelle' | 'Efectivo' | 'Transferencia'>('Pago Móvil');
+  const [selectedPayment, setSelectedPayment] = useState<'Pago Móvil' | 'Zelle' | 'Efectivo' | 'Transferencia' | 'Otro'>('Pago Móvil');
   const [validationError, setValidationError] = useState('');
   const [crearCuenta, setCrearCuenta] = useState(true);
+  const [customPaymentNote, setCustomPaymentNote] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Registration modal after order
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword] = useState(() => {
+    const phone = clientPhone.replace(/[\s\-()]/g, '');
+    return phone;
+  });
+  const [regError, setRegError] = useState('');
+  const [regSuccess, setRegSuccess] = useState(false);
+  const [regLoading, setRegLoading] = useState(false);
 
   // Map metrics
   const [shippingLat, setShippingLat] = useState<number>(config.coordenadas_tienda.lat);
@@ -49,6 +64,37 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
   const activeSedes = config.sedes?.filter(s => s.activa) || [];
   const hasMultipleSedes = activeSedes.length > 1;
   const [selectedSedeId, setSelectedSedeId] = useState<string>('');
+
+  const handleCopy = async (text: string, fieldId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldId);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopiedField(fieldId);
+      setTimeout(() => setCopiedField(null), 2000);
+    }
+  };
+
+  const CopyButton: React.FC<{ text: string; fieldId: string }> = ({ text, fieldId }) => (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); handleCopy(text, fieldId); }}
+      className="shrink-0 p-1 rounded hover:bg-zinc-200 transition-colors cursor-pointer"
+      title="Copiar"
+    >
+      {copiedField === fieldId
+        ? <Check size={12} className="text-emerald-500" />
+        : <Copy size={12} className="text-zinc-400 hover:text-zinc-600" />
+      }
+    </button>
+  );
 
   const getWhatsAppPhone = (): string => {
     if (selectedSedeId) {
@@ -138,8 +184,9 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
     const finalUserId: string | undefined = currentUser ? currentUser.id : undefined;
     const finalClientName = currentUser ? currentUser.nombre : clientName;
     const finalClientPhone = currentUser ? currentUser.telefono : clientPhone;
+    const finalClientEmail = currentUser ? currentUser.email : clientEmail;
 
-    // Guest validation: phone required, name optional
+    // Guest validation: phone required, email optional but validated if provided
     const cleanedPhone = finalClientPhone.replace(/[\s\-()]/g, '');
     const phoneRegex = /^\+?[0-9]{7,15}$/;
     if (!cleanedPhone) {
@@ -148,6 +195,10 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
     }
     if (!phoneRegex.test(cleanedPhone)) {
       setValidationError('El número de teléfono no es válido. Debe contener de 7 a 15 números (ej: +584124976451).');
+      return;
+    }
+    if (finalClientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalClientEmail)) {
+      setValidationError('El correo electrónico no es válido.');
       return;
     }
     setValidationError('');
@@ -189,14 +240,14 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab }) => {
 *Pedido ID:* ${preOrderId}
 *Cliente:* ${finalClientName || 'Cliente sin nombre'}
 *Telefono:* ${cleanedPhone}
-*Direccion de Entrega:* ${shippingZone}
+${finalClientEmail ? `*Correo:* ${finalClientEmail}\n` : ''}*Direccion de Entrega:* ${shippingZone}
 *Ubicacion Mapa:* https://www.google.com/maps?q=${shippingLat},${shippingLng}
 *Metodo Despacho:* ${deliveryLabel} - Costo: $${effectiveShippingCost.toFixed(2)}
 
 *Detalle del Carrito:*
 ${productosDetailText}
 *Total Neto a Pagar:* $${finalTotalUsd} / ${finalTotalBs} Bs.
-*Metodo de Pago:* ${selectedPayment}
+*Metodo de Pago:* ${selectedPayment}${selectedPayment === 'Otro' && customPaymentNote ? `\n*Detalle Pago:* ${customPaymentNote}` : ''}
 ----------------------------------`;
 
     let cleanConfigPhone = getWhatsAppPhone().replace(/\D/g, '');
@@ -209,9 +260,10 @@ ${productosDetailText}
     const created = await createOrder({
       cliente_nombre: finalClientName || 'Cliente sin nombre',
       cliente_telefono: cleanedPhone,
-      cliente_email: currentUser?.email || '',
+      cliente_email: finalClientEmail || '',
       usuario_id: finalUserId,
       guest_phone: currentUser ? undefined : cleanedPhone,
+      guest_email: currentUser ? undefined : (finalClientEmail || undefined),
       crear_cuenta: !currentUser && crearCuenta,
       items: cart.map(ci => ({
         food_id: ci.item.id,
@@ -241,94 +293,136 @@ ${productosDetailText}
       }
       localStorage.setItem('trv_active_order_id', created.id);
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      // Show registration modal for guests
+      if (!currentUser && crearCuenta) {
+        setShowRegistrationModal(true);
+      }
     } else {
       setValidationError('Error crítico: No se pudo registrar el pedido en el servidor. Verifique su conexión e intente de nuevo.');
     }
     setIsProcessing(false);
   };
 
+  const handleCreateAccount = async () => {
+    setRegError('');
+    if (!regEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail)) {
+      setRegError('Ingrese un correo válido.');
+      return;
+    }
+    setRegLoading(true);
+    try {
+      const phone = clientPhone.replace(/[\s\-()]/g, '');
+      await registerUser(
+        clientName || 'Cliente',
+        regEmail.trim().toLowerCase(),
+        phone,
+        phone
+      );
+      setRegSuccess(true);
+    } catch (err: any) {
+      setRegError(err?.message || 'Error al crear la cuenta.');
+    }
+    setRegLoading(false);
+  };
+
   if (processedOrder) {
     return (
+      <>
       <div className="flex flex-col items-center justify-center p-6 text-center py-16 gap-4 text-zinc-900 bg-white rounded-lg border border-zinc-200 shadow-sm">
         <SEOHead title="Pedido Confirmado" />
         <div className="w-16 h-16 rounded-full border font-bold flex items-center justify-center text-3xl animate-bounce shadow-sm" style={{ backgroundColor: `${config.theme_color || '#0f5d34'}15`, borderColor: `${config.theme_color || '#0f5d34'}60`, color: config.theme_color || '#0f5d34' }}>
           <CheckCircle size={32} />
         </div>
-        <h3 className="text-[21px] font-bold font-display text-zinc-900">¡Su Compra ha sido Procesada!</h3>
+        <h3 className="text-[21px] font-bold font-display text-zinc-900">¡Compra Procesada!</h3>
         <p className="text-[13px] text-zinc-600 max-w-sm leading-relaxed">
-          Hemos recibido su pedido con el ID <strong>{processedOrder.id}</strong>.
-          Para agilizar el despacho y coordinar el pago, por favor envíe su factura por WhatsApp.
+          Pedido <strong>{processedOrder.id}</strong> recibido. Envíe su factura por WhatsApp.
         </p>
-        {!currentUser && crearCuenta && (
-          <div className="w-full max-w-sm bg-violet-50 border border-violet-200 p-3 rounded-lg text-xs text-violet-700">
-            Se creó una cuenta con su teléfono <strong>{processedOrder.cliente_telefono}</strong>. Podrá acceder desde "Mi Perfil" con su número y cualquier contraseña temporal.
-          </div>
-        )}
         <div className="w-full max-w-sm bg-zinc-50 border border-zinc-200 p-4 rounded-lg text-left text-xs text-zinc-700 flex flex-col gap-2 font-mono mt-2">
-          <span className="font-bold font-display text-[15px] tracking-tight border-b border-zinc-200 pb-1 block" style={{ color: config.theme_color || '#0f5d34' }}>Recibo de Compra {config.site_nombre || ''}</span>
+          <span className="font-bold font-display text-[15px] tracking-tight border-b border-zinc-200 pb-1 block" style={{ color: config.theme_color || '#0f5d34' }}>Recibo</span>
           <div>ID: <span className="text-zinc-900 font-bold">{processedOrder.id}</span></div>
           <div>Cliente: <span className="text-zinc-900">{processedOrder.cliente_nombre}</span></div>
-          <div>Monto USD: <span className="font-bold" style={{ color: config.theme_color || '#0f5d34' }}>${(processedOrder.total_usd || 0).toFixed(2)}</span></div>
-          <div>Monto Bs: <span className="font-bold" style={{ color: config.theme_color || '#0f5d34' }}>{(processedOrder.total_bs || 0).toFixed(2)} Bs</span></div>
+          <div>Total: <span className="font-bold" style={{ color: config.theme_color || '#0f5d34' }}>${(processedOrder.total_usd || 0).toFixed(2)} / {(processedOrder.total_bs || 0).toFixed(2)} Bs</span></div>
           <div>Metodo: <span className="text-zinc-900 font-bold">{processedOrder.metodo_pago}</span></div>
         </div>
-        <div className="flex flex-col gap-2 w-full max-w-xs mt-6">
-          <button
-            type="button"
-            onClick={() => {
+        <div className="flex flex-col gap-2 w-full max-w-xs mt-4">
+          <button type="button" onClick={() => {
               let details = '';
-              processedOrder.items.forEach((it: any) => {
-                details += `- ${it.quantity || it.cantidad}x ${it.nombre} - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`;
-              });
-              const msg = `*Nuevo Pedido en ${config.site_nombre || 'BurgerPop'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion de Entrega:* ${processedOrder.direccion_envio}\n*Ubicacion Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n*Metodo Despacho:* Delivery Express - Costo: $${processedOrder.costo_envio_usd.toFixed(2)}\n\n*Productos:*\n${details}\n*Total Neto a Pagar:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Metodo de Pago:* ${processedOrder.metodo_pago}\n----------------------------------`;
-              let cleanPhone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
-              if (cleanPhone.startsWith('0')) cleanPhone = '58' + cleanPhone.substring(1);
-              const retryUrlMobile = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
-              const isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-              if (isMob) {
-                window.location.href = retryUrlMobile;
-              } else {
-                const tab = window.open(retryUrlMobile, '_blank', 'noopener,noreferrer');
-                if (!tab) window.location.href = retryUrlMobile;
-              }
+              processedOrder.items.forEach((it: any) => { details += `- ${it.quantity || it.cantidad}x ${it.nombre} - $${(it.precio_usd * (it.quantity || it.cantidad)).toFixed(2)}\n`; });
+              const msg = `*Nuevo Pedido en ${config.site_nombre || 'BurgerPop'}*\n----------------------------------\n*Pedido ID:* ${processedOrder.id}\n*Cliente:* ${processedOrder.cliente_nombre}\n*Telefono:* ${processedOrder.cliente_telefono}\n*Direccion:* ${processedOrder.direccion_envio}\n*Mapa:* https://www.google.com/maps?q=${processedOrder.lat},${processedOrder.lng}\n\n*Productos:*\n${details}\n*Total:* $${processedOrder.total_usd.toFixed(2)} / ${processedOrder.total_bs.toFixed(2)} Bs.\n*Pago:* ${processedOrder.metodo_pago}`;
+              let phone = (config.telefono_soporte || '584124976451').replace(/\D/g, '');
+              if (phone.startsWith('0')) phone = '58' + phone.substring(1);
+              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
             }}
-            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-4 rounded-lg text-xs transition-transform tracking-wider flex items-center justify-center gap-1.5 uppercase font-display cursor-pointer shadow-md"
-          >
-            Enviar a WhatsApp
-          </button>
-          <div className="text-[10px] text-zinc-500 mb-2 flex items-start gap-2">
-            <Info className="mt-0.5 flex-shrink-0 text-zinc-400" size={14} />
-            <span>Si WhatsApp no se abrió automáticamente, habilite los pop-ups y presione el botón verde.</span>
-            <button type="button" onClick={() => setShowPopupHelp(true)} className="ml-auto text-xs underline" style={{ color: config.theme_color || '#0f5d34' }}>
-              ¿Cómo?
-            </button>
-          </div>
-          {showPopupHelp && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-              <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-zinc-800">Habilitar pop-ups</h3>
-                  <button onClick={() => setShowPopupHelp(false)} className="text-zinc-400 hover:text-zinc-600"><X size={20} /></button>
-                </div>
-                <ol className="list-decimal list-inside text-sm text-zinc-600 space-y-2">
-                  <li>En Chrome: menú (⋮) → Configuración → Privacidad → Pop-ups → Permitir <code>wa.me</code>.</li>
-                  <li>En Firefox: menú (☰) → Opciones → Privacidad → Pop-ups → Excepciones → Añade <code>https://wa.me</code>.</li>
-                  <li>En Edge: Configuración → Cookies → Pop-ups → Añade <code>https://wa.me</code>.</li>
-                </ol>
-                <button onClick={() => setShowPopupHelp(false)} className="mt-4 w-full text-white py-2 rounded hover:opacity-90" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
-                  Entendido
-                </button>
-              </div>
-            </div>
-          )}
-          <button type="button" onClick={() => setTab('profile')} className="w-full text-white font-bold py-3 px-4 rounded-lg text-xs transition-all tracking-wider flex items-center justify-center gap-1.5 uppercase font-display cursor-pointer hover:opacity-90" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
-            Ver Estatus de mi Pedido
-          </button>
-          <button type="button" onClick={() => setTab('home')} className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200 text-xs py-2 rounded-lg transition-all cursor-pointer font-medium">
+            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+          >Enviar a WhatsApp</button>
+          <button type="button" onClick={() => { if (onClose) onClose(); else setTab('home'); }} className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200 text-xs py-2 rounded-lg cursor-pointer font-medium">
             Ir a la Tienda
           </button>
         </div>
       </div>
+
+      {/* Registration Modal */}
+      {showRegistrationModal && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center lg:items-center lg:p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowRegistrationModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
+            <div className="flex justify-center pt-3 pb-1 lg:hidden"><div className="w-10 h-1 rounded-full bg-zinc-300" /></div>
+            {!regSuccess ? (
+              <div className="p-6 flex flex-col items-center gap-4">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: `${config.theme_color || '#0f5d34'}15` }}>
+                  <Shield size={28} style={{ color: config.theme_color || '#0f5d34' }} />
+                </div>
+                <h3 className="text-lg font-bold text-zinc-900 text-center">Crea tu Cuenta</h3>
+                <p className="text-xs text-zinc-500 text-center leading-relaxed">
+                  Regístrate para hacer pedidos más rápido en el futuro. Tu contraseña será tu número de teléfono.
+                </p>
+                <div className="w-full flex flex-col gap-3 mt-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><User size={9} /> Nombre</span>
+                    <input type="text" value={clientName} readOnly className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none text-zinc-800" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><Phone size={9} /> Telefono (tu contraseña)</span>
+                    <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-lg overflow-hidden">
+                      <input type="text" value={clientPhone.replace(/[\s\-()]/g, '')} readOnly className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none text-zinc-800" />
+                      <CopyButton text={clientPhone.replace(/[\s\-()]/g, '')} fieldId="reg-phone" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><Mail size={9} /> Correo electronico</span>
+                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="tu@email.com" className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-violet-500" />
+                  </div>
+                </div>
+                {regError && <p className="text-xs text-red-500 text-center">{regError}</p>}
+                <button type="button" onClick={handleCreateAccount} disabled={regLoading} className="w-full text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
+                  {regLoading ? 'Creando...' : <>Crear mi Cuenta <ArrowRight size={14} /></>}
+                </button>
+                <button type="button" onClick={() => setShowRegistrationModal(false)} className="text-xs text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                  Ahora no, gracias
+                </button>
+              </div>
+            ) : (
+              <div className="p-6 flex flex-col items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle size={28} className="text-emerald-500" />
+                </div>
+                <h3 className="text-lg font-bold text-zinc-900 text-center">¡Cuenta Creada!</h3>
+                <p className="text-xs text-zinc-500 text-center leading-relaxed">
+                  Ya puedes iniciar sesión con tu teléfono y la contraseña es la misma que tu número.
+                </p>
+                <div className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-4 flex flex-col gap-2 font-mono text-xs">
+                  <div className="flex items-center justify-between"><span className="text-zinc-500">Correo:</span><span className="font-bold text-zinc-800">{regEmail}</span></div>
+                  <div className="flex items-center justify-between"><span className="text-zinc-500">Contraseña:</span><span className="font-bold text-zinc-800">{clientPhone.replace(/[\s\-()]/g, '')}</span></div>
+                </div>
+                <button type="button" onClick={() => { setShowRegistrationModal(false); if (onClose) onClose(); else setTab('home'); }} className="w-full text-white font-bold py-3 rounded-xl text-sm cursor-pointer" style={{ backgroundColor: config.theme_color || '#0f5d34' }}>
+                  Entendido
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      </>
     );
   }
 
@@ -456,20 +550,22 @@ ${productosDetailText}
               <MapPin size={14} /> Direccion de Entrega
             </h3>
             {/* Shipping method buttons */}
-            <div className="grid grid-cols-3 gap-1.5 mb-3">
+            <div className="flex gap-1.5 mb-3">
               {config.recogida_en_local && (
-                <button type="button" onClick={() => handleShippingMethodChange('recogida')} className={`border p-2 rounded-lg text-center text-[10px] font-bold transition-all cursor-pointer ${shippingMethod === 'recogida' ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>
+                <button type="button" onClick={() => handleShippingMethodChange('recogida')} className={`border p-2 rounded-lg text-center text-[10px] font-bold transition-all cursor-pointer flex-1 ${shippingMethod === 'recogida' ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>
                   Recogida
                 </button>
               )}
               {config.entrega_por_zonas && (
-                <button type="button" onClick={() => handleShippingMethodChange('zonas')} className={`border p-2 rounded-lg text-center text-[10px] font-bold transition-all cursor-pointer ${shippingMethod === 'zonas' ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>
+                <button type="button" onClick={() => handleShippingMethodChange('zonas')} className={`border p-2 rounded-lg text-center text-[10px] font-bold transition-all cursor-pointer flex-1 ${shippingMethod === 'zonas' ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>
                   Zonas
                 </button>
               )}
-              <button type="button" onClick={() => handleShippingMethodChange('mapa')} className={`border p-2 rounded-lg text-center text-[10px] font-bold transition-all cursor-pointer ${shippingMethod === 'mapa' ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>
-                Mapa
-              </button>
+              {!config.entrega_por_zonas && (
+                <button type="button" onClick={() => handleShippingMethodChange('mapa')} className={`border p-2 rounded-lg text-center text-[10px] font-bold transition-all cursor-pointer flex-1 ${shippingMethod === 'mapa' ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>
+                  Mapa
+                </button>
+              )}
             </div>
 
             {shippingMethod === 'mapa' && (
@@ -489,13 +585,6 @@ ${productosDetailText}
                     <span className="font-mono">{config.delivery_gratis ? 'Gratis' : `$${z.cost.toFixed(2)}`}</span>
                   </button>
                 ))}
-                {config.envio_nacional && (
-                  <button type="button" onClick={() => { setSelectedZoneIndex((config.delivery_zonas || []).length); setShippingCost(config.delivery_gratis ? 0 : (config.costo_envio_nacional || 0)); setShippingDistance(100); setShippingZone('Envio Nacional'); }}
-                    className={`border p-3 rounded-lg text-left flex items-center justify-between text-[10px] font-bold transition-all cursor-pointer ${selectedZoneIndex === (config.delivery_zonas || []).length ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'}`}>
-                    <span>Envio Nacional</span>
-                    <span className="font-mono">{config.delivery_gratis ? 'Gratis' : `$${(config.costo_envio_nacional || 0).toFixed(2)}`}</span>
-                  </button>
-                )}
               </div>
             )}
 
@@ -544,6 +633,10 @@ ${productosDetailText}
                   <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1"><User size={9} /> Nombre (opcional)</span>
                   <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-zinc-950" />
                 </div>
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <span className="text-[9px] uppercase font-bold text-zinc-500 flex items-center gap-1">✉️ Correo (opcional)</span>
+                  <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-zinc-950" />
+                </div>
                 <label className="flex items-center gap-2 mt-3 cursor-pointer">
                   <input type="checkbox" checked={crearCuenta} onChange={(e) => setCrearCuenta(e.target.checked)} className="w-4 h-4 rounded border-zinc-300 accent-current" style={{ accentColor: config.theme_color || '#0f5d34' }} />
                   <span className="text-[10px] text-zinc-600">Crear cuenta con estos datos (para futuros pedidos)</span>
@@ -560,7 +653,8 @@ ${productosDetailText}
                 { key: 'Pago Móvil', label: 'Pago Movil Bs', icon: 'Bs', enabled: config.pagomovil_enabled },
                 { key: 'Zelle', label: 'Zelle USD', icon: 'USD', enabled: config.zelle_enabled },
                 { key: 'Efectivo', label: 'Efectivo', icon: 'Cash', enabled: config.efectivo_enabled },
-                { key: 'Transferencia', label: 'Transferencia', icon: 'Bco', enabled: config.transferencia_enabled }
+                { key: 'Transferencia', label: 'Transferencia', icon: 'Bco', enabled: config.transferencia_enabled },
+                { key: 'Otro', label: 'Otro', icon: '?', enabled: true }
               ].filter(pm => pm.enabled).map(pm => (
                 <button type="button" key={pm.key} onClick={() => setSelectedPayment(pm.key as any)} className={`border p-2.5 rounded-lg text-left flex items-center gap-2 transition-all cursor-pointer text-[10px] ${selectedPayment === pm.key ? 'bg-zinc-950 text-white border-zinc-950 font-bold' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'}`}>
                   <span className="text-[8px] uppercase font-mono font-bold px-1 py-0.5 rounded bg-zinc-200 text-zinc-800 shrink-0">{pm.icon}</span>
@@ -568,22 +662,103 @@ ${productosDetailText}
                 </button>
               ))}
             </div>
+
+            {/* Payment details with copy buttons */}
             <div className="mt-3 p-3 bg-zinc-50 border border-zinc-200 rounded-lg text-[10px] text-zinc-700 leading-relaxed font-mono">
-              <span className="font-bold font-display text-[11px] mb-1 block" style={{ color: config.theme_color || '#0f5d34' }}>Instrucciones:</span>
+              <span className="font-bold font-display text-[11px] mb-2 block" style={{ color: config.theme_color || '#0f5d34' }}>Instrucciones:</span>
+
               {selectedPayment === 'Pago Móvil' && (
-                <>
-                  <div>{config.pagomovil_data || 'Banesco (0134) - RIF J-50123456-7'}</div>
-                  <div className="font-black mt-1" style={{ color: config.theme_color || '#0f5d34' }}>Calcular: {totalBs.toFixed(2)} Bs.</div>
-                </>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Banco / Titular</span>
+                      <span className="text-zinc-800 font-bold">{(config.pagomovil_data || 'Banesco (0134)').split('-')[0]?.trim()}</span>
+                    </div>
+                    <CopyButton text={config.pagomovil_data || 'Banesco (0134) - RIF J-50123456-7'} fieldId="pm-data" />
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Telefono</span>
+                      <span className="text-zinc-800 font-bold">{(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'}</span>
+                    </div>
+                    <CopyButton text={(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'} fieldId="pm-phone" />
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Cedula / RIF</span>
+                      <span className="text-zinc-800 font-bold">{(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'}</span>
+                    </div>
+                    <CopyButton text={(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'} fieldId="pm-ci" />
+                  </div>
+                  <div className="font-black mt-1 text-center py-1 rounded" style={{ color: config.theme_color || '#0f5d34', backgroundColor: `${config.theme_color || '#0f5d34'}10` }}>
+                    Calcular: {totalBs.toFixed(2)} Bs.
+                  </div>
+                </div>
               )}
+
               {selectedPayment === 'Zelle' && (
-                <>
-                  <div>{config.zelle_data || 'pagos@marketo.com.ve'}</div>
-                  <div className="font-black mt-1" style={{ color: config.theme_color || '#0f5d34' }}>Monto: ${totalUsd.toFixed(2)} USD</div>
-                </>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Correo Zelle</span>
+                      <span className="text-zinc-800 font-bold">{config.zelle_data || 'pagos@marketo.com.ve'}</span>
+                    </div>
+                    <CopyButton text={config.zelle_data || 'pagos@marketo.com.ve'} fieldId="zelle-email" />
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Monto a enviar</span>
+                      <span className="font-black" style={{ color: config.theme_color || '#0f5d34' }}>${totalUsd.toFixed(2)} USD</span>
+                    </div>
+                    <CopyButton text={`$${totalUsd.toFixed(2)}`} fieldId="zelle-amount" />
+                  </div>
+                </div>
               )}
-              {selectedPayment === 'Efectivo' && <div>{config.efectivo_data || 'Paga al motorizado en efectivo al recibir'}</div>}
-              {selectedPayment === 'Transferencia' && <div>{config.transferencia_data || `Banesco - ${config.site_nombre || 'Tienda'} C.A.`}</div>}
+
+              {selectedPayment === 'Efectivo' && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Instruccion</span>
+                      <span className="text-zinc-800 font-bold">{config.efectivo_data || 'Paga al motorizado en efectivo al recibir'}</span>
+                    </div>
+                  </div>
+                  <div className="font-black mt-1 text-center py-1 rounded" style={{ color: config.theme_color || '#0f5d34', backgroundColor: `${config.theme_color || '#0f5d34'}10` }}>
+                    Total a pagar: ${totalUsd.toFixed(2)} / {totalBs.toFixed(2)} Bs.
+                  </div>
+                </div>
+              )}
+
+              {selectedPayment === 'Transferencia' && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Datos Bancarios</span>
+                      <span className="text-zinc-800 font-bold">{config.transferencia_data || `Banesco - ${config.site_nombre || 'Tienda'} C.A.`}</span>
+                    </div>
+                    <CopyButton text={config.transferencia_data || `Banesco - ${config.site_nombre || 'Tienda'} C.A.`} fieldId="transfer-data" />
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-zinc-400 uppercase">Monto</span>
+                      <span className="font-black" style={{ color: config.theme_color || '#0f5d34' }}>${totalUsd.toFixed(2)} USD</span>
+                    </div>
+                    <CopyButton text={`$${totalUsd.toFixed(2)}`} fieldId="transfer-amount" />
+                  </div>
+                </div>
+              )}
+
+              {selectedPayment === 'Otro' && (
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    value={customPaymentNote}
+                    onChange={(e) => setCustomPaymentNote(e.target.value)}
+                    placeholder="Describe como vas a pagar (ej: Pago con Binance, Pago con另一个 app, etc)"
+                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-[10px] outline-none focus:border-violet-600 resize-none font-mono"
+                    rows={3}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -627,7 +802,7 @@ ${productosDetailText}
           )}
 
           {/* CTA Button */}
-          <button type="submit" disabled={isProcessing} className={`fixed bottom-20 left-4 right-4 md:relative md:bottom-auto md:left-auto md:right-auto z-50 ${isProcessing ? 'bg-zinc-400' : 'bg-[#25D366] hover:bg-[#128C7E]'} text-white font-bold font-display py-4 rounded-xl text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg`}>
+          <button type="submit" disabled={isProcessing} className={`sticky bottom-0 z-10 w-full ${isProcessing ? 'bg-zinc-400' : 'bg-[#25D366] hover:bg-[#128C7E]'} text-white font-bold font-display py-4 rounded-xl text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg`}>
             {isProcessing ? 'Procesando...' : 'Procesar y Enviar WhatsApp'}
           </button>
         </form>
