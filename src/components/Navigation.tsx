@@ -1,18 +1,14 @@
-﻿import React, { useState } from 'react';
+﻿import React from 'react';
 import {
   Home,
-  Grid,
   ShoppingCart,
   Menu,
   X,
-  PhoneCall,
   MapPin,
   ShieldAlert,
   User,
   MessageCircle,
-  Utensils,
   Tag,
-  Mail,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
@@ -31,70 +27,60 @@ export const Navigation: React.FC<NavigationProps> = ({
   drawerOpen,
   setDrawerOpen,
 }) => {
-  const { cart, config, isAdminAuthenticated, logoutAdmin, currentUser, notifications } = useApp();
-  const themeColor = config.theme_color || '#E31837';
+  const { cart, config, isAdminAuthenticated, logoutAdmin, currentUser } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const logoUrl = config.logo_url || '';
 
   const getWhatsAppPhone = () => {
     const active = config.sedes?.filter((s) => s.activa);
     return active && active.length > 1 ? active[0].telefono : config.telefono_soporte;
   };
 
-  const unreadCount = currentUser
-    ? notifications.filter(
-        (n) =>
-          !n.leida &&
-          (n.tipo === 'todos' ||
-            (n.tipo === 'personal' && n.destinatario_telefono?.trim() === currentUser.telefono.trim()))
-      ).length
-    : 0;
-
-  const navLinks = [
-    { label: 'Inicio', tab: 'home' as const, icon: Home },
-    { label: 'Menú', tab: 'catalog' as const, icon: Grid },
-    { label: 'Combos', tab: 'catalog' as const, icon: Tag },
-    { label: 'Contacto', tab: 'profile' as const, icon: Mail },
-  ];
-
   return (
     <>
-      {/* DESKTOP TOP HEADER — lg and up */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-white border-b border-zinc-100 shadow-sm h-16">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between px-6 h-full">
-          {/* Left: Brand */}
+      {/* ═══════════════════════════════════════════════════════════
+          DESKTOP HEADER — Chipotle-style 3-column sticky bar
+          ═══════════════════════════════════════════════════════════ */}
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-white border-b border-zinc-200 h-16 items-center">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between px-8 h-full">
+
+          {/* Left: Circular Logo */}
           <button
             type="button"
             onClick={() => setTab('home')}
-            className="flex items-center gap-2 shrink-0 cursor-pointer"
+            className="flex items-center gap-3 shrink-0 cursor-pointer group"
           >
-            <span className="text-2xl font-black tracking-tight text-zinc-900" style={{ fontFamily: 'var(--font-display)' }}>
-              {config.site_nombre}
-            </span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={config.site_nombre}
+                className="w-10 h-10 rounded-full object-cover border-2 border-zinc-200 group-hover:border-zinc-400 transition-colors"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-black font-display">
+                {(config.site_nombre || 'F').charAt(0)}
+              </div>
+            )}
           </button>
 
           {/* Center: Navigation Links */}
-          <nav className="flex items-center gap-1 ml-12">
-            {navLinks.map((link) => {
-              const isActive = currentTab === link.tab && (
-                link.tab === 'home'
-                  ? currentTab === 'home'
-                  : link.tab === 'catalog'
-                    ? link.label === 'Menú'
-                      ? currentTab === 'catalog'
-                      : currentTab === 'catalog'
-                    : currentTab === link.tab
-              );
+          <nav className="flex items-center gap-2">
+            {[
+              { label: 'MENU', tab: 'catalog' as const },
+              { label: 'LOCATIONS', tab: 'catalog' as const },
+              { label: 'REWARDS', tab: 'profile' as const },
+            ].map((link) => {
+              const isActive = currentTab === link.tab;
               return (
                 <button
-                  type="button"
                   key={link.label}
+                  type="button"
                   onClick={() => setTab(link.tab)}
-                  className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`px-5 py-2 text-[13px] font-bold tracking-wide uppercase transition-colors cursor-pointer rounded-full ${
                     isActive
-                      ? ''
-                      : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
+                      ? 'text-zinc-900'
+                      : 'text-zinc-500 hover:text-zinc-900'
                   }`}
-                  style={isActive ? { color: themeColor, backgroundColor: themeColor + '15' } : {}}
                 >
                   {link.label}
                 </button>
@@ -102,87 +88,89 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </nav>
 
-          {/* Right: Cart + WhatsApp */}
-          <div className="flex items-center gap-3">
-            {/* Cart Icon */}
+          {/* Right: Sign In + Cart */}
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setTab('profile')}
+              className="text-[13px] font-bold tracking-wide uppercase text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+            >
+              {currentUser ? `HI, ${currentUser.nombre.split(' ')[0].toUpperCase()}` : 'SIGN IN'}
+            </button>
+
             <button
               type="button"
               onClick={() => setTab('checkout')}
-              className="relative p-2.5 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
-              aria-label="Ver carrito"
+              className="relative p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+              aria-label="Carrito de compras"
             >
-              <ShoppingCart size={20} className="text-zinc-700" />
+              <ShoppingCart size={22} className="text-zinc-800" strokeWidth={1.8} />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-orange-500 text-white text-[10px] font-bold px-1 leading-none">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold px-1 leading-none">
                   {cartCount}
                 </span>
               )}
             </button>
-
           </div>
         </div>
       </header>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR — Pop Vibrant */}
-      <nav
-        id="bottom-bar"
-        className="fixed bottom-0 left-0 right-0 z-50 h-[72px] bg-white border-t border-zinc-100 px-2 pb-2 flex items-start justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden safe-area-bottom"
-      >
-        {/* Nav: Inicio */}
-        <button onClick={() => setTab('home')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'home' ? '' : 'text-zinc-400'}`}
-          style={currentTab === 'home' ? { color: themeColor } : {}}
-        >
-          {currentTab === 'home' && <span className="absolute top-0 w-6 h-[3px] rounded-full" style={{ backgroundColor: themeColor }} />}
-          <Home size={20} strokeWidth={currentTab === 'home' ? 2.5 : 1.8} />
-          <span className="text-[10px] mt-0.5 font-semibold">Inicio</span>
-        </button>
+      {/* ═══════════════════════════════════════════════════════════
+          MOBILE HEADER — Hamburger + Logo | Cart
+          ═══════════════════════════════════════════════════════════ */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-zinc-200 h-14 flex items-center justify-between px-4">
+        {/* Left: Hamburger + Logo */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="p-1.5 -ml-1 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+            aria-label="Abrir menú"
+          >
+            <Menu size={22} className="text-zinc-800" strokeWidth={2} />
+          </button>
 
-        {/* Nav: Menú */}
-        <button onClick={() => setDrawerOpen(true)}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'catalog' ? '' : 'text-zinc-400'}`}
-          style={currentTab === 'catalog' ? { color: themeColor } : {}}
-        >
-          <Grid size={20} strokeWidth={currentTab === 'catalog' ? 2.5 : 1.8} />
-          <span className="text-[10px] mt-0.5 font-semibold">Menú</span>
-        </button>
-
-        {/* Nav: Carrito */}
-        <button onClick={() => setTab('checkout')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'cart' || currentTab === 'checkout' ? '' : 'text-zinc-400'}`}
-          style={(currentTab === 'cart' || currentTab === 'checkout') ? { color: themeColor } : {}}
-        >
-          {(currentTab === 'cart' || currentTab === 'checkout') && <span className="absolute top-0 w-6 h-[3px] rounded-full" style={{ backgroundColor: themeColor }} />}
-          <div className="relative">
-            <ShoppingCart size={20} strokeWidth={currentTab === 'cart' || currentTab === 'checkout' ? 2.5 : 1.8} />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[9px] font-bold px-1 leading-none shadow-lg"
-                style={{ backgroundColor: themeColor }}>
-                {cartCount}
-              </span>
+          <button
+            type="button"
+            onClick={() => setTab('home')}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={config.site_nombre}
+                className="w-8 h-8 rounded-full object-cover border border-zinc-200"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-black font-display">
+                {(config.site_nombre || 'F').charAt(0)}
+              </div>
             )}
-          </div>
-          <span className="text-[10px] mt-0.5 font-semibold">Carrito</span>
-        </button>
+            <span className="text-sm font-extrabold text-zinc-900 tracking-tight font-display hidden sm:inline">
+              {config.site_nombre}
+            </span>
+          </button>
+        </div>
 
-        {/* Nav: Perfil */}
-        <button onClick={() => setTab('profile')}
-          className={`flex flex-col items-center justify-center flex-1 pt-2 transition-colors relative ${currentTab === 'profile' ? '' : 'text-zinc-400'}`}
-          style={currentTab === 'profile' ? { color: themeColor } : {}}
+        {/* Right: Cart */}
+        <button
+          type="button"
+          onClick={() => setTab('checkout')}
+          className="relative p-2 -mr-1 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+          aria-label="Carrito de compras"
         >
-          {currentTab === 'profile' && <span className="absolute top-0 w-6 h-[3px] rounded-full" style={{ backgroundColor: themeColor }} />}
-          <div className="relative">
-            <User size={20} strokeWidth={currentTab === 'profile' ? 2.5 : 1.8} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-pop-red border-2 border-white animate-pulse" />
-            )}
-          </div>
-          <span className="text-[10px] mt-0.5 font-semibold">{currentUser ? 'Perfil' : 'Ingresar'}</span>
+          <ShoppingCart size={22} className="text-zinc-800" strokeWidth={1.8} />
+          {cartCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold px-1 leading-none">
+              {cartCount}
+            </span>
+          )}
         </button>
-      </nav>
-      <div className="h-[72px] lg:hidden" />
+      </header>
 
-      {/* MOBILE DRAWER PANEL */}
+      {/* ═══════════════════════════════════════════════════════════
+          MOBILE DRAWER PANEL — Slide-in side menu
+          ═══════════════════════════════════════════════════════════ */}
       <div
         className={`fixed inset-0 z-50 overflow-hidden transition-opacity duration-300 lg:hidden ${
           drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -197,11 +185,20 @@ export const Navigation: React.FC<NavigationProps> = ({
         >
           {/* Drawer Header */}
           <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
-            <div className="flex flex-col">
-              <span className="font-bold text-lg text-zinc-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                {config.site_nombre}
-              </span>
-              <span className="text-[10px] text-orange-500 font-mono tracking-wider font-semibold">Delivery Express</span>
+            <div className="flex items-center gap-3">
+              {logoUrl ? (
+                <img src={logoUrl} alt={config.site_nombre} className="w-9 h-9 rounded-full object-cover" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-black font-display">
+                  {(config.site_nombre || 'F').charAt(0)}
+                </div>
+              )}
+              <div className="flex flex-col">
+                <span className="font-bold text-sm text-zinc-900 tracking-tight font-display">
+                  {config.site_nombre}
+                </span>
+                <span className="text-[10px] text-zinc-400 font-semibold tracking-wider">Delivery Express</span>
+              </div>
             </div>
             <button
               type="button"
@@ -215,65 +212,27 @@ export const Navigation: React.FC<NavigationProps> = ({
           {/* Navigation links */}
           <div className="flex-1 overflow-y-auto py-3 px-3 no-scrollbar">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] uppercase font-bold text-zinc-300 tracking-widest px-3 py-2">
-                Navegar
-              </span>
-
-              <button
-                type="button"
-                onClick={() => { setTab('home'); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                  currentTab === 'home' ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
-                }`}
-              >
-                <Home size={16} /> Inicio
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setTab('catalog'); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                  currentTab === 'catalog' ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
-                }`}
-              >
-                <Grid size={16} /> Nuestro Menú
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setTab('catalog'); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer text-zinc-600 hover:bg-zinc-50`}
-              >
-                <Tag size={16} /> Combos
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setTab('checkout'); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                  (currentTab === 'cart' || currentTab === 'checkout') ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
-                }`}
-              >
-                <ShoppingCart size={16} /> Mi Pedido
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setTab('profile'); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                  currentTab === 'profile' ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
-                }`}
-              >
-                <User size={16} /> Mi Cuenta
-              </button>
+              {[
+                { label: 'Inicio', tab: 'home' as const, icon: Home },
+                { label: 'Nuestro Menú', tab: 'catalog' as const, icon: Tag },
+                { label: 'Mi Pedido', tab: 'checkout' as const, icon: ShoppingCart },
+                { label: 'Mi Cuenta', tab: 'profile' as const, icon: User },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => { setTab(item.tab); setDrawerOpen(false); }}
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg font-medium transition-all cursor-pointer ${
+                    currentTab === item.tab ? 'bg-zinc-100 text-zinc-900 font-semibold' : 'text-zinc-600 hover:bg-zinc-50'
+                  }`}
+                >
+                  <item.icon size={16} /> {item.label}
+                </button>
+              ))}
             </div>
 
             {/* Quick actions */}
             <div className="mt-4 pt-3 border-t border-zinc-100 flex flex-col gap-0.5">
-              <span className="text-[10px] uppercase font-bold text-zinc-300 tracking-widest px-3 py-2">
-                Acciones Rápidas
-              </span>
-
               <a
                 href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                 target="_blank"
@@ -286,9 +245,6 @@ export const Navigation: React.FC<NavigationProps> = ({
 
             {/* Store info */}
             <div className="mt-4 pt-3 border-t border-zinc-100">
-              <span className="text-[10px] uppercase font-bold text-zinc-300 tracking-widest px-3 py-2 block">
-                Nuestro Local
-              </span>
               <div className="flex gap-2 px-3 text-xs text-zinc-500 leading-relaxed">
                 <MapPin size={14} className="text-zinc-400 shrink-0 mt-0.5" />
                 <p>{config.direccion_fisica}</p>
@@ -323,12 +279,11 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             )}
             <div className="text-[9px] text-zinc-300 font-mono text-center mt-2">
-              {config.site_nombre || 'BurgerPop'} v2.0.0
+              {config.site_nombre || 'FoodPop'} v2.0.0
             </div>
           </div>
         </aside>
       </div>
-
     </>
   );
 };
