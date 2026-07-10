@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Promotion, FoodItem } from '../../../types/store';
-import { X, Save, Send, Clock, Calendar } from 'lucide-react';
+import { X, Save, Send, Clock, Calendar, Bell, BellOff } from 'lucide-react';
 
 interface PromotionFormProps {
   promotion?: Promotion | null;
   foodItems: FoodItem[];
   onSave: (promo: Omit<Promotion, 'id' | 'created_at'>) => Promise<void>;
+  onSendNotification?: (title: string, message: string, imageUrl?: string) => Promise<boolean>;
   onClose: () => void;
 }
 
-export const PromotionForm: React.FC<PromotionFormProps> = ({ promotion, foodItems, onSave, onClose }) => {
+export const PromotionForm: React.FC<PromotionFormProps> = ({ promotion, foodItems, onSave, onSendNotification, onClose }) => {
   const [title, setTitle] = useState(promotion?.title || '');
   const [message, setMessage] = useState(promotion?.message || '');
   const [imageUrl, setImageUrl] = useState(promotion?.image_url || '');
@@ -25,15 +26,17 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({ promotion, foodIte
   const [channel, setChannel] = useState<Promotion['channel']>(promotion?.channel || 'both');
   const [maxUses, setMaxUses] = useState(promotion?.max_uses || 0);
   const [status, setStatus] = useState<Promotion['status']>(promotion?.status || 'draft');
+  const [sendPush, setSendPush] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async () => {
+  const handleSave = async (activateAndSend = false) => {
     if (!title.trim() || !message.trim() || !startDate || !endDate) {
       alert('Por favor completa los campos obligatorios: título, mensaje, fecha inicio y fecha fin');
       return;
     }
     setSaving(true);
     try {
+      const finalStatus = activateAndSend ? 'active' : status;
       await onSave({
         title: title.trim(),
         message: message.trim(),
@@ -53,9 +56,16 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({ promotion, foodIte
         impressions: promotion?.impressions || 0,
         clicks: promotion?.clicks || 0,
         conversions: promotion?.conversions || 0,
-        status,
-        sent_at: promotion?.sent_at,
+        status: finalStatus,
+        sent_at: activateAndSend ? new Date().toISOString() : promotion?.sent_at,
       });
+
+      if (sendPush && onSendNotification) {
+        const notifSent = await onSendNotification(title.trim(), message.trim(), imageUrl || undefined);
+        if (notifSent) {
+          console.log('✅ Notificación push enviada para la promoción:', title);
+        }
+      }
     } finally {
       setSaving(false);
     }
@@ -175,20 +185,58 @@ export const PromotionForm: React.FC<PromotionFormProps> = ({ promotion, foodIte
             <label className="text-[10px] font-bold text-slate-500 uppercase">Límite de usos (0 = ilimitado)</label>
             <input type="number" min="0" value={maxUses} onChange={e => setMaxUses(Number(e.target.value))} className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs outline-none focus:border-violet-500" />
           </div>
+
+          {/* Toggle Enviar notificación push */}
+          <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                  {sendPush ? <Bell size={18} className="text-violet-600" /> : <BellOff size={18} className="text-slate-400" />}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Enviar como notificación push</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Los clientes recibirán una alerta en su dispositivo</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSendPush(!sendPush)}
+                className={`relative w-12 h-7 rounded-full transition-colors cursor-pointer ${
+                  sendPush ? 'bg-violet-600' : 'bg-slate-300'
+                }`}
+              >
+                <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  sendPush ? 'translate-x-5' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+            {sendPush && (
+              <div className="mt-3 bg-white rounded-lg p-3 border border-violet-100">
+                <p className="text-[10px] text-slate-500 mb-2">Vista previa de la notificación:</p>
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
+                    <Bell size={14} className="text-violet-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-slate-900 truncate">{title || 'Título de la promoción'}</p>
+                    <p className="text-[10px] text-slate-500 truncate">{message || 'Mensaje de la promoción'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-slate-200 px-5 py-3 flex justify-end gap-2 rounded-b-2xl">
-          <button onClick={onClose} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 cursor-pointer">Cancelar</button>
-          <button onClick={handleSave} disabled={saving} className="px-4 py-2 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2 cursor-pointer">
+        <div className="sticky bottom-0 bg-white border-t border-slate-200 px-5 py-3 flex flex-col sm:flex-row justify-end gap-2 rounded-b-2xl">
+          <button onClick={onClose} className="px-4 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 cursor-pointer">Cancelar</button>
+          <button onClick={() => handleSave(false)} disabled={saving} className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-xl hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
             <Save size={14} />
-            {saving ? 'Guardando...' : 'Guardar'}
+            {saving ? 'Guardando...' : 'Guardar Borrador'}
           </button>
-          {status === 'draft' && (
-            <button onClick={() => { setStatus('active'); handleSave(); }} disabled={saving} className="px-4 py-2 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2 cursor-pointer">
-              <Send size={14} />
-              Guardar y Activar
-            </button>
-          )}
+          <button onClick={() => handleSave(true)} disabled={saving} className="px-4 py-2.5 text-xs font-semibold text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
+            <Send size={14} />
+            {sendPush ? 'Activar y Enviar' : 'Guardar y Activar'}
+          </button>
         </div>
       </div>
     </div>

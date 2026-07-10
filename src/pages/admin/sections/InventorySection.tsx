@@ -2,7 +2,8 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { FoodItem } from '../../../types/store';
 import { uploadFileToStorage, compressImage, getPublicUrl } from '../../../store/supabaseClient';
-import { Plus, Edit, Trash2, Search, Upload, FileSpreadsheet, Mic, Pause, PackageX, CheckCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Upload, FileSpreadsheet, Mic, Pause, PackageX, CheckCircle, Eye } from 'lucide-react';
+import { ProductPreviewModal } from '../components/ProductPreviewModal';
 
 interface InventorySectionProps {
   openEditor: (part: FoodItem | null) => void;
@@ -13,7 +14,9 @@ const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config 
   const { foodItems, addFoodItem, updateFoodItem, deleteFoodItem, searchItems } = useApp();
   const [crudSearch, setCrudSearch] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState<FoodItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const themeColor = config.theme_color || '#7c3aed';
 
   const crudSearchParts = useMemo(() => {
     return searchItems(crudSearch, true);
@@ -195,63 +198,86 @@ const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config 
       </div>
 
       {/* List display */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {crudSearchParts.map(part => (
           <div 
             key={part.id} 
-            className="p-3 bg-white border border-slate-200 rounded-lg shadow-sm flex justify-between items-center gap-4 hover:border-violet-300 transition-all"
+            className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0 relative">
+            {/* Product Info Row */}
+            <div className="flex items-center gap-4 p-4">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 relative">
                 <img src={part.imagen_urls[0]} alt={part.nombre} className="w-full h-full object-cover" />
                 {part.imagen_urls && part.imagen_urls.length > 1 && (
-                  <span className="absolute bottom-0 right-0 bg-violet-650 text-white font-mono text-[7px] font-bold px-1 py-0.2 rounded-tl tracking-tighter" title={`${part.imagen_urls.length} imagenes cargadas`}>
+                  <span className="absolute bottom-0 right-0 bg-violet-600 text-white font-mono text-[8px] font-bold px-1.5 py-0.5 rounded-tl" title={`${part.imagen_urls.length} imágenes`}>
                     {part.imagen_urls.length}
                   </span>
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex gap-2 items-center">
-                  <h5 className="text-xs font-bold text-slate-900 line-clamp-1">{part.nombre}</h5>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border ${
-                    (part as any).disponibilidad === 'Agotado' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                    (part as any).disponibilidad === 'En Reposición' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                <div className="flex flex-wrap gap-2 items-center">
+                  <h5 className="text-sm font-bold text-slate-900 line-clamp-1">{part.nombre}</h5>
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
+                    (part as any).disponibilidad === 'Agotado' ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                    (part as any).disponibilidad === 'En Reposición' ? 'bg-amber-50 text-amber-600 border-amber-200' :
                     part.activo === false ? 'bg-slate-100 text-slate-500 border-slate-200' :
-                    'bg-emerald-50 text-emerald-600 border-emerald-100'
+                    'bg-emerald-50 text-emerald-600 border-emerald-200'
                   }`}>
                     {(part as any).disponibilidad || (part.activo ? 'Disponible' : 'Inactivo')}
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-500 font-mono flex gap-2 mt-0.5">
-                  <span>Stock: <strong className={part.stock <= 3 ? 'text-red-500' : 'text-slate-900'}>{part.stock} unid</strong></span>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <span className="text-sm font-bold" style={{ color: themeColor }}>${part.precio_usd.toFixed(2)}</span>
+                  <span className="text-[10px] text-slate-400">•</span>
+                  <span className="text-[11px] text-slate-500 capitalize">{part.categoria}</span>
+                  <span className="text-[10px] text-slate-400">•</span>
+                  <span className="text-[11px] text-slate-500">
+                    Stock: <strong className={part.stock <= 3 ? 'text-red-500 font-bold' : 'text-slate-700 font-bold'}>{part.stock}</strong>
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-1 items-center">
+            {/* Action Buttons Row — Grandes y con labels */}
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 flex flex-wrap gap-2">
+              {/* Botón Ver */}
+              <button 
+                type="button"
+                onClick={() => setPreviewProduct(part)}
+                className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 px-3 text-[11px] font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer"
+              >
+                <Eye size={15} />
+                Ver
+              </button>
+
+              {/* Botón Estado (Disponible/Agotado) */}
               <button 
                 type="button"
                 onClick={() => {
                   const newDisponibilidad = (part as any).disponibilidad === 'Disponible' ? 'Agotado' : 'Disponible';
                   updateFoodItem(part.id, { disponibilidad: newDisponibilidad } as any);
                 }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 px-3 text-[11px] font-bold rounded-xl transition-all cursor-pointer border ${
                   (part as any).disponibilidad === 'Agotado' 
-                    ? 'text-amber-600 bg-amber-100 hover:bg-amber-200' 
-                    : 'text-slate-500 hover:text-amber-600 bg-slate-100 hover:bg-amber-50'
+                    ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100' 
+                    : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
                 }`}
-                title={(part as any).disponibilidad === 'Agotado' ? 'Marcar Disponible' : 'Marcar Agotado'}
               >
-                {part.activo === false ? <PackageX size={13} /> : (part as any).disponibilidad === 'Agotado' ? <Pause size={13} /> : <CheckCircle size={13} />}
+                {part.activo === false ? <PackageX size={15} /> : (part as any).disponibilidad === 'Agotado' ? <Pause size={15} /> : <CheckCircle size={15} />}
+                {(part as any).disponibilidad === 'Agotado' ? 'Reponer' : 'Disponible'}
               </button>
+
+              {/* Botón Editar */}
               <button 
                 type="button"
                 onClick={() => openEditor(part)}
-                className="p-1.5 text-slate-500 hover:text-violet-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
-                title="Editar"
+                className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 px-3 text-[11px] font-bold text-violet-700 bg-violet-50 border border-violet-200 rounded-xl hover:bg-violet-100 transition-all cursor-pointer"
               >
-                <Edit size={13} />
+                <Edit size={15} />
+                Editar
               </button>
+
+              {/* Botón Eliminar */}
               <button 
                 type="button"
                 onClick={() => {
@@ -259,15 +285,25 @@ const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config 
                     deleteFoodItem(part.id);
                   }
                 }}
-                className="p-1.5 text-slate-500 hover:text-red-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
-                title="Eliminar"
+                className="flex items-center justify-center gap-2 py-2.5 px-3 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-all cursor-pointer"
               >
-                <Trash2 size={13} />
+                <Trash2 size={15} />
+                Eliminar
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Modal Vista Previa */}
+      {previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => setPreviewProduct(null)}
+          onEdit={(p) => { openEditor(p); setPreviewProduct(null); }}
+          themeColor={themeColor}
+        />
+      )}
     </div>
   );
 };

@@ -299,6 +299,33 @@ const ContentSection: React.FC = () => {
                 <input type="text" value={config.hero_cta_text || ''} onChange={e => updateConfig({ hero_cta_text: e.target.value })}
                   className="admin-input mt-1" placeholder="Ver Menú" />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Efecto del Hero</label>
+                  <select value={config.hero_effect || 'fade'} onChange={e => updateConfig({ hero_effect: e.target.value as any })}
+                    className="admin-input mt-1">
+                    <option value="fade">Fade</option>
+                    <option value="slide">Slide</option>
+                    <option value="typewriter">Typewriter</option>
+                    <option value="none">Ninguno</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Altura del Hero</label>
+                  <select value={config.hero_height || 'auto'} onChange={e => updateConfig({ hero_height: e.target.value as any })}
+                    className="admin-input mt-1">
+                    <option value="auto">Automática</option>
+                    <option value="60vh">60% vh</option>
+                    <option value="70vh">70% vh</option>
+                    <option value="full">100% vh</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Opacidad del Overlay (%): {config.hero_overlay_opacity ?? 100}</label>
+                <input type="range" min="0" max="100" value={config.hero_overlay_opacity ?? 100} onChange={e => updateConfig({ hero_overlay_opacity: parseInt(e.target.value) })}
+                  className="w-full mt-1" />
+              </div>
             </div>
           </div>
 
@@ -306,10 +333,11 @@ const ContentSection: React.FC = () => {
             <p className="admin-label mb-3">Títulos de Secciones</p>
             <div className="flex flex-col gap-3">
               {[
-                { key: 'section_promos_title', label: 'Promociones', placeholder: 'Promociones Especiales' },
-                { key: 'section_new_title', label: 'Novedades', placeholder: 'Lo Nuevo del Menú' },
-                { key: 'section_bestseller_title', label: 'Más Vendidos', placeholder: 'Lo Que Todos Piden' },
-                { key: 'section_rewards_title', label: 'Recompensas', placeholder: 'Únete a Recompensas' },
+                { key: 'section_highlights_title', label: 'Destacados', placeholder: 'Destacados' },
+                { key: 'section_categories_title', label: 'Categorías', placeholder: 'LO MÁS POPULAR' },
+                { key: 'section_bestseller_title', label: 'Más Vendidos', placeholder: 'LO MÁS PEDIDO' },
+                { key: 'section_rewards_title', label: 'Recompensas', placeholder: 'RECOMPENSAS' },
+                { key: 'section_rewards_description', label: 'Descripción Recompensas', placeholder: 'Acumula puntos...' },
               ].map(item => (
                 <div key={item.key}>
                   <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>{item.label}</label>
@@ -321,7 +349,42 @@ const ContentSection: React.FC = () => {
           </div>
 
           <div className="admin-card p-4">
-            <p className="admin-label mb-3">Footer</p>
+            <p className="admin-label mb-3">Pasos de Recompensas</p>
+            <div className="flex flex-col gap-3">
+              {[
+                { key1: 'rewards_step1_title', key2: 'rewards_step1_desc', label: 'Paso 1', defaultTitle: 'Regístrate gratis', defaultDesc: 'Crea tu cuenta en segundos' },
+                { key1: 'rewards_step2_title', key2: 'rewards_step2_desc', label: 'Paso 2', defaultTitle: 'Ordena y acumula', defaultDesc: 'Gana puntos con cada pedido' },
+                { key1: 'rewards_step3_title', key2: 'rewards_step3_desc', label: 'Paso 3', defaultTitle: 'Canjea recompensas', defaultDesc: 'Intercambia puntos por comida gratis' },
+              ].map((step, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <label className="text-xs font-bold" style={{ color: 'var(--ios-text)' }}>{step.label}</label>
+                  <input type="text" value={(config as any)[step.key1] || step.defaultTitle} onChange={e => updateConfig({ [step.key1]: e.target.value })}
+                    className="admin-input" placeholder={step.defaultTitle} />
+                  <input type="text" value={(config as any)[step.key2] || step.defaultDesc} onChange={e => updateConfig({ [step.key2]: e.target.value })}
+                    className="admin-input" placeholder={step.defaultDesc} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-card p-4">
+            <p className="admin-label mb-3">Footer — Sobre Nosotros</p>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Título "Sobre Nosotros"</label>
+                <input type="text" value={config.footer_about_title || ''} onChange={e => updateConfig({ footer_about_title: e.target.value })}
+                  className="admin-input mt-1" placeholder="Sobre Mi Restaurante" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Descripción "Sobre Nosotros" (SEO)</label>
+                <textarea value={config.footer_about_text || ''} onChange={e => updateConfig({ footer_about_text: e.target.value })}
+                  className="admin-input mt-1" rows={4} placeholder="Somos un restaurante de comida rápida en Valencia..." style={{ resize: 'none' }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-card p-4">
+            <p className="admin-label mb-3">Footer — General</p>
             <div className="flex flex-col gap-3">
               <div>
                 <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Texto del Footer</label>
@@ -332,6 +395,11 @@ const ContentSection: React.FC = () => {
                 <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>Copyright</label>
                 <input type="text" value={config.footer_copyright || ''} onChange={e => updateConfig({ footer_copyright: e.target.value })}
                   className="admin-input mt-1" placeholder="© 2025 Mi Restaurante" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold" style={{ color: 'var(--ios-text-secondary)' }}>URL del Sitio (SEO)</label>
+                <input type="url" value={config.site_url || ''} onChange={e => updateConfig({ site_url: e.target.value })}
+                  className="admin-input mt-1" placeholder="https://mirestaurante.com" />
               </div>
             </div>
           </div>

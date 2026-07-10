@@ -11,6 +11,7 @@ interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (item: FoodItem, qty?: number, opts?: SelectedOption[], total?: number, removed?: string[]) => void;
+  onGoToCheckout?: () => void;
 }
 
 const ALLERGEN_COLORS: Record<string, string> = {
@@ -41,6 +42,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
   onClose,
   onAddToCart,
+  onGoToCheckout,
 }) => {
   const { config, getActiveFlashSale, getProductAverageRating, getProductReviews, foodItems } = useApp();
   const [activeImageIdx, setActiveImageIdx] = useState(0);
@@ -420,6 +422,18 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <ShoppingCart size={16} />
               Agregar · ${totalPrice.toFixed(2)}
             </RippleButton>
+
+            {/* Go to checkout */}
+            {onGoToCheckout && (
+              <button
+                onClick={() => { handleAddToCart(); setTimeout(() => onGoToCheckout(), 200); }}
+                disabled={isAgotado}
+                className="h-12 px-5 rounded-xl flex items-center justify-center gap-2 text-white font-bold text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed border-2 bg-transparent"
+                style={{ borderColor: themeColor, color: themeColor }}
+              >
+                Ir a Caja →
+              </button>
+            )}
           </div>
         </div>
       </div>

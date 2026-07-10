@@ -174,6 +174,7 @@ function AppContent() {
             addToCart(item, qty || 1, opts || [], total || 0, removed || []);
             setSelectedProductDetails(null);
           }}
+          onGoToCheckout={() => { setSelectedProductDetails(null); setTab('checkout'); }}
         />
 
         {/* ═══ ADMIN LOGIN MODAL ═══ */}

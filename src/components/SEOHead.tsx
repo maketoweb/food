@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useRef } from 'react';
 import { FoodItem } from '../types/store';
 import { useApp } from '../store/AppContext';
+import { getOrganizationSchema, getRestaurantSchema, getProductSchema, getFAQSchema, getWebsiteSchema, getBreadcrumbSchema } from '../schemas';
 
 interface SEOHeadProps {
   title?: string;
@@ -162,48 +163,53 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     }
     appleTitleMeta.setAttribute('content', config.site_nombre || 'BurgerPop');
 
-    // JSON-LD Schema
+    // JSON-LD Schema — SEO Premium from schemas.js
     const existingScript = document.getElementById('foodapp-jsonld-schema');
     if (existingScript) existingScript.remove();
+    const existingOrgScript = document.getElementById('foodapp-jsonld-org');
+    const existingWebScript = document.getElementById('foodapp-jsonld-web');
+    const existingFaqScript = document.getElementById('foodapp-jsonld-faq');
+    if (existingOrgScript) existingOrgScript.remove();
+    if (existingWebScript) existingWebScript.remove();
+    if (existingFaqScript) existingFaqScript.remove();
 
     let schemaObj: any = null;
 
     if (type === 'home') {
-      schemaObj = {
-        '@context': 'https://schema.org',
-        '@type': config.jsonld_type || 'Restaurant',
-        'name': config.site_nombre || 'FoodApp',
-        'image': config.banners?.[0] || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
-        '@id': 'https://foodapp.com.ve',
-        'url': 'https://foodapp.com.ve',
-        'telephone': config.telefono_soporte || '',
-        'priceRange': config.jsonld_priceRange || '$$',
-        'address': {
-          '@type': 'PostalAddress',
-          'streetAddress': config.direccion_fisica || '',
-          'addressCountry': 'VE'
-        },
-        'servesCuisine': config.jsonld_servesCuisine || ['Comida Rapida', 'Hamburguesas', 'Pastas', 'Pizzas', 'Postres'],
-        'description': config.seo_home_description || 'Delivery de comida premium. Pide tu plato favorito y recibe en minutos.'
-      };
+      schemaObj = getRestaurantSchema(config);
+
+      // Organization schema
+      const orgScript = document.createElement('script');
+      orgScript.id = 'foodapp-jsonld-org';
+      orgScript.type = 'application/ld+json';
+      orgScript.innerHTML = JSON.stringify(getOrganizationSchema(config));
+      document.head.appendChild(orgScript);
+
+      // Website schema
+      const webScript = document.createElement('script');
+      webScript.id = 'foodapp-jsonld-web';
+      webScript.type = 'application/ld+json';
+      webScript.innerHTML = JSON.stringify(getWebsiteSchema(config));
+      document.head.appendChild(webScript);
+
+      // FAQ schema
+      const faqSchema = getFAQSchema(config.faq_items);
+      if (faqSchema) {
+        const faqScript = document.createElement('script');
+        faqScript.id = 'foodapp-jsonld-faq';
+        faqScript.type = 'application/ld+json';
+        faqScript.innerHTML = JSON.stringify(faqSchema);
+        document.head.appendChild(faqScript);
+      }
+
+      // Breadcrumb for home
+      const bcScript = document.createElement('script');
+      bcScript.id = 'foodapp-jsonld-bc';
+      bcScript.type = 'application/ld+json';
+      bcScript.innerHTML = JSON.stringify(getBreadcrumbSchema(config, [{ name: 'Inicio' }]));
+      document.head.appendChild(bcScript);
     } else if (type === 'product' && product) {
-      schemaObj = {
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        'name': product.nombre,
-        'image': product.imagen_urls[0],
-        'description': seoDesc,
-        'offers': {
-          '@type': 'Offer',
-          'url': `https://foodapp.com.ve/catalog?search=${product.id}`,
-          'priceCurrency': 'USD',
-          'price': product.precio_usd.toFixed(2),
-          'itemCondition': 'https://schema.org/NewCondition',
-          'availability': product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-          'seller': { '@type': 'Restaurant', 'name': config.site_nombre || 'FoodApp' }
-        },
-        'category': product.categoria
-      };
+      schemaObj = getProductSchema(product, config);
     } else if (type === 'catalog') {
       schemaObj = {
         '@context': 'https://schema.org',

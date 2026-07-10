@@ -1,6 +1,7 @@
 import React from 'react';
 import { Order } from '../../../types/store';
 import { Clock, ChevronDown, ChevronUp, Printer, MessageSquare, CheckCircle, Truck, XCircle } from 'lucide-react';
+import { OrderTimeline } from './OrderTimeline';
 
 interface OrderCardProps {
   order: Order;
@@ -55,7 +56,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, isExpanded, onToggl
 
       {isExpanded && (
         <div className="border-t border-slate-100 p-4 bg-slate-50">
-          <div className="space-y-1 mb-3">
+          <OrderTimeline currentStatus={order.status} themeColor={themeColor} />
+          <div className="space-y-1 mb-3 mt-3">
             {order.items?.map((item, i) => (
               <div key={i} className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-700">{item.nombre} x{item.cantidad}</span>

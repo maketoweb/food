@@ -1,11 +1,12 @@
 import React, { Suspense, lazy, useState, useCallback } from 'react';
 import { useApp } from '../../store/AppContext';
 import { useAdminStore } from '../../store/stores/adminStore';
+import { useOrders } from './hooks/useOrders';
 import { Order, FoodItem } from '../../types/store';
 import {
   BarChart3, ShoppingBag, Utensils, Grid, User, Ticket, Settings,
   X, Bell, MessageSquare, Megaphone, Package, Award, FileText,
-  LayoutGrid, ChevronLeft
+  LayoutGrid, ChevronLeft, MapPin
 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 
@@ -22,6 +23,7 @@ const PromosSection = lazy(() => import('./sections/PromosSection'));
 const CombosSection = lazy(() => import('./sections/CombosSection'));
 const LoyaltySection = lazy(() => import('./sections/LoyaltySection'));
 const ContentSection = lazy(() => import('./sections/ContentSection'));
+const TrackingSection = lazy(() => import('./sections/TrackingSection'));
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -39,6 +41,7 @@ interface AdminIndexProps {
 const ALL_SECTIONS = [
   { id: 'reports',      label: 'Panel',          icon: BarChart3,        group: 'principal' },
   { id: 'orders',       label: 'Pedidos',        icon: ShoppingBag,      group: 'principal' },
+  { id: 'tracking',     label: 'Rastreo',        icon: MapPin,           group: 'principal' },
   { id: 'inventory',    label: 'Menú',           icon: Utensils,         group: 'principal' },
   { id: 'promos',       label: 'Ofertas',        icon: Megaphone,        group: 'principal' },
   { id: 'combos',       label: 'Combos',         icon: Package,          group: 'principal' },
@@ -63,6 +66,7 @@ const BOTTOM_TABS = [
 export default function AdminIndex({ setTab }: AdminIndexProps) {
   const { config } = useApp();
   const { activeSection, setActiveSection } = useAdminStore();
+  const { advanceStatus } = useOrders();
   const themeColor = config.theme_color || '#007AFF';
 
   const [showMoreSheet, setShowMoreSheet] = useState(false);
@@ -82,7 +86,9 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
     );
   }, []);
 
-  const handleStatusAdvance = useCallback((_order: Order) => {}, []);
+  const handleStatusAdvance = useCallback((order: Order) => {
+    advanceStatus(order);
+  }, [advanceStatus]);
 
   const visibleSections = ALL_SECTIONS.filter(s => s.id !== 'tables' || config.tiene_mesas);
   const sectionLabel = visibleSections.find(s => s.id === activeSection)?.label || 'Panel';
@@ -130,6 +136,7 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
       case 'chat': return <ChatSection />;
       case 'promos': return <PromosSection />;
       case 'combos': return <CombosSection />;
+      case 'tracking': return <TrackingSection />;
       case 'loyalty': return <LoyaltySection />;
       case 'content': return <ContentSection />;
       default: return <DashboardSection />;

@@ -336,6 +336,9 @@ const PromosSection: React.FC = () => {
           promotion={editingPromo}
           foodItems={foodItems}
           onSave={handleSavePromotion}
+          onSendNotification={async (title, message, imageUrl) => {
+            return await addNotification(title, message, 'todos', undefined, imageUrl || '', '');
+          }}
           onClose={() => { setShowPromoForm(false); setEditingPromo(null); }}
         />
       )}
