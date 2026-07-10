@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckCircle, Clock, Circle } from 'lucide-react';
 
 interface OrderTimelineProps {
-  statuses: string[];
+  statuses?: string[];
   currentStatus: string;
   themeColor: string;
 }

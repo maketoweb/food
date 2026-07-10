@@ -160,7 +160,7 @@ export const ProductPreviewModal: React.FC<ProductPreviewModalProps> = ({
               <div className="flex flex-wrap gap-2">
                 {product.sizes.map((size, idx) => (
                   <span key={idx} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                    {size.name} — ${size.price?.toFixed(2) || product.precio_usd.toFixed(2)}
+                    {size.name} — ${size.price_usd?.toFixed(2) || product.precio_usd.toFixed(2)}
                   </span>
                 ))}
               </div>
@@ -168,14 +168,14 @@ export const ProductPreviewModal: React.FC<ProductPreviewModalProps> = ({
           )}
 
           {/* Options if available */}
-          {product.options && product.options.length > 0 && (
+          {product.option_groups && product.option_groups.length > 0 && (
             <div>
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Opciones / Extras</h4>
               <div className="flex flex-col gap-1.5">
-                {product.options.map((opt, idx) => (
+                {product.option_groups.map((group: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-xs">
-                    <span className="text-slate-700 font-medium">{opt.name}</span>
-                    <span className="text-slate-500 font-mono">{opt.price ? `+$${opt.price.toFixed(2)}` : 'Gratis'}</span>
+                    <span className="text-slate-700 font-medium">{group.nombre}</span>
+                    <span className="text-slate-500 font-mono text-[10px]">{group.options?.length || 0} opciones</span>
                   </div>
                 ))}
               </div>
