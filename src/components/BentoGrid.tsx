@@ -37,7 +37,7 @@ export const BentoGrid: React.FC = () => {
         {/* Card 2: Delivery Speed */}
         <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/40 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between gap-3 min-h-[140px] group">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] text-orange-500 font-mono uppercase tracking-wider font-bold">Delivery Express</span>
+            <span className="text-[10px] text-orange-500 font-mono uppercase tracking-wider font-bold">Delivery Rápido</span>
             <Truck size={18} className="text-orange-500" />
           </div>
           <div>

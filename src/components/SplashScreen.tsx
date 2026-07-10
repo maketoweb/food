@@ -47,7 +47,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
           className="text-white/60 text-xs uppercase tracking-widest mt-3"
           style={{ animation: 'nameSlideUp 0.6s ease-out 0.3s both' }}
         >
-          Delivery Express
+          Delivery Rápido
         </p>
         <div
           className="mt-6 flex gap-1.5"

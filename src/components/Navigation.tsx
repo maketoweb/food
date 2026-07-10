@@ -70,9 +70,9 @@ export const Navigation: React.FC<NavigationProps> = ({
           {/* Center: Navigation Links */}
           <nav className="flex items-center gap-2">
             {[
-              { label: 'MENU', tab: 'catalog' as const },
-              { label: 'LOCATIONS', tab: 'catalog' as const },
-              { label: 'REWARDS', tab: 'profile' as const },
+              { label: 'MENÚ', tab: 'catalog' as const },
+              { label: 'UBICACIONES', tab: 'catalog' as const },
+              { label: 'RECOMPENSAS', tab: 'profile' as const },
             ].map((link) => {
               const isActive = currentTab === link.tab;
               return (
@@ -92,14 +92,14 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </nav>
 
-          {/* Right: Sign In + Cart */}
-          <div className="flex items-center gap-4">
+          {/* Right: Sign In + Cart + Admin */}
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setTab('profile')}
               className="text-[13px] font-bold tracking-wide uppercase text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
             >
-              {currentUser ? `HI, ${currentUser.nombre.split(' ')[0].toUpperCase()}` : 'SIGN IN'}
+              {currentUser ? `HOLA, ${currentUser.nombre.split(' ')[0].toUpperCase()}` : 'INICIAR SESIÓN'}
             </button>
 
             <button
@@ -115,6 +115,31 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </span>
               )}
             </button>
+
+            {/* Admin acceso discreto - solo si no está autenticado */}
+            {!isAdminAuthenticated && (
+              <button
+                type="button"
+                onClick={onTriggerAdminLogin}
+                className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer opacity-40 hover:opacity-100"
+                title="Panel de administración"
+                aria-label="Acceso administrativo"
+              >
+                <ShieldAlert size={18} className="text-zinc-500" strokeWidth={1.5} />
+              </button>
+            )}
+            {isAdminAuthenticated && (
+              <button
+                type="button"
+                onClick={() => setTab('admin')}
+                className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer relative"
+                title="Ir al panel admin"
+                aria-label="Panel de administración"
+              >
+                <ShieldAlert size={18} className="text-emerald-600" strokeWidth={1.5} />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500" />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -156,20 +181,45 @@ export const Navigation: React.FC<NavigationProps> = ({
           </button>
         </div>
 
-        {/* Right: Cart */}
-        <button
-          type="button"
-          onClick={() => setTab('checkout')}
-          className="relative p-2 -mr-1 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
-          aria-label="Carrito de compras"
-        >
-          <ShoppingCart size={22} className="text-zinc-800" strokeWidth={1.8} />
-          {cartCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold px-1 leading-none">
-              {cartCount}
-            </span>
+        {/* Right: Cart + Admin */}
+        <div className="flex items-center gap-1">
+          {!isAdminAuthenticated && (
+            <button
+              type="button"
+              onClick={onTriggerAdminLogin}
+              className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer opacity-30 hover:opacity-80"
+              title="Panel de administración"
+              aria-label="Acceso administrativo"
+            >
+              <ShieldAlert size={18} className="text-zinc-500" strokeWidth={1.5} />
+            </button>
           )}
-        </button>
+          {isAdminAuthenticated && (
+            <button
+              type="button"
+              onClick={() => setTab('admin')}
+              className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer relative"
+              title="Ir al panel admin"
+              aria-label="Panel de administración"
+            >
+              <ShieldAlert size={18} className="text-emerald-600" strokeWidth={1.5} />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setTab('checkout')}
+            className="relative p-2 -mr-1 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+            aria-label="Carrito de compras"
+          >
+            <ShoppingCart size={22} className="text-zinc-800" strokeWidth={1.8} />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold px-1 leading-none">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
       {/* ═══════════════════════════════════════════════════════════
@@ -201,7 +251,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <span className="font-bold text-sm text-zinc-900 tracking-tight font-display">
                   {config.site_nombre}
                 </span>
-                <span className="text-[10px] text-zinc-400 font-semibold tracking-wider">Delivery Express</span>
+                <span className="text-[10px] text-zinc-400 font-semibold tracking-wider">Delivery Rápido</span>
               </div>
             </div>
             <button

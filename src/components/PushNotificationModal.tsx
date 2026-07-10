@@ -189,7 +189,7 @@ export const PushNotificationModal: React.FC = () => {
                 🛵
               </div>
               <div className="flex flex-col leading-snug">
-                <span className="text-[10px] font-extrabold text-zinc-900">Alertas de Delivery Express</span>
+                <span className="text-[10px] font-extrabold text-zinc-900">Alertas de Delivery Rápido</span>
                 <span className="text-[9px] text-zinc-400 leading-normal">
                   Sabrás exactamente el momento en que nuestro motorizado parta a tu dirección.
                 </span>

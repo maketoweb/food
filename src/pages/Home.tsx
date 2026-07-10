@@ -53,7 +53,7 @@ export const Home: React.FC<HomeProps> = ({
   }, [activeItems, config.categories]);
 
   // Service selector state
-  const [serviceMode, setServiceMode] = useState<'pickup' | 'delivery'>('delivery');
+  const [serviceMode, setServiceMode] = useState<'recoger' | 'domicilio'>('domicilio');
   const [locationSearch, setLocationSearch] = useState('');
 
   // Promo carousel state
@@ -80,7 +80,7 @@ export const Home: React.FC<HomeProps> = ({
     if (newItems.length > 0) {
       items.push({
         title: 'Novedades en el Menú',
-        description: 'Prueba lo最新最新 de nuestra cocina. Sabores que te sorprenderán.',
+        description: 'Prueba lo nuevo de nuestra cocina. Sabores que te sorprenderán.',
         image: newItems[0]?.imagen_urls?.[0] || config.banners?.[1] || CATEGORY_HERO_BG['pollo'],
         action: 'Descubrir',
       });
@@ -117,7 +117,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           SECTION 1: HERO BANNER — Full-width with left-aligned text
           ═══════════════════════════════════════════════════════════ */}
-      <section className="relative w-full h-[360px] md:h-[480px] lg:h-[540px] overflow-hidden bg-zinc-900">
+      <section className="relative w-full h-[340px] sm:h-[400px] md:h-[460px] lg:h-[520px] overflow-hidden bg-zinc-900">
         {/* Background Image */}
         {config.banners.length > 0 ? (
           <img
@@ -134,13 +134,13 @@ export const Home: React.FC<HomeProps> = ({
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
         {/* Content — Left-aligned on PC, centered on mobile */}
-        <div className="absolute inset-0 flex items-end md:items-center pb-16 md:pb-0">
-          <div className="w-full max-w-7xl mx-auto px-6 md:px-12">
+        <div className="absolute inset-0 flex items-end md:items-center pb-20 sm:pb-16 md:pb-0">
+          <div className="w-full max-w-7xl mx-auto px-5 md:px-8 lg:px-12">
             <div className="max-w-lg">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
                 {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
               </h1>
-              <p className="text-white/70 text-sm md:text-base mt-3 md:mt-4 max-w-md leading-relaxed">
+              <p className="text-white/70 text-xs sm:text-sm md:text-base mt-3 md:mt-4 max-w-md leading-relaxed">
                 {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
               </p>
 
@@ -148,13 +148,13 @@ export const Home: React.FC<HomeProps> = ({
               <div className="flex flex-col sm:flex-row gap-3 mt-5 md:mt-6">
                 <button
                   onClick={() => setTab('catalog')}
-                  className="bg-white text-zinc-900 font-bold text-sm px-8 py-3.5 rounded-full inline-flex items-center justify-center gap-2 hover:bg-zinc-100 transition-all cursor-pointer active:scale-95"
+                  className="bg-white text-zinc-900 font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 hover:bg-zinc-100 transition-all cursor-pointer active:scale-95"
                 >
-                  {config.hero_cta_text || 'ORDER NOW'} <ArrowRight size={16} />
+                  {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={16} />
                 </button>
                 <button
                   onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
-                  className="bg-transparent text-white font-bold text-sm px-8 py-3.5 rounded-full inline-flex items-center justify-center gap-2 border-2 border-white/40 hover:border-white/80 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                  className="bg-transparent text-white font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 border-2 border-white/40 hover:border-white/80 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
                 >
                   Ver Menú
                 </button>
@@ -167,34 +167,34 @@ export const Home: React.FC<HomeProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           SECTION 2: SERVICE SELECTOR — Pickup/Delivery + Location Search
           ═══════════════════════════════════════════════════════════ */}
-      <section className="w-full bg-white border-b border-zinc-200">
-        <div className="max-w-4xl mx-auto px-4 py-4 md:py-5">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-zinc-50 rounded-2xl p-2 border border-zinc-200">
+      <section className="w-full bg-white border-b border-zinc-100">
+        <div className="max-w-4xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 bg-zinc-50 rounded-2xl p-2 border border-zinc-200">
             {/* Service Mode Tabs */}
             <div className="flex bg-white rounded-xl border border-zinc-200 overflow-hidden shrink-0">
               <button
-                onClick={() => setServiceMode('pickup')}
+                onClick={() => setServiceMode('recoger')}
                 className={`px-5 py-2.5 text-xs font-bold tracking-wide uppercase transition-all cursor-pointer ${
-                  serviceMode === 'pickup'
+                  serviceMode === 'recoger'
                     ? 'text-white'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
-                style={serviceMode === 'pickup' ? { backgroundColor: themeColor } : {}}
+                style={serviceMode === 'recoger' ? { backgroundColor: themeColor } : {}}
               >
                 <Clock size={14} className="inline mr-1.5 -mt-0.5" />
-                Pickup
+                Recoger
               </button>
               <button
-                onClick={() => setServiceMode('delivery')}
+                onClick={() => setServiceMode('domicilio')}
                 className={`px-5 py-2.5 text-xs font-bold tracking-wide uppercase transition-all cursor-pointer ${
-                  serviceMode === 'delivery'
+                  serviceMode === 'domicilio'
                     ? 'text-white'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
-                style={serviceMode === 'delivery' ? { backgroundColor: themeColor } : {}}
+                style={serviceMode === 'domicilio' ? { backgroundColor: themeColor } : {}}
               >
                 <MapPin size={14} className="inline mr-1.5 -mt-0.5" />
-                Delivery
+                Domicilio
               </button>
             </div>
 
@@ -206,7 +206,7 @@ export const Home: React.FC<HomeProps> = ({
                   type="text"
                   value={locationSearch}
                   onChange={(e) => setLocationSearch(e.target.value)}
-                  placeholder="Enter city, state, or ZIP code"
+                  placeholder="Ciudad, estado o código postal"
                   className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none focus:ring-2 focus:ring-zinc-300 transition-all"
                 />
               </div>
@@ -233,8 +233,8 @@ export const Home: React.FC<HomeProps> = ({
           SECTION 3: PROMOTIONAL BANNERS CAROUSEL
           ═══════════════════════════════════════════════════════════ */}
       {carouselItems.length > 0 && (
-        <section className="w-full py-8 md:py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">Destacados</h2>
               {/* Desktop arrow controls */}
@@ -311,11 +311,11 @@ export const Home: React.FC<HomeProps> = ({
           SECTION 4: MENU HIGHLIGHTS GRID — Category Cards
           ═══════════════════════════════════════════════════════════ */}
       {categorySections.length > 0 && (
-        <section className="w-full py-8 md:py-12 bg-zinc-50">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <section className="w-full py-6 sm:py-8 md:py-12 bg-zinc-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">CROWD PLEASERS</h2>
+                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">LO MÁS POPULAR</h2>
                 <p className="text-xs text-zinc-500 mt-1">Explora nuestras categorías y ordena lo que más te guste</p>
               </div>
               <button
@@ -361,14 +361,14 @@ export const Home: React.FC<HomeProps> = ({
                       <div className="p-4 flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-bold text-zinc-900 capitalize">{section.name}</h3>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">{section.items.length} items</p>
+                          <p className="text-[11px] text-zinc-400 mt-0.5">{section.items.length} productos</p>
                         </div>
                         <button
                           onClick={() => { setSelectedCategory(section.name); setTab('catalog'); }}
                           className="text-white text-xs font-bold px-4 py-2 rounded-full transition-all cursor-pointer hover:opacity-90 active:scale-95"
                           style={{ backgroundColor: themeColor }}
                         >
-                          ORDER
+                          ORDENAR
                         </button>
                       </div>
                     </div>
@@ -383,8 +383,8 @@ export const Home: React.FC<HomeProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           SECTION 5: REWARDS PROGRAM — Dark background, 2-column
           ═══════════════════════════════════════════════════════════ */}
-      <section className="w-full py-10 md:py-16" style={{ backgroundColor: '#2D0A00' }}>
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <section className="w-full py-8 sm:py-10 md:py-16" style={{ backgroundColor: '#2D0A00' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
 
             {/* Left: Promotional Image */}
@@ -414,7 +414,7 @@ export const Home: React.FC<HomeProps> = ({
             <div className="w-full md:w-1/2 text-white">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
                 Únete a<br />
-                <span style={{ color: themeColor }}>REWARDS</span>
+                <span style={{ color: themeColor }}>RECOMPENSAS</span>
               </h2>
               <p className="text-white/60 text-sm mt-3 max-w-md leading-relaxed">
                 El programa de fidelización más delicioso. Acumula puntos con cada compra y canjéalos por comida gratis.
@@ -446,13 +446,13 @@ export const Home: React.FC<HomeProps> = ({
                   className="text-white font-bold text-sm px-8 py-3 rounded-full inline-flex items-center justify-center gap-2 transition-all cursor-pointer hover:opacity-90 active:scale-95"
                   style={{ backgroundColor: themeColor }}
                 >
-                  JOIN NOW
+                  ÚNETE AHORA
                 </button>
                 <button
                   onClick={() => setTab('profile')}
                   className="bg-transparent text-white font-bold text-sm px-8 py-3 rounded-full inline-flex items-center justify-center gap-2 border-2 border-white/30 hover:border-white/60 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
                 >
-                  SIGN IN
+                  INICIAR SESIÓN
                 </button>
               </div>
             </div>
@@ -464,8 +464,8 @@ export const Home: React.FC<HomeProps> = ({
           SECTION 5.5: POPULAR ITEMS — Top ordered products
           ═══════════════════════════════════════════════════════════ */}
       {bestsellerItems.length > 0 && (
-        <section className="w-full py-8 md:py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">LO MÁS PEDIDO</h2>
