@@ -23,16 +23,23 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   const indexedDBTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const defaultTitle = `Restaurante Online Premium | ${config.site_nombre}`;
-    const defaultDesc = `Pide tu comida favorita con delivery express. Hamburguesas, pastas, postres artesanales y más. Recibe en minutos.`;
-    const defaultKeywords = `restaurante, foodapp, comida, delivery, hamburguesas, pastas, postres, pizza, delivery express`;
+    const siteName = config.site_nombre || 'FoodApp';
+    const defaultTitle = config.seo_home_title || `Restaurante Online Premium | ${siteName}`;
+    const defaultDesc = config.seo_home_description || `Pide tu comida favorita con delivery express. Hamburguesas, pastas, postres artesanales y más. Recibe en minutos.`;
+    const defaultKeywords = config.seo_home_keywords || `restaurante, foodapp, comida, delivery, hamburguesas, pastas, postres, pizza, delivery express`;
     
     let seoTitle = title;
     let seoDesc = description;
     let seoKeywords = defaultKeywords;
 
+    if (type === 'home') {
+      seoTitle = title || defaultTitle;
+      seoDesc = description || defaultDesc;
+      seoKeywords = defaultKeywords;
+    }
+
     if (type === 'product' && product) {
-      seoTitle = `${product.nombre} | ${config.site_nombre || 'BurgerPop'}`;
+      seoTitle = `${product.nombre} | ${siteName}`;
       seoDesc = `Pide ${product.nombre} de la mejor calidad. Delivery express en minutos.`;
       seoKeywords = `${product.nombre}, ${product.categoria}, foodapp, restaurante, delivery`;
     }
@@ -41,8 +48,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       const category = filters?.category || '';
       const filterText = category || 'Menú Completo';
       
-      seoTitle = `Comprar ${filterText} | Catálogo ${config.site_nombre || 'BurgerPop'}`;
-      seoDesc = `Menú de ${filterText}. Hamburguesas, pastas, pizzas, postres y más con delivery express. Pide online en ${config.site_nombre || 'nuestro restaurante'}.`;
+      seoTitle = config.seo_catalog_title || `Comprar ${filterText} | Catálogo ${siteName}`;
+      seoDesc = config.seo_catalog_description || `Menú de ${filterText}. Hamburguesas, pastas, pizzas, postres y más con delivery express. Pide online en ${siteName}.`;
       
       const kwParts = ['foodapp', 'restaurante', 'delivery', 'comida online'];
       if (category) kwParts.push(category.toLowerCase());
@@ -164,20 +171,20 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     if (type === 'home') {
       schemaObj = {
         '@context': 'https://schema.org',
-        '@type': 'Restaurant',
-        'name': config.site_nombre || 'BurgerPop',
-        'image': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
+        '@type': config.jsonld_type || 'Restaurant',
+        'name': config.site_nombre || 'FoodApp',
+        'image': config.banners?.[0] || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
         '@id': 'https://foodapp.com.ve',
         'url': 'https://foodapp.com.ve',
         'telephone': config.telefono_soporte || '',
-        'priceRange': '$$',
+        'priceRange': config.jsonld_priceRange || '$$',
         'address': {
           '@type': 'PostalAddress',
           'streetAddress': config.direccion_fisica || '',
           'addressCountry': 'VE'
         },
-        'servesCuisine': ['Comida Rapida', 'Hamburguesas', 'Pastas', 'Pizzas', 'Postres'],
-        'description': 'Delivery de comida premium. Pide tu plato favorito y recibe en minutos.'
+        'servesCuisine': config.jsonld_servesCuisine || ['Comida Rapida', 'Hamburguesas', 'Pastas', 'Pizzas', 'Postres'],
+        'description': config.seo_home_description || 'Delivery de comida premium. Pide tu plato favorito y recibe en minutos.'
       };
     } else if (type === 'product' && product) {
       schemaObj = {
@@ -193,7 +200,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
           'price': product.precio_usd.toFixed(2),
           'itemCondition': 'https://schema.org/NewCondition',
           'availability': product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-          'seller': { '@type': 'Restaurant', 'name': config.site_nombre || 'BurgerPop' }
+          'seller': { '@type': 'Restaurant', 'name': config.site_nombre || 'FoodApp' }
         },
         'category': product.categoria
       };
@@ -201,8 +208,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       schemaObj = {
         '@context': 'https://schema.org',
         '@type': 'SearchResultsPage',
-        'name': `Menú ${config.site_nombre || 'BurgerPop'}`,
-        'description': 'Busca y pide tu plato favorito con delivery express.'
+        'name': `Menú ${config.site_nombre || 'FoodApp'}`,
+        'description': config.seo_catalog_description || 'Busca y pide tu plato favorito con delivery express.'
       };
     }
 

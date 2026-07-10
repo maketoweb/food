@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale } from '../types/store';
+import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
@@ -82,6 +82,15 @@ interface AppContextProps {
   // Flash Sales
   flashSales: FlashSale[];
   getActiveFlashSale: (productId: string) => FlashSale | null;
+  
+  // Loyalty
+  loyaltyTransactions: LoyaltyTransaction[];
+  earnLoyaltyPoints: (userId: string, orderId: string, amountUsd: number, sedeId?: string) => Promise<void>;
+  redeemLoyaltyPoints: (userId: string, pointsToRedeem: number, orderId?: string) => Promise<boolean>;
+  getUserLoyaltyPoints: (userId: string) => number;
+  getUserLoyaltyTier: (userId: string) => LoyaltyTier | null;
+  adjustUserPoints: (userId: string, points: number, reason: string) => Promise<void>;
+  getLoyaltyTransactions: (userId: string) => LoyaltyTransaction[];
   
   // Auth
   authenticateAdmin: (email: string, pass: string) => Promise<boolean>;
@@ -1107,7 +1116,21 @@ const DEFAULT_CONFIG: StoreConfig = {
       activa: true,
       es_principal: true
     }
-  ]
+  ],
+  loyalty: {
+    enabled: false,
+    points_per_dollar: 1,
+    min_order_for_points: 5,
+    redemption_rate: 100,
+    max_discount_percent: 30,
+    welcome_bonus: 50,
+    bonus_actions: { daily_login: 5, first_order: 25, review: 10, referral: 100 },
+    tiers: [
+      { id: 'tier-bronze', name: 'Bronce', min_points: 0, multiplier: 1, benefits: ['Puntos base'], color: '#CD7F32' },
+      { id: 'tier-silver', name: 'Plata', min_points: 500, multiplier: 1.25, benefits: ['25% más puntos'], color: '#8E8E93' },
+      { id: 'tier-gold', name: 'Oro', min_points: 1500, multiplier: 1.5, benefits: ['50% más puntos', 'Envío gratis'], color: '#FF9500' },
+    ],
+  },
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -1216,6 +1239,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [flashSales, setFlashSales] = useState<FlashSale[]>(() => {
     const saved = localStorage.getItem('trv_flash_sales');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>(() => {
+    const saved = localStorage.getItem('trv_loyalty_transactions');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -1559,6 +1587,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('trv_flash_sales', JSON.stringify(flashSales));
   }, [flashSales]);
+
+  useEffect(() => {
+    localStorage.setItem('trv_loyalty_transactions', JSON.stringify(loyaltyTransactions));
+  }, [loyaltyTransactions]);
 
   // Daily Exchange Rate Update Routine (BCV Oficial)
   const fetchExchangeRate = async (retryCount = 0): Promise<boolean> => {
@@ -2743,6 +2775,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // --- LOYALTY / FIDELIZACIÓN ---
+  const earnLoyaltyPoints = async (userId: string, orderId: string, amountUsd: number, sedeId?: string) => {
+    const loyaltyConfig = config.loyalty;
+    if (!loyaltyConfig?.enabled || amountUsd < loyaltyConfig.min_order_for_points) return;
+    
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    
+    const tier = getUserLoyaltyTier(userId);
+    const multiplier = tier?.multiplier || 1;
+    const pointsEarned = Math.floor(amountUsd * loyaltyConfig.points_per_dollar * multiplier);
+    
+    if (pointsEarned <= 0) return;
+    
+    const tx: LoyaltyTransaction = {
+      id: `loy-tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      user_id: userId,
+      type: 'earn',
+      points: pointsEarned,
+      description: `Compra #${orderId.slice(-8)}`,
+      order_id: orderId,
+      sede_id: sedeId,
+      created_at: new Date().toISOString(),
+    };
+    
+    setLoyaltyTransactions(prev => [...prev, tx]);
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u;
+      return {
+        ...u,
+        loyalty_points: (u.loyalty_points || 0) + pointsEarned,
+        loyalty_lifetime_points: (u.loyalty_lifetime_points || 0) + pointsEarned,
+      };
+    }));
+  };
+
+  const redeemLoyaltyPoints = async (userId: string, pointsToRedeem: number, orderId?: string): Promise<boolean> => {
+    const loyaltyConfig = config.loyalty;
+    if (!loyaltyConfig?.enabled) return false;
+    
+    const user = users.find(u => u.id === userId);
+    if (!user || (user.loyalty_points || 0) < pointsToRedeem) return false;
+    
+    const tx: LoyaltyTransaction = {
+      id: `loy-tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      user_id: userId,
+      type: 'redeem',
+      points: -pointsToRedeem,
+      description: orderId ? `Canje en pedido #${orderId.slice(-8)}` : 'Canje de puntos',
+      order_id: orderId,
+      created_at: new Date().toISOString(),
+    };
+    
+    setLoyaltyTransactions(prev => [...prev, tx]);
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u;
+      return { ...u, loyalty_points: (u.loyalty_points || 0) - pointsToRedeem };
+    }));
+    
+    return true;
+  };
+
+  const getUserLoyaltyPoints = (userId: string): number => {
+    const user = users.find(u => u.id === userId);
+    return user?.loyalty_points || 0;
+  };
+
+  const getUserLoyaltyTier = (userId: string): LoyaltyTier | null => {
+    const loyaltyConfig = config.loyalty;
+    if (!loyaltyConfig?.enabled || !loyaltyConfig.tiers?.length) return null;
+    
+    const user = users.find(u => u.id === userId);
+    const lifetimePoints = user?.loyalty_lifetime_points || 0;
+    
+    let bestTier: LoyaltyTier | null = null;
+    for (const tier of loyaltyConfig.tiers) {
+      if (lifetimePoints >= tier.min_points) {
+        if (!bestTier || tier.min_points > bestTier.min_points) {
+          bestTier = tier;
+        }
+      }
+    }
+    return bestTier;
+  };
+
+  const adjustUserPoints = async (userId: string, points: number, reason: string) => {
+    const tx: LoyaltyTransaction = {
+      id: `loy-tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      user_id: userId,
+      type: 'adjustment',
+      points: points,
+      description: reason,
+      created_at: new Date().toISOString(),
+    };
+    
+    setLoyaltyTransactions(prev => [...prev, tx]);
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u;
+      return {
+        ...u,
+        loyalty_points: Math.max(0, (u.loyalty_points || 0) + points),
+        loyalty_lifetime_points: points > 0
+          ? (u.loyalty_lifetime_points || 0) + points
+          : u.loyalty_lifetime_points,
+      };
+    }));
+  };
+
+  const getLoyaltyTransactions = (userId: string): LoyaltyTransaction[] => {
+    return loyaltyTransactions
+      .filter(tx => tx.user_id === userId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  };
+
   return (
     <AppContext.Provider value={{
       // NOTE: the store currently uses `products` as the source of truth.
@@ -2809,7 +2955,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       getProductReviews,
       getProductAverageRating,
       flashSales,
-      getActiveFlashSale
+      getActiveFlashSale,
+      loyaltyTransactions,
+      earnLoyaltyPoints,
+      redeemLoyaltyPoints,
+      getUserLoyaltyPoints,
+      getUserLoyaltyTier,
+      adjustUserPoints,
+      getLoyaltyTransactions
     }}>
       {children}
     </AppContext.Provider>

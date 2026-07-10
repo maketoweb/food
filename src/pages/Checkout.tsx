@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, Info, X, Rocket, Copy, Check, Mail, Key, ArrowRight, Shield } from 'lucide-react';
@@ -65,6 +65,39 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const activeSedes = config.sedes?.filter(s => s.activa) || [];
   const hasMultipleSedes = activeSedes.length > 1;
   const [selectedSedeId, setSelectedSedeId] = useState<string>('');
+
+  // Restore saved shipping data for logged-in users
+  useEffect(() => {
+    if (currentUser) {
+      const savedMethod = localStorage.getItem('trv_last_shipping_method') as 'mapa' | 'recogida' | 'zonas' | null;
+      const savedLat = localStorage.getItem('trv_last_shipping_lat');
+      const savedLng = localStorage.getItem('trv_last_shipping_lng');
+      const savedZone = localStorage.getItem('trv_last_shipping_zone');
+      const savedSede = localStorage.getItem('trv_last_sede_id');
+
+      if (savedMethod) {
+        setShippingMethod(savedMethod);
+        if (savedMethod === 'recogida') {
+          setShippingLat(config.coordenadas_tienda.lat);
+          setShippingLng(config.coordenadas_tienda.lng);
+          setShippingCost(0);
+          setShippingDistance(0);
+          setShippingZone('Retiro en Tienda');
+        } else if (savedMethod === 'zonas') {
+          setShippingLat(config.coordenadas_tienda.lat);
+          setShippingLng(config.coordenadas_tienda.lng);
+          setShippingCost(0);
+          setShippingDistance(0);
+          setShippingZone(savedZone || 'Selecciona una zona');
+        } else if (savedLat && savedLng) {
+          setShippingLat(parseFloat(savedLat));
+          setShippingLng(parseFloat(savedLng));
+          if (savedZone) setShippingZone(savedZone);
+        }
+      }
+      if (savedSede) setSelectedSedeId(savedSede);
+    }
+  }, [currentUser?.id]);
 
   const handleCopy = async (text: string, fieldId: string) => {
     try {
@@ -293,6 +326,14 @@ ${productosDetailText}
         updateCoupon(appliedCoupon.id, { usage_count: (appliedCoupon.usage_count || 0) + 1 });
       }
       localStorage.setItem('trv_active_order_id', created.id);
+      // Save shipping data for logged-in users
+      if (currentUser) {
+        localStorage.setItem('trv_last_shipping_method', shippingMethod);
+        localStorage.setItem('trv_last_shipping_lat', String(shippingLat));
+        localStorage.setItem('trv_last_shipping_lng', String(shippingLng));
+        localStorage.setItem('trv_last_shipping_zone', shippingZone);
+        if (selectedSedeId) localStorage.setItem('trv_last_sede_id', selectedSedeId);
+      }
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       // Show registration modal for guests
       if (!currentUser && crearCuenta) {

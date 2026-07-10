@@ -33,7 +33,11 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   const getWhatsAppPhone = () => {
     const active = config.sedes?.filter((s) => s.activa);
-    return active && active.length > 1 ? active[0].telefono : config.telefono_soporte;
+    if (active && active.length > 0) {
+      // Use per-store WhatsApp number if available, otherwise fall back to phone or global
+      return active[0].whatsapp_numero || active[0].telefono || config.telefono_soporte;
+    }
+    return config.telefono_soporte;
   };
 
   return (

@@ -449,3 +449,151 @@ svg {
 .tab-indicator {
   transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1), width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* === ADMIN iOS-LIKE === */
+:root {
+  --ios-bg: #F2F2F7;
+  --ios-card: #FFFFFF;
+  --ios-border: #E5E5EA;
+  --ios-text: #1C1C1E;
+  --ios-text-secondary: #8E8E93;
+  --ios-separator: #C6C6C8;
+  --ios-success: #34C759;
+  --ios-error: #FF3B30;
+  --ios-warning: #FF9500;
+  --ios-radius: 16px;
+  --ios-radius-sm: 12px;
+}
+
+.admin-bg { background: var(--ios-bg); }
+
+.admin-card {
+  background: var(--ios-card);
+  border-radius: var(--ios-radius);
+  border: 1px solid var(--ios-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.admin-card-sm { border-radius: var(--ios-radius-sm); }
+
+.admin-header {
+  background: var(--ios-card);
+  border-bottom: 1px solid var(--ios-border);
+  height: 56px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-bottom-tabs {
+  background: var(--ios-card);
+  border-top: 1px solid var(--ios-border);
+  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.admin-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ios-text);
+  letter-spacing: -0.3px;
+}
+
+.admin-input {
+  background: var(--ios-card);
+  border: 1px solid var(--ios-border);
+  border-radius: var(--ios-radius-sm);
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--ios-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: var(--theme-color, #007AFF);
+}
+
+.admin-btn {
+  background: var(--theme-color, #007AFF);
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-radius: var(--ios-radius-sm);
+  border: none;
+  width: 100%;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.admin-btn-secondary {
+  background: transparent;
+  color: var(--theme-color, #007AFF);
+  border: 1px solid var(--ios-border);
+}
+
+.admin-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ios-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.bottom-sheet-handle {
+  width: 36px;
+  height: 5px;
+  background: var(--ios-separator);
+  border-radius: 3px;
+  margin: 8px auto;
+}
+
+.bottom-sheet {
+  border-radius: 16px 16px 0 0;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.admin-tab-active { color: var(--theme-color, #007AFF); }
+.admin-tab-inactive { color: var(--ios-text-secondary); }
+
+.admin-toggle {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  border-radius: 16px;
+  background: var(--ios-border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-toggle.active {
+  background: var(--theme-color, #34C759);
+}
+
+.admin-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+
+.admin-toggle.active::after {
+  transform: translateX(20px);
+}

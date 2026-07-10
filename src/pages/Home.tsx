@@ -138,10 +138,10 @@ export const Home: React.FC<HomeProps> = ({
           <div className="w-full max-w-7xl mx-auto px-6 md:px-12">
             <div className="max-w-lg">
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-                {config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
+                {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
               </h1>
               <p className="text-white/70 text-sm md:text-base mt-3 md:mt-4 max-w-md leading-relaxed">
-                {config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
+                {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
               </p>
 
               {/* Two CTA buttons */}
@@ -150,7 +150,7 @@ export const Home: React.FC<HomeProps> = ({
                   onClick={() => setTab('catalog')}
                   className="bg-white text-zinc-900 font-bold text-sm px-8 py-3.5 rounded-full inline-flex items-center justify-center gap-2 hover:bg-zinc-100 transition-all cursor-pointer active:scale-95"
                 >
-                  ORDER NOW <ArrowRight size={16} />
+                  {config.hero_cta_text || 'ORDER NOW'} <ArrowRight size={16} />
                 </button>
                 <button
                   onClick={() => { setSelectedCategory(''); setTab('catalog'); }}

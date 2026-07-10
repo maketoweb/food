@@ -5,6 +5,10 @@ export interface AppUser {
   contrasena: string;
   email?: string;
   createdAt: string;
+  loyalty_points?: number;
+  loyalty_lifetime_points?: number;
+  loyalty_tier_id?: string;
+  sede_preferida_id?: string;
 }
 
 export interface FoodOption {
@@ -101,6 +105,16 @@ export interface Order {
   sede_id?: string;
 }
 
+export interface SedeHorario {
+  lunes?: { open: string; close: string };
+  martes?: { open: string; close: string };
+  miercoles?: { open: string; close: string };
+  jueves?: { open: string; close: string };
+  viernes?: { open: string; close: string };
+  sabado?: { open: string; close: string };
+  domingo?: { open: string; close: string };
+}
+
 export interface Sede {
   id: string;
   nombre: string;
@@ -110,6 +124,10 @@ export interface Sede {
   horario?: string;
   activa: boolean;
   es_principal: boolean;
+  whatsapp_numero?: string;
+  horario_detallado?: SedeHorario;
+  esta_abierta_manual?: boolean;
+  imagen_url?: string;
 }
 
 export interface DeliveryZone {
@@ -214,6 +232,43 @@ export interface FAQItem {
   answer: string;
 }
 
+export interface LoyaltyTier {
+  id: string;
+  name: string;
+  min_points: number;
+  multiplier: number;
+  benefits: string[];
+  color: string;
+}
+
+export interface LoyaltyConfig {
+  enabled: boolean;
+  points_per_dollar: number;
+  min_order_for_points: number;
+  redemption_rate: number;
+  max_discount_percent: number;
+  welcome_bonus: number;
+  bonus_actions: {
+    daily_login: number;
+    first_order: number;
+    review: number;
+    referral: number;
+  };
+  tiers: LoyaltyTier[];
+}
+
+export interface LoyaltyTransaction {
+  id: string;
+  user_id: string;
+  type: 'earn' | 'redeem' | 'bonus' | 'adjustment' | 'expire';
+  points: number;
+  description: string;
+  order_id?: string;
+  sede_id?: string;
+  created_at: string;
+  expires_at?: string;
+}
+
 export const ALLERGEN_OPTIONS = [
   'Gluten', 'Lácteos', 'Frutos secos', 'Mariscos', 'Soja',
   'Huevos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos',
@@ -271,4 +326,29 @@ export interface StoreConfig {
   categories_colors?: Record<string, { primary: string; light: string; textColor: string }>;
   combos?: ProductCombo[];
   faq_items?: FAQItem[];
+  loyalty?: LoyaltyConfig;
+  seo_home_title?: string;
+  seo_home_description?: string;
+  seo_home_keywords?: string;
+  seo_catalog_title?: string;
+  seo_catalog_description?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  hero_cta_text?: string;
+  section_promos_title?: string;
+  section_new_title?: string;
+  section_bestseller_title?: string;
+  section_rewards_title?: string;
+  section_rewards_description?: string;
+  footer_text?: string;
+  footer_copyright?: string;
+  instagram_url?: string;
+  twitter_url?: string;
+  facebook_url?: string;
+  tiktok_url?: string;
+  youtube_url?: string;
+  font_display?: string;
+  jsonld_type?: string;
+  jsonld_priceRange?: string;
+  jsonld_servesCuisine?: string[];
 }

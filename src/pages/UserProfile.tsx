@@ -5,7 +5,7 @@ import { supabase } from '../store/supabaseClient';
 import {
   User, Lock, Phone, UserPlus, LogIn, LogOut, Bell, Package, Mail,
   CheckCircle, Clock, Truck, MapPin, Edit2, AlertCircle, Eye, EyeOff, Tag,
-  Copy, Check, X, Smartphone, MessageSquare, Send, ExternalLink, Trash2
+  Copy, Check, X, Smartphone, MessageSquare, Send, ExternalLink, Trash2, Star, Award, Gift
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { OrderTracker } from '../components/OrderTracker';
@@ -36,12 +36,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
     deleteNotification,
     clearAllNotifications,
     hapticEnabled,
-    toggleHaptic
+    toggleHaptic,
+    getUserLoyaltyPoints,
+    getUserLoyaltyTier,
+    getLoyaltyTransactions
   } = useApp();
 
   const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
 
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'orders' | 'notifications'>('orders');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'orders' | 'notifications' | 'rewards'>('orders');
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
 
   // ── Lógica de Popup Automático de Instalación (PWA) ────────────────────────
@@ -748,6 +751,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
               <button
                 type="button"
+                onClick={() => { setActiveSubTab('rewards'); setShowEditFields(false); }}
+                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold font-display uppercase tracking-wider text-center flex items-center justify-center gap-1 ${activeSubTab === 'rewards' ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:text-zinc-900 bg-white border border-zinc-200'}`}
+              >
+                <Star size={13} /> Recompensas
+              </button>
+
+              <button
+                type="button"
                 onClick={() => { setActiveSubTab('profile'); setShowEditFields(true); }}
                 className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold font-display uppercase tracking-wider text-center flex items-center justify-center gap-1 ${activeSubTab === 'profile' ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:text-zinc-900 bg-white border border-zinc-200'}`}
               >
@@ -1233,6 +1244,76 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                 >
                   Enviar Mensaje
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* REWARDS / LOYALTY SECTION */}
+          {activeSubTab === 'rewards' && currentUser && (
+            <div className="p-4 border border-zinc-200 rounded-xl bg-white flex flex-col gap-4">
+              <div className="flex items-center gap-3 border-b border-zinc-150 pb-3">
+                <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                  <Award size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-zinc-900 text-sm">Recompensas</h3>
+                  <p className="text-[10px] text-zinc-500">Acumula puntos y canjéalos en tus pedidos</p>
+                </div>
+              </div>
+
+              {/* Points Balance */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 text-center">
+                <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider mb-1">Tus Puntos</p>
+                <p className="text-3xl font-black text-amber-900">{getUserLoyaltyPoints(currentUser.id)}</p>
+                <p className="text-[10px] text-amber-600 mt-1">
+                  Nivel: {getUserLoyaltyTier(currentUser.id)?.name || 'Sin nivel'}
+                </p>
+              </div>
+
+              {/* Tier Info */}
+              {config.loyalty?.tiers && config.loyalty.tiers.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Niveles Disponibles</p>
+                  {config.loyalty.tiers.sort((a, b) => a.min_points - b.min_points).map((tier, idx) => {
+                    const userPoints = getUserLoyaltyPoints(currentUser.id);
+                    const isActive = userPoints >= tier.min_points;
+                    return (
+                      <div key={idx} className={`p-3 border rounded-lg flex items-center gap-3 ${isActive ? 'bg-amber-50 border-amber-200' : 'bg-zinc-50 border-zinc-200 opacity-60'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${isActive ? 'bg-amber-500 text-white' : 'bg-zinc-300 text-zinc-600'}`}>
+                          {tier.multiplier}x
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-zinc-900 text-xs">{tier.name}</p>
+                          <p className="text-[9px] text-zinc-500">{tier.min_points}+ puntos</p>
+                        </div>
+                        {isActive && <span className="text-[9px] text-green-600 font-bold">ACTIVO</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Recent Transactions */}
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Historial Reciente</p>
+                {getLoyaltyTransactions(currentUser.id).length === 0 ? (
+                  <p className="text-[11px] text-zinc-400 text-center py-4">Aún no tienes transacciones de puntos</p>
+                ) : (
+                  getLoyaltyTransactions(currentUser.id).slice(0, 5).map((tx, idx) => (
+                    <div key={idx} className="p-2.5 border border-zinc-100 rounded-lg flex items-center gap-2.5 text-[11px]">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.points > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                        {tx.points > 0 ? <Gift size={14} /> : <Star size={14} />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-zinc-800 text-[11px]">{tx.description}</p>
+                        <p className="text-[9px] text-zinc-400">{tx.created_at}</p>
+                      </div>
+                      <span className={`font-bold text-[12px] ${tx.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.points > 0 ? '+' : ''}{tx.points}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

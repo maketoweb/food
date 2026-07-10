@@ -4,7 +4,8 @@ import { useAdminStore } from '../../store/stores/adminStore';
 import { Order, FoodItem } from '../../types/store';
 import {
   BarChart3, ShoppingBag, Utensils, Grid, User, Ticket, Settings,
-  Menu, X, Bell, MessageSquare, Megaphone, Package
+  X, Bell, MessageSquare, Megaphone, Package, Award, FileText,
+  LayoutGrid, ChevronLeft
 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 
@@ -19,12 +20,14 @@ const NotificationsSection = lazy(() => import('./sections/NotificationsSection'
 const ChatSection = lazy(() => import('./sections/ChatSection'));
 const PromosSection = lazy(() => import('./sections/PromosSection'));
 const CombosSection = lazy(() => import('./sections/CombosSection'));
+const LoyaltySection = lazy(() => import('./sections/LoyaltySection'));
+const ContentSection = lazy(() => import('./sections/ContentSection'));
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-20">
     <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-      <p className="text-xs text-slate-400 font-medium">Cargando sección...</p>
+      <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--ios-border)', borderTopColor: 'transparent' }} />
+      <p className="text-sm" style={{ color: 'var(--ios-text-secondary)' }}>Cargando...</p>
     </div>
   </div>
 );
@@ -33,24 +36,37 @@ interface AdminIndexProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin') => void;
 }
 
-const ADMIN_SECTIONS = [
-  { id: 'reports', label: 'Dashboard', icon: BarChart3 },
-  { id: 'orders', label: 'Pedidos', icon: ShoppingBag },
-  { id: 'inventory', label: 'Menú', icon: Utensils },
-  { id: 'promos', label: 'Promociones', icon: Megaphone },
-  { id: 'combos', label: 'Combos', icon: Package },
-  { id: 'tables', label: 'Mesas', icon: Grid },
-  { id: 'customers', label: 'Clientes', icon: User },
-  { id: 'notifications', label: 'Notificaciones', icon: Bell },
-  { id: 'chat', label: 'Mensajes', icon: MessageSquare },
-  { id: 'coupons', label: 'Cupónes', icon: Ticket },
-  { id: 'settings', label: 'Configuración', icon: Settings },
+const ALL_SECTIONS = [
+  { id: 'reports',      label: 'Panel',          icon: BarChart3,        group: 'principal' },
+  { id: 'orders',       label: 'Pedidos',        icon: ShoppingBag,      group: 'principal' },
+  { id: 'inventory',    label: 'Menú',           icon: Utensils,         group: 'principal' },
+  { id: 'promos',       label: 'Ofertas',        icon: Megaphone,        group: 'principal' },
+  { id: 'combos',       label: 'Combos',         icon: Package,          group: 'principal' },
+  { id: 'tables',       label: 'Mesas',          icon: Grid,             group: 'principal' },
+  { id: 'loyalty',      label: 'Fidelización',   icon: Award,            group: 'clientes' },
+  { id: 'customers',    label: 'Clientes',       icon: User,             group: 'clientes' },
+  { id: 'chat',         label: 'Mensajes',       icon: MessageSquare,    group: 'clientes' },
+  { id: 'notifications',label: 'Avisos',         icon: Bell,             group: 'comunicacion' },
+  { id: 'content',      label: 'Contenido',      icon: FileText,         group: 'contenido' },
+  { id: 'coupons',      label: 'Cupones',        icon: Ticket,           group: 'contenido' },
+  { id: 'settings',     label: 'Configuración',  icon: Settings,         group: 'sistema' },
+];
+
+const BOTTOM_TABS = [
+  { id: 'reports', label: 'Panel',   icon: BarChart3 },
+  { id: 'orders',  label: 'Pedidos', icon: ShoppingBag },
+  { id: 'inventory', label: 'Menú',  icon: Utensils },
+  { id: '__more',  label: 'Más',     icon: LayoutGrid },
+  { id: 'settings',label: 'Config',  icon: Settings },
 ];
 
 export default function AdminIndex({ setTab }: AdminIndexProps) {
   const { config } = useApp();
-  const { activeSection, setActiveSection, sidebarOpen, setSidebarOpen } = useAdminStore();
-  const themeColor = config.theme_color || '#7c3aed';
+  const { activeSection, setActiveSection } = useAdminStore();
+  const themeColor = config.theme_color || '#007AFF';
+
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [openOrderDetailIds, setOpenOrderDetailIds] = useState<string[]>([]);
   const [editingOrderItems, setEditingOrderItems] = useState<Order | null>(null);
@@ -66,13 +82,20 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
     );
   }, []);
 
-  const handleStatusAdvance = useCallback((_order: Order) => {
-    // Status advance is handled by the OrdersSection component
-  }, []);
+  const handleStatusAdvance = useCallback((_order: Order) => {}, []);
 
-  const sidebarSections = ADMIN_SECTIONS.filter(s => s.id !== 'tables' || config.tiene_mesas);
+  const visibleSections = ALL_SECTIONS.filter(s => s.id !== 'tables' || config.tiene_mesas);
+  const sectionLabel = visibleSections.find(s => s.id === activeSection)?.label || 'Panel';
 
-  const sectionLabel = sidebarSections.find(s => s.id === activeSection)?.label || 'Dashboard';
+  const moreSections = visibleSections.filter(s =>
+    !BOTTOM_TABS.some(t => t.id === s.id)
+  );
+
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId as any);
+    setShowMoreSheet(false);
+    setSidebarOpen(false);
+  };
 
   const renderSection = () => {
     switch (activeSection) {
@@ -107,68 +130,187 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
       case 'chat': return <ChatSection />;
       case 'promos': return <PromosSection />;
       case 'combos': return <CombosSection />;
+      case 'loyalty': return <LoyaltySection />;
+      case 'content': return <ContentSection />;
       default: return <DashboardSection />;
     }
   };
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--ios-bg)' }}>
       <SEOHead title={`Admin - ${config.site_nombre || 'Panel'}`} type="admin" />
 
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-
-      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <div className="p-4 border-b border-slate-200 flex items-center gap-3">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-60 shrink-0" style={{ background: 'var(--ios-card)', borderRight: '1px solid var(--ios-border)' }}>
+        <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--ios-border)' }}>
           {config.logo_url ? (
-            <img src={config.logo_url} alt={config.site_nombre} className="w-8 h-8 rounded-lg object-cover" />
+            <img src={config.logo_url} alt={config.site_nombre} className="w-9 h-9 rounded-xl object-cover" />
           ) : (
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: themeColor }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: themeColor }}>
               {config.site_nombre?.[0] || 'A'}
             </div>
           )}
-          <span className="font-bold text-sm text-slate-900 truncate">{config.site_nombre || 'Admin'}</span>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-slate-400 hover:text-slate-600 rounded"><X size={18} /></button>
+          <span className="font-bold text-base truncate" style={{ color: 'var(--ios-text)' }}>{config.site_nombre || 'Admin'}</span>
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {sidebarSections.map(section => {
+          {visibleSections.map(section => {
             const Icon = section.icon;
             const isActive = activeSection === section.id;
             return (
               <button
                 key={section.id}
-                onClick={() => { setActiveSection(section.id as never); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  isActive ? 'text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-                }`}
-                style={isActive ? { backgroundColor: themeColor } : {}}
+                onClick={() => handleSectionChange(section.id)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer touch-target"
+                style={{
+                  background: isActive ? `${themeColor}15` : 'transparent',
+                  color: isActive ? themeColor : 'var(--ios-text-secondary)',
+                  borderLeft: isActive ? `3px solid ${themeColor}` : '3px solid transparent',
+                }}
               >
-                <Icon size={16} />
+                <Icon size={20} />
                 {section.label}
               </button>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-slate-200">
-          <button onClick={() => setTab('home')} className="w-full text-xs text-slate-500 hover:text-slate-800 py-2 transition-colors cursor-pointer">
-            ← Volver a la tienda
+        <div className="p-3" style={{ borderTop: '1px solid var(--ios-border)' }}>
+          <button onClick={() => setTab('home')} className="w-full text-sm py-3 transition-colors cursor-pointer flex items-center justify-center gap-2" style={{ color: 'var(--ios-text-secondary)' }}>
+            <ChevronLeft size={16} /> Volver a la tienda
           </button>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
-        <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer">
-            <Menu size={18} />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
+        {/* Header */}
+        <header className="admin-header shrink-0">
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-xl cursor-pointer" style={{ color: 'var(--ios-text)' }}>
+            <BarChart3 size={22} />
           </button>
-          <h1 className="text-sm font-bold text-slate-900">{sectionLabel}</h1>
+          <h1 className="admin-section-title ml-2">{sectionLabel}</h1>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto" style={{ padding: '16px' }}>
           <Suspense fallback={<SectionLoader />}>
             {renderSection()}
           </Suspense>
         </main>
+
+        {/* Mobile Bottom Tabs */}
+        <div className="lg:hidden admin-bottom-tabs shrink-0">
+          {BOTTOM_TABS.map(tab => {
+            const Icon = tab.icon;
+            const isMore = tab.id === '__more';
+            const isActive = isMore ? showMoreSheet : activeSection === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  if (isMore) {
+                    setShowMoreSheet(true);
+                  } else {
+                    handleSectionChange(tab.id);
+                  }
+                }}
+                className="flex flex-col items-center justify-center gap-1 flex-1 py-2 cursor-pointer touch-target"
+                style={{ color: isActive ? themeColor : 'var(--ios-text-secondary)' }}
+              >
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
+                <span className="text-[10px] font-semibold">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 w-72 flex flex-col" style={{ background: 'var(--ios-card)' }}>
+            <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--ios-border)' }}>
+              {config.logo_url ? (
+                <img src={config.logo_url} alt={config.site_nombre} className="w-9 h-9 rounded-xl object-cover" />
+              ) : (
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: themeColor }}>
+                  {config.site_nombre?.[0] || 'A'}
+                </div>
+              )}
+              <span className="font-bold text-base truncate" style={{ color: 'var(--ios-text)' }}>{config.site_nombre || 'Admin'}</span>
+              <button onClick={() => setSidebarOpen(false)} className="ml-auto p-2 rounded-xl" style={{ color: 'var(--ios-text-secondary)' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+              {visibleSections.map(section => {
+                const Icon = section.icon;
+                const isActive = activeSection === section.id;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => handleSectionChange(section.id)}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer touch-target"
+                    style={{
+                      background: isActive ? `${themeColor}15` : 'transparent',
+                      color: isActive ? themeColor : 'var(--ios-text-secondary)',
+                      borderLeft: isActive ? `3px solid ${themeColor}` : '3px solid transparent',
+                    }}
+                  >
+                    <Icon size={20} />
+                    {section.label}
+                  </button>
+                );
+              })}
+            </nav>
+            <div className="p-3" style={{ borderTop: '1px solid var(--ios-border)' }}>
+              <button onClick={() => setTab('home')} className="w-full text-sm py-3 flex items-center justify-center gap-2" style={{ color: 'var(--ios-text-secondary)' }}>
+                <ChevronLeft size={16} /> Volver a la tienda
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* More Sections Bottom Sheet */}
+      {showMoreSheet && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowMoreSheet(false)} />
+          <div className="absolute bottom-0 left-0 right-0 bottom-sheet" style={{ background: 'var(--ios-card)' }}>
+            <div className="bottom-sheet-handle" />
+            <div className="p-4">
+              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--ios-text)' }}>Más opciones</h3>
+              <div className="space-y-1">
+                {moreSections.map(section => {
+                  const Icon = section.icon;
+                  const isActive = activeSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => handleSectionChange(section.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all cursor-pointer touch-target"
+                      style={{
+                        background: isActive ? `${themeColor}15` : 'transparent',
+                        color: isActive ? themeColor : 'var(--ios-text)',
+                      }}
+                    >
+                      <Icon size={20} />
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => { setTab('home'); setShowMoreSheet(false); }}
+                className="w-full mt-4 py-3.5 rounded-xl text-sm font-semibold cursor-pointer touch-target"
+                style={{ color: 'var(--ios-text-secondary)', borderTop: '1px solid var(--ios-border)' }}
+              >
+                ← Volver a la tienda
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
