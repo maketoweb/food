@@ -79,6 +79,13 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
     }
   }, [currentUser?.id]);
 
+  // Auto-skip Step 1 for logged-in users
+  useEffect(() => {
+    if (currentUser && currentStep === 1 && cart.length > 0) {
+      setCurrentStep(2);
+    }
+  }, [currentUser?.id]);
+
   const handleCopy = async (text: string, fieldId: string) => {
     try {
       await navigator.clipboard.writeText(text);

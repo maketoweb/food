@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '../store/AppContext';
-import { FoodItem } from '../types/store';
+import { FoodItem, Promotion } from '../types/store';
 import {
   ArrowRight, ShoppingCart, Search, MapPin, ChevronLeft, ChevronRight,
   ChevronDown, Crosshair, Users, Gift
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { PremiumProductCard } from '../components/PremiumProductCard';
+import { PromotionBanner } from '../components/PromotionBanner';
 import { Footer } from '../components/Footer';
 import { FloatingCartButton } from '../components/FloatingCartButton';
 
@@ -38,8 +39,17 @@ export const Home: React.FC<HomeProps> = ({
   navigateToCatalog: _navigateToCatalog,
   deferredPrompt: _deferredPrompt, onInstallClick
 }) => {
-  const { foodItems, config, cart, addToCart, getProductAverageRating, getProductReviews } = useApp();
+  const { foodItems, config, cart, addToCart, getProductAverageRating, getProductReviews, promotions } = useApp();
   const themeColor = config.theme_color || '#E31837';
+
+  const activePromotions = useMemo(() => {
+    const now = new Date().toISOString();
+    return (promotions || []).filter(p => 
+      p.status === 'active' && 
+      (!p.start_date || p.start_date <= now) && 
+      (!p.end_date || p.end_date >= now)
+    );
+  }, [promotions]);
 
   const activeItems = useMemo(() => foodItems.filter(p => p.activo !== false), [foodItems]);
   const promoItems = useMemo(() => activeItems.filter(p => p.es_promo), [activeItems]);
@@ -189,7 +199,36 @@ export const Home: React.FC<HomeProps> = ({
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 2: PROMOTIONAL BANNERS CAROUSEL
+          SECTION 2: ACTIVE PROMOTIONS CAROUSEL
+          ═══════════════════════════════════════════════════════════ */}
+      {activePromotions.length > 0 && (
+        <section className="w-full py-6 sm:py-8 md:py-12" style={{ background: `linear-gradient(180deg, ${themeColor}08, ${themeColor}03)` }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                  Ofertas Activas
+                </h2>
+                <p className="text-xs text-zinc-500 mt-1">No te pierdas nuestras promociones especiales</p>
+              </div>
+            </div>
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+              {activePromotions.map((promo) => (
+                <div key={promo.id} className="shrink-0 w-[85vw] sm:w-[60vw] md:w-[calc(50%-8px)] snap-start">
+                  <PromotionBanner
+                    promotion={promo}
+                    themeColor={themeColor}
+                    onClick={() => setTab('catalog')}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          SECTION 3: PROMOTIONAL BANNERS CAROUSEL
           ═══════════════════════════════════════════════════════════ */}
       {carouselItems.length > 0 && (
         <section className="w-full py-6 sm:py-8 md:py-12 bg-white">

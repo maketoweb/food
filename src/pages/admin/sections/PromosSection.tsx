@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { Promotion } from '../../../types/store';
+import { supabase } from '../../../store/supabaseClient';
 import { Megaphone, Tag, Send, Search, Percent, Plus } from 'lucide-react';
 import { PromotionForm } from '../components/PromotionForm';
 import { PromotionCard } from '../components/PromotionCard';
@@ -18,6 +19,15 @@ const PromosSection: React.FC = () => {
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
   const [selectedPromoStats] = useState<Promotion | null>(null);
+
+  useEffect(() => {
+    const loadPromotions = async () => {
+      if (!supabase) return;
+      const { data } = await supabase.from('promotions').select('*').order('created_at', { ascending: false });
+      if (data) setPromotions(data as Promotion[]);
+    };
+    loadPromotions();
+  }, []);
 
   const categories = ['Todas', ...new Set(foodItems.map(p => p.categoria))];
   
@@ -78,27 +88,37 @@ const PromosSection: React.FC = () => {
 
   const handleSavePromotion = async (promoData: Omit<Promotion, 'id' | 'created_at'>) => {
     if (editingPromo) {
-      setPromotions(prev => prev.map(p => p.id === editingPromo.id ? { ...p, ...promoData } : p));
+      if (supabase) {
+        const { data } = await supabase.from('promotions').update(promoData).eq('id', editingPromo.id).select().single();
+        if (data) setPromotions(prev => prev.map(p => p.id === editingPromo.id ? data as Promotion : p));
+      }
     } else {
-      const newPromo: Promotion = {
-        ...promoData,
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
-      } as Promotion;
-      setPromotions(prev => [...prev, newPromo]);
+      if (supabase) {
+        const { data } = await supabase.from('promotions').insert([promoData]).select().single();
+        if (data) setPromotions(prev => [data as Promotion, ...prev]);
+      }
     }
     setShowPromoForm(false);
     setEditingPromo(null);
   };
 
-  const handleDeletePromotion = (id: string) => {
+  const handleDeletePromotion = async (id: string) => {
     if (confirm('¿Eliminar esta promoción?')) {
+      if (supabase) {
+        await supabase.from('promotions').delete().eq('id', id);
+      }
       setPromotions(prev => prev.filter(p => p.id !== id));
     }
   };
 
-  const handleSendPromotion = (id: string) => {
+  const handleSendPromotion = async (id: string) => {
+    const promo = promotions.find(p => p.id === id);
+    if (!promo) return;
+    if (supabase) {
+      await supabase.from('promotions').update({ status: 'active', sent_at: new Date().toISOString() }).eq('id', id);
+    }
     setPromotions(prev => prev.map(p => p.id === id ? { ...p, status: 'active' as const, sent_at: new Date().toISOString() } : p));
+    await addNotification(promo.title, promo.message, 'todos', undefined, promo.image_url || '', '');
   };
 
   const ProductCard: React.FC<{ product: any; isPromo: boolean }> = ({ product, isPromo }) => (

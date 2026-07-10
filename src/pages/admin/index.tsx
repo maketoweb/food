@@ -9,6 +9,7 @@ import {
   LayoutGrid, ChevronLeft, MapPin
 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
+import { EditProductForm } from '../../components/EditProductForm';
 
 const DashboardSection = lazy(() => import('./sections/DashboardSection'));
 const OrdersSection = lazy(() => import('./sections/OrdersSection'));
@@ -64,7 +65,7 @@ const BOTTOM_TABS = [
 ];
 
 export default function AdminIndex({ setTab }: AdminIndexProps) {
-  const { config } = useApp();
+  const { config, foodItems, updateFoodItem } = useApp();
   const { activeSection, setActiveSection } = useAdminStore();
   const { advanceStatus } = useOrders();
   const themeColor = config.theme_color || '#007AFF';
@@ -230,6 +231,20 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
           })}
         </div>
       </div>
+
+      {/* Edit Product Modal */}
+      {openEditor && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+          <EditProductForm
+            part={openEditor}
+            onSubmit={async (updated) => {
+              await updateFoodItem(updated.id, updated);
+              setOpenEditor(null);
+            }}
+            onClose={() => setOpenEditor(null)}
+          />
+        </div>
+      )}
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (

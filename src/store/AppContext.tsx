@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier } from '../types/store';
+import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier, Promotion } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
   foodItems: FoodItem[];
+  promotions: Promotion[];
   orders: Order[];
   config: StoreConfig;
   coupons: Coupon[];
@@ -1150,6 +1151,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+
   const [config, setConfig] = useState<StoreConfig>(() => {
     const saved = localStorage.getItem('trv_config');
     if (saved) {
@@ -1687,6 +1690,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return { ...p, option_groups: fallback?.option_groups || [] };
         });
         setProducts(merged);
+      }
+
+      // Cargar promociones activas
+      const { data: dbPromotions } = await supabase.from('promotions').select('*');
+      if (dbPromotions) {
+        setPromotions(dbPromotions as Promotion[]);
       }
       
       // Cargar configuración COMPLETA de la tienda
@@ -2894,6 +2903,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // NOTE: the store currently uses `products` as the source of truth.
       // Keeping the exposed context API consistent with the rest of the app.
       foodItems: products,
+      promotions,
       orders,
       config,
       coupons,
