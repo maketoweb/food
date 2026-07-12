@@ -137,15 +137,70 @@ export const Home: React.FC<HomeProps> = ({
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 1: HERO BANNER — hover/touch zoom effect
+          SECTION 1: HERO BANNER — Mobile card layout / Desktop fullscreen
           ═══════════════════════════════════════════════════════════ */}
+      
+      {/* MOBILE: Card-style layout */}
+      <section className="md:hidden w-full bg-zinc-50 px-4 pt-4 pb-2">
+        <div className="flex flex-col gap-4">
+          {/* Text content */}
+          <div className={`${heroTextClass}`}>
+            <h1 className="text-2xl font-black text-zinc-900 leading-[1.15] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+              {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
+            </h1>
+            <p className="text-zinc-500 text-xs mt-2 leading-relaxed">
+              {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
+            </p>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTab('catalog')}
+              className="flex-1 bg-zinc-900 text-white font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-zinc-800 transition-all cursor-pointer active:scale-[0.98]"
+            >
+              {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
+            </button>
+            <button
+              onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
+              className="flex-1 bg-white text-zinc-700 font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 border border-zinc-200 hover:bg-zinc-50 transition-all cursor-pointer active:scale-[0.98]"
+            >
+              Ver Menú
+            </button>
+          </div>
+
+          {/* Image card */}
+          <div 
+            ref={heroRef}
+            className="relative w-full h-[200px] rounded-2xl overflow-hidden shadow-sm"
+            onMouseEnter={() => setHeroHovered(true)}
+            onMouseLeave={() => setHeroHovered(false)}
+            onTouchStart={() => setHeroHovered(true)}
+            onTouchEnd={() => setTimeout(() => setHeroHovered(false), 2000)}
+          >
+            {config.banners.length > 0 ? (
+              <img
+                src={config.banners[0]}
+                alt=""
+                className={`w-full h-full object-cover transition-transform duration-700 ${
+                  heroHovered ? 'scale-105' : 'scale-100'
+                }`}
+                referrerPolicy="no-referrer"
+                loading="eager"
+              />
+            ) : (
+              <div className="w-full h-full bg-zinc-200" />
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* DESKTOP: Fullscreen layout */}
       <section
         ref={heroRef}
-        className={`relative w-full ${heroHeightClass} overflow-hidden bg-zinc-900`}
+        className={`hidden md:block relative w-full ${heroHeightClass} overflow-hidden bg-zinc-900`}
         onMouseEnter={() => setHeroHovered(true)}
         onMouseLeave={() => setHeroHovered(false)}
-        onTouchStart={() => setHeroHovered(true)}
-        onTouchEnd={() => setTimeout(() => setHeroHovered(false), 2000)}
       >
         {/* Background Image with zoom effect */}
         {config.banners.length > 0 ? (
@@ -169,17 +224,17 @@ export const Home: React.FC<HomeProps> = ({
         />
 
         {/* Content */}
-        <div className="absolute inset-0 flex items-end md:items-center pb-24 sm:pb-20 md:pb-0">
-          <div className="w-full max-w-7xl mx-auto px-5 md:px-8 lg:px-12">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full max-w-7xl mx-auto px-8 lg:px-12">
             <div className={`max-w-lg ${heroTextClass}`}>
-              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
                 {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
               </h1>
-              <p className="text-white/70 text-xs sm:text-sm md:text-base mt-3 md:mt-4 max-w-md leading-relaxed">
+              <p className="text-white/70 text-base mt-4 max-w-md leading-relaxed">
                 {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 mt-5 md:mt-6">
+              <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setTab('catalog')}
                   className="bg-white text-zinc-900 font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 hover:bg-zinc-100 transition-all cursor-pointer active:scale-95"

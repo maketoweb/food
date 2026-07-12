@@ -135,60 +135,10 @@ CREATE TABLE IF NOT EXISTS store_config (
 
 INSERT INTO store_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
--- Migrar columnas antiguas si existen (idempotente)
-DO $$
-BEGIN
-    -- Renombrar columnas legacy si existen
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='store_config' AND column_name='tienda_lat') THEN
-        -- columnas ya existen, noop
-    END IF;
-    -- Agregar columnas nuevas de forma segura
-    PERFORM add_column_if_not_exists('store_config', 'site_url', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'hero_effect', 'VARCHAR(20) DEFAULT ''fade''');
-    PERFORM add_column_if_not_exists('store_config', 'hero_height', 'VARCHAR(20) DEFAULT ''auto''');
-    PERFORM add_column_if_not_exists('store_config', 'hero_overlay_opacity', 'INTEGER DEFAULT 100');
-    PERFORM add_column_if_not_exists('store_config', 'section_highlights_title', 'TEXT DEFAULT ''Destacados''');
-    PERFORM add_column_if_not_exists('store_config', 'section_categories_title', 'TEXT DEFAULT ''LO MÁS POPULAR''');
-    PERFORM add_column_if_not_exists('store_config', 'rewards_step1_title', 'TEXT DEFAULT ''Regístrate gratis''');
-    PERFORM add_column_if_not_exists('store_config', 'rewards_step1_desc', 'TEXT DEFAULT ''Crea tu cuenta en segundos''');
-    PERFORM add_column_if_not_exists('store_config', 'rewards_step2_title', 'TEXT DEFAULT ''Ordena y acumula''');
-    PERFORM add_column_if_not_exists('store_config', 'rewards_step2_desc', 'TEXT DEFAULT ''Gana puntos con cada pedido''');
-    PERFORM add_column_if_not_exists('store_config', 'rewards_step3_title', 'TEXT DEFAULT ''Canjea recompensas''');
-    PERFORM add_column_if_not_exists('store_config', 'rewards_step3_desc', 'TEXT DEFAULT ''Intercambia puntos por comida gratis''');
-    PERFORM add_column_if_not_exists('store_config', 'footer_about_title', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'footer_about_text', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'seo_home_title', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'seo_home_description', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'seo_home_keywords', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'jsonld_type', 'VARCHAR(50) DEFAULT ''Restaurant''');
-    PERFORM add_column_if_not_exists('store_config', 'jsonld_priceRange', 'VARCHAR(10) DEFAULT ''$$''');
-    PERFORM add_column_if_not_exists('store_config', 'jsonld_servesCuisine', 'TEXT[] DEFAULT ARRAY[''Comida Rápida'', ''Hamburguesas'', ''Pizzas'']::TEXT[]');
-    PERFORM add_column_if_not_exists('store_config', 'font_display', 'TEXT DEFAULT ''Fredoka''');
-    PERFORM add_column_if_not_exists('store_config', 'sedes', 'JSONB DEFAULT ''[]''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'sede_activa_id', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('store_config', 'loyalty', 'JSONB DEFAULT ''{}''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'combos', 'JSONB DEFAULT ''[]''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'faq_items', 'JSONB DEFAULT ''[]''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'categories_images', 'JSONB DEFAULT ''{}''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'categories_colors', 'JSONB DEFAULT ''{}''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'delivery_zonas', 'JSONB DEFAULT ''[]''::JSONB');
-    PERFORM add_column_if_not_exists('store_config', 'recogida_en_local', 'BOOLEAN DEFAULT TRUE');
-    PERFORM add_column_if_not_exists('store_config', 'entrega_por_zonas', 'BOOLEAN DEFAULT FALSE');
-    PERFORM add_column_if_not_exists('store_config', 'delivery_gratis', 'BOOLEAN DEFAULT FALSE');
-    PERFORM add_column_if_not_exists('store_config', 'delivery_gratis_threshold', 'NUMERIC(10,2) DEFAULT 0');
-    PERFORM add_column_if_not_exists('store_config', 'costo_delivery_km', 'NUMERIC(10,2) DEFAULT 0');
-    PERFORM add_column_if_not_exists('store_config', 'envio_nacional', 'BOOLEAN DEFAULT FALSE');
-    PERFORM add_column_if_not_exists('store_config', 'costo_envio_nacional', 'NUMERIC(10,2) DEFAULT 0');
-    PERFORM add_column_if_not_exists('store_config', 'stock_alert_threshold', 'INTEGER DEFAULT 5');
-EXCEPTION WHEN OTHERS THEN
-    -- Si la función helper no existe, ignorar (la tabla se crea limpia arriba)
-    NULL;
-END $$;
-
 -- Función helper para agregar columnas de forma idempotente
 CREATE OR REPLACE FUNCTION add_column_if_not_exists(
     p_table TEXT, p_column TEXT, p_type TEXT
-) RETURNS VOID AS $$
+) RETURNS VOID AS $func$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
@@ -197,10 +147,10 @@ BEGIN
         EXECUTE format('ALTER TABLE %I ADD COLUMN %I %s', p_table, p_column, p_type);
     END IF;
 END;
-$$ LANGUAGE plpgsql;
+$func$ LANGUAGE plpgsql;
 
--- Ejecutar migraciones de columnas nuevas
-DO $$
+-- Ejecutar migraciones de columnas nuevas (la función ya existe arriba)
+DO $block$
 BEGIN
     PERFORM add_column_if_not_exists('store_config', 'site_url', 'TEXT DEFAULT ''''');
     PERFORM add_column_if_not_exists('store_config', 'hero_effect', 'VARCHAR(20) DEFAULT ''fade''');
@@ -221,7 +171,6 @@ BEGIN
     PERFORM add_column_if_not_exists('store_config', 'seo_home_keywords', 'TEXT DEFAULT ''''');
     PERFORM add_column_if_not_exists('store_config', 'jsonld_type', 'VARCHAR(50) DEFAULT ''Restaurant''');
     PERFORM add_column_if_not_exists('store_config', 'jsonld_priceRange', 'VARCHAR(10) DEFAULT ''$$''');
-    PERFORM add_column_if_not_exists('store_config', 'jsonld_servesCuisine', 'TEXT[] DEFAULT ARRAY[''Comida Rápida'', ''Hamburguesas'', ''Pizzas'']::TEXT[]');
     PERFORM add_column_if_not_exists('store_config', 'font_display', 'TEXT DEFAULT ''Fredoka''');
     PERFORM add_column_if_not_exists('store_config', 'sedes', 'JSONB DEFAULT ''[]''::JSONB');
     PERFORM add_column_if_not_exists('store_config', 'sede_activa_id', 'TEXT DEFAULT ''''');
@@ -239,7 +188,18 @@ BEGIN
     PERFORM add_column_if_not_exists('store_config', 'envio_nacional', 'BOOLEAN DEFAULT FALSE');
     PERFORM add_column_if_not_exists('store_config', 'costo_envio_nacional', 'NUMERIC(10,2) DEFAULT 0');
     PERFORM add_column_if_not_exists('store_config', 'stock_alert_threshold', 'INTEGER DEFAULT 5');
-END $$;
+END $block$;
+
+-- Columna con ARRAY default (manejar por separado por la sintaxis ARRAY)
+DO $block$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'store_config' AND column_name = 'jsonld_servescuisine'
+    ) THEN
+        EXECUTE 'ALTER TABLE store_config ADD COLUMN jsonld_servesCuisine TEXT[] DEFAULT ARRAY[$$Comida Rápida$$, $$Hamburguesas$$, $$Pizzas$$]::TEXT[]';
+    END IF;
+END $block$;
 
 -- ----------------------------------------------------------------------------
 -- 2. usuarios_clientes
