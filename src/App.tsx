@@ -6,6 +6,7 @@ import { Checkout } from './pages/Checkout';
 import Admin from './pages/admin/index';
 import { UserProfile } from './pages/UserProfile';
 import { Navigation } from './components/Navigation';
+import { BottomNav } from './components/BottomNav';
 import { FoodItem } from './types/store';
 import { PushNotificationModal } from './components/PushNotificationModal';
 import { X, ShoppingBag } from 'lucide-react';
@@ -108,7 +109,7 @@ function AppContent() {
         <FreeDeliveryBar currentTotal={cart.reduce((sum, item) => sum + item.item.precio_usd * item.quantity, 0)} threshold={config.delivery_gratis_threshold || 0} themeColor={config.theme_color || '#FF2D95'} />
 
         {/* ═══ MAIN CONTENT AREA ═══ */}
-        <main className="flex-1 overflow-y-auto w-full">
+        <main className="flex-1 overflow-y-auto w-full pb-14 lg:pb-0">
           {tab === 'home' && (
             <Home
               setTab={setTab}
@@ -166,6 +167,9 @@ function AppContent() {
             <UserProfile setTab={setTab} deferredPrompt={deferredPrompt} onInstallClick={handleInstallClick} />
           )}
         </main>
+
+        {/* ═══ MOBILE BOTTOM NAV ═══ */}
+        <BottomNav currentTab={tab} setTab={setTab} />
 
         {/* ═══ PRODUCT MODAL ═══ */}
         <ProductModal
