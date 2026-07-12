@@ -17,7 +17,7 @@ import { FreeDeliveryBar } from './components/FreeDeliveryBar';
 import { ProductModal } from './components/ProductModal';
 
 function AppContent() {
-  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading } = useApp();
+  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated } = useApp();
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);

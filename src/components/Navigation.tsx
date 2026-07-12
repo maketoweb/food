@@ -5,7 +5,6 @@ import {
   Menu,
   X,
   MapPin,
-  ShieldAlert,
   User,
   MessageCircle,
   Tag,
@@ -27,7 +26,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   drawerOpen,
   setDrawerOpen,
 }) => {
-  const { cart, config, isAdminAuthenticated, logoutAdmin, currentUser } = useApp();
+  const { cart, config, currentUser } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const logoUrl = config.logo_url || '';
 
