@@ -15,7 +15,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
   const tabs = [
     { id: 'home' as const, label: 'Inicio', icon: Home },
     { id: 'catalog' as const, label: 'Menú', icon: UtensilsCrossed },
-    { id: 'cart' as const, label: 'Carrito', icon: ShoppingCart, badge: cartCount },
+    { id: 'checkout' as const, label: 'Carrito', icon: ShoppingCart, badge: cartCount },
     { id: 'profile' as const, label: 'Cuenta', icon: User },
   ];
 
@@ -23,7 +23,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-200 safe-area-bottom">
       <div className="flex items-center justify-around h-14 px-2">
         {tabs.map((tabItem) => {
-          const isActive = currentTab === tabItem.id;
+          const isActive = tabItem.id === 'checkout' 
+            ? currentTab === 'cart' || currentTab === 'checkout'
+            : currentTab === tabItem.id;
           return (
             <button
               key={tabItem.id}
