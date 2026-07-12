@@ -67,6 +67,18 @@ export const Home: React.FC<HomeProps> = ({
   const [heroHovered, setHeroHovered] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
+  // Hero mobile carousel state
+  const [heroSlide, setHeroSlide] = useState(0);
+  const heroBanners = config.banners.slice(0, 3);
+
+  useEffect(() => {
+    if (heroBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setHeroSlide(prev => (prev + 1) % heroBanners.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [heroBanners.length]);
+
   // Promo carousel state
   const promoCarouselRef = useRef<HTMLDivElement>(null);
 
@@ -137,61 +149,82 @@ export const Home: React.FC<HomeProps> = ({
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 1: HERO BANNER — Mobile card layout / Desktop fullscreen
+          SECTION 1: HERO BANNER — Mobile carousel / Desktop fullscreen
           ═══════════════════════════════════════════════════════════ */}
       
-      {/* MOBILE: Card-style layout */}
-      <section className="md:hidden w-full bg-zinc-50 px-4 pt-4 pb-2">
-        <div className="flex flex-col gap-4">
-          {/* Text content */}
-          <div className={`${heroTextClass}`}>
-            <h1 className="text-2xl font-black text-zinc-900 leading-[1.15] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-              {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
-            </h1>
-            <p className="text-zinc-500 text-xs mt-2 leading-relaxed">
-              {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
-            </p>
-          </div>
+      {/* MOBILE: Full-width carousel */}
+      <section className="md:hidden w-full bg-zinc-50">
+        {/* Text content */}
+        <div className={`px-4 pt-4 pb-3 ${heroTextClass}`}>
+          <h1 className="text-[22px] font-black text-zinc-900 leading-[1.15] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+            {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
+          </h1>
+          <p className="text-zinc-500 text-[11px] mt-1.5 leading-relaxed">
+            {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
+          </p>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTab('catalog')}
-              className="flex-1 bg-zinc-900 text-white font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-zinc-800 transition-all cursor-pointer active:scale-[0.98]"
-            >
-              {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
-            </button>
-            <button
-              onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
-              className="flex-1 bg-white text-zinc-700 font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 border border-zinc-200 hover:bg-zinc-50 transition-all cursor-pointer active:scale-[0.98]"
-            >
-              Ver Menú
-            </button>
-          </div>
-
-          {/* Image card */}
-          <div 
-            ref={heroRef}
-            className="relative w-full h-[200px] rounded-2xl overflow-hidden shadow-sm"
-            onMouseEnter={() => setHeroHovered(true)}
-            onMouseLeave={() => setHeroHovered(false)}
-            onTouchStart={() => setHeroHovered(true)}
-            onTouchEnd={() => setTimeout(() => setHeroHovered(false), 2000)}
+        {/* Buttons */}
+        <div className="flex gap-2 px-4 pb-3">
+          <button
+            onClick={() => setTab('catalog')}
+            className="flex-1 bg-zinc-900 text-white font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-zinc-800 transition-all cursor-pointer active:scale-[0.98]"
           >
-            {config.banners.length > 0 ? (
-              <img
-                src={config.banners[0]}
-                alt=""
-                className={`w-full h-full object-cover transition-transform duration-700 ${
-                  heroHovered ? 'scale-105' : 'scale-100'
-                }`}
-                referrerPolicy="no-referrer"
-                loading="eager"
-              />
-            ) : (
-              <div className="w-full h-full bg-zinc-200" />
-            )}
-          </div>
+            {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
+          </button>
+          <button
+            onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
+            className="flex-1 bg-white text-zinc-700 font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 border border-zinc-200 hover:bg-zinc-50 transition-all cursor-pointer active:scale-[0.98]"
+          >
+            Ver Menú
+          </button>
+        </div>
+
+        {/* Carousel - full width */}
+        <div 
+          ref={heroRef}
+          className="relative w-full h-[240px] overflow-hidden"
+          onMouseEnter={() => setHeroHovered(true)}
+          onMouseLeave={() => setHeroHovered(false)}
+          onTouchStart={() => setHeroHovered(true)}
+          onTouchEnd={() => setTimeout(() => setHeroHovered(false), 2000)}
+        >
+          {heroBanners.length > 0 ? (
+            <div 
+              className="flex h-full transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${heroSlide * 100}%)` }}
+            >
+              {heroBanners.map((banner, idx) => (
+                <img
+                  key={idx}
+                  src={banner}
+                  alt=""
+                  className="w-full h-full object-cover shrink-0"
+                  referrerPolicy="no-referrer"
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full h-full bg-zinc-200" />
+          )}
+
+          {/* Dots indicator */}
+          {heroBanners.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+              {heroBanners.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setHeroSlide(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    idx === heroSlide 
+                      ? 'w-5 bg-white shadow-sm' 
+                      : 'w-1.5 bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -1058,8 +1058,8 @@ const DEFAULT_CONFIG: StoreConfig = {
   coordenadas_tienda: { lat: 10.198300, lng: -68.004400 },
   banners: [
     'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=1200',
-    'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80&w=1200',
-    'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=1200'
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200',
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=1200'
   ],
   zelle_enabled: true,
   zelle_data: 'pagos@burgerpop.com.ve',
