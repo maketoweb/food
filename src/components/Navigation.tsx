@@ -31,6 +31,9 @@ export const Navigation: React.FC<NavigationProps> = ({
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const logoUrl = config.logo_url || '';
 
+  // Hide mobile header on catalog page for native app feel
+  const hideMobileHeader = currentTab === 'catalog';
+
   const getWhatsAppPhone = () => {
     const active = config.sedes?.filter((s) => s.activa);
     if (active && active.length > 0) {
@@ -145,8 +148,9 @@ export const Navigation: React.FC<NavigationProps> = ({
       </header>
 
       {/* ═══════════════════════════════════════════════════════════
-          MOBILE HEADER — Hamburger + Logo | Cart
+          MOBILE HEADER — Hidden on catalog for native app feel
           ═══════════════════════════════════════════════════════════ */}
+      {!hideMobileHeader && (
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-zinc-200 h-14 flex items-center justify-between px-4">
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-3">
@@ -168,10 +172,10 @@ export const Navigation: React.FC<NavigationProps> = ({
               <img
                 src={logoUrl}
                 alt={config.site_nombre}
-                className="w-8 h-8 rounded-full object-cover border border-zinc-200"
+                className="h-9 w-auto object-contain"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-black font-display">
+              <div className="w-9 h-9 bg-zinc-900 text-white flex items-center justify-center text-sm font-black font-display">
                 {(config.site_nombre || 'F').charAt(0)}
               </div>
             )}
@@ -221,6 +225,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           </button>
         </div>
       </header>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════
           MOBILE DRAWER PANEL — Slide-in side menu
@@ -241,9 +246,9 @@ export const Navigation: React.FC<NavigationProps> = ({
           <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
             <div className="flex items-center gap-3">
               {logoUrl ? (
-                <img src={logoUrl} alt={config.site_nombre} className="w-9 h-9 rounded-full object-cover" />
+                <img src={logoUrl} alt={config.site_nombre} className="h-10 w-auto object-contain" />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-black font-display">
+                <div className="w-10 h-10 bg-zinc-900 text-white flex items-center justify-center text-sm font-black font-display">
                   {(config.site_nombre || 'F').charAt(0)}
                 </div>
               )}

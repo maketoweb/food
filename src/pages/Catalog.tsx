@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import { FoodItem } from '../types/store';
-import { Search, X } from 'lucide-react';
+import { Search, X, ChevronLeft, Menu } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { ProductCard } from '../components/ProductCard';
 
@@ -12,11 +12,13 @@ interface CatalogProps {
   passedSearchTerm?: string;
   clearPassedSearchTerm?: () => void;
   resetGlobalFilters: () => void;
+  setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
+  onOpenDrawer?: () => void;
 }
 
 export const Catalog: React.FC<CatalogProps> = ({
   selectedCategory, setSelectedCategory,
-  onViewProductDetails, passedSearchTerm, clearPassedSearchTerm, resetGlobalFilters
+  onViewProductDetails, passedSearchTerm, clearPassedSearchTerm, resetGlobalFilters, setTab, onOpenDrawer
 }) => {
   const { foodItems, config, addToCart } = useApp();
   const themeColor = config.theme_color || '#E31837';
@@ -49,7 +51,29 @@ export const Catalog: React.FC<CatalogProps> = ({
     <div className="flex flex-col gap-5 pb-24 max-w-7xl mx-auto">
       <SEOHead type="catalog" />
 
-      <div className="flex items-center justify-between">
+      {/* Mobile back button */}
+      <div className="lg:hidden flex items-center gap-3 pt-1">
+        <button
+          onClick={() => setTab('home')}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+        >
+          <ChevronLeft size={18} className="text-zinc-700" />
+        </button>
+        <h2 className="text-lg font-bold text-zinc-900 flex-1">
+          {selectedCategory || 'Menú'}
+        </h2>
+        {onOpenDrawer && (
+          <button
+            onClick={onOpenDrawer}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+          >
+            <Menu size={18} className="text-zinc-700" />
+          </button>
+        )}
+      </div>
+
+      {/* Desktop header */}
+      <div className="hidden lg:flex items-center justify-between">
         <h2 className="text-lg font-bold text-zinc-900">
           {selectedCategory || 'Menú'}
         </h2>

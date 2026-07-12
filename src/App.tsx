@@ -101,8 +101,8 @@ function AppContent() {
           setDrawerOpen={setDrawerOpen}
         />
 
-        {/* Offset for fixed header */}
-        <div className="h-14 lg:h-16" />
+        {/* Offset for fixed header - hidden on catalog mobile */}
+        <div className={tab === 'catalog' ? 'lg:h-16' : 'h-14 lg:h-16'} />
 
         {/* FREE DELIVERY PROGRESS BAR */}
         <FreeDeliveryBar currentTotal={cart.reduce((sum, item) => sum + item.item.precio_usd * item.quantity, 0)} threshold={config.delivery_gratis_threshold || 0} themeColor={config.theme_color || '#FF2D95'} />
@@ -130,6 +130,8 @@ function AppContent() {
               passedSearchTerm={globalSearch}
               clearPassedSearchTerm={() => setGlobalSearch('')}
               resetGlobalFilters={resetAllFilters}
+              setTab={setTab}
+              onOpenDrawer={() => setDrawerOpen(true)}
             />
           )}
 

@@ -228,31 +228,37 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </section>
 
-      {/* DESKTOP: Fullscreen layout */}
+      {/* DESKTOP: Fullscreen carousel */}
       <section
         ref={heroRef}
         className={`hidden md:block relative w-full ${heroHeightClass} overflow-hidden bg-zinc-900`}
         onMouseEnter={() => setHeroHovered(true)}
         onMouseLeave={() => setHeroHovered(false)}
       >
-        {/* Background Image with zoom effect */}
-        {config.banners.length > 0 ? (
-          <img
-            src={config.banners[0]}
-            alt=""
-            className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
-              heroHovered ? 'scale-110' : 'scale-100'
-            }`}
-            referrerPolicy="no-referrer"
-            loading="eager"
-          />
+        {/* Carousel images */}
+        {heroBanners.length > 0 ? (
+          <div 
+            className="absolute inset-0 flex h-full transition-transform duration-700 ease-out"
+            style={{ transform: `translateX(-${heroSlide * 100}%)` }}
+          >
+            {heroBanners.map((banner, idx) => (
+              <img
+                key={idx}
+                src={banner}
+                alt=""
+                className="w-full h-full object-cover shrink-0"
+                referrerPolicy="no-referrer"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+              />
+            ))}
+          </div>
         ) : (
           <div className="absolute inset-0 bg-zinc-800" />
         )}
 
         {/* Dynamic overlay opacity */}
         <div
-          className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"
           style={{ opacity: (config.hero_overlay_opacity ?? 100) / 100 }}
         />
 
@@ -284,6 +290,23 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Dots indicator */}
+        {heroBanners.length > 1 && (
+          <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2">
+            {heroBanners.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setHeroSlide(idx)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  idx === heroSlide 
+                    ? 'w-8 bg-white shadow-sm' 
+                    : 'w-2 bg-white/50 hover:bg-white/70'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
