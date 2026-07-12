@@ -48,24 +48,24 @@ export const Catalog: React.FC<CatalogProps> = ({
   }, [foodItems, searchQuery, selectedCategory]);
 
   return (
-    <div className="flex flex-col gap-5 pb-24 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-4 pb-24 max-w-7xl mx-auto px-4">
       <SEOHead type="catalog" />
 
       {/* Mobile back button */}
-      <div className="lg:hidden flex items-center gap-3 pt-1">
+      <div className="lg:hidden flex items-center gap-2 pt-1">
         <button
           onClick={() => setTab('home')}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
         >
           <ChevronLeft size={18} className="text-zinc-700" />
         </button>
-        <h2 className="text-lg font-bold text-zinc-900 flex-1">
+        <h2 className="text-lg font-bold text-zinc-900 flex-1 text-center pr-8">
           {selectedCategory || 'Menú'}
         </h2>
         {onOpenDrawer && (
           <button
             onClick={onOpenDrawer}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
           >
             <Menu size={18} className="text-zinc-700" />
           </button>
@@ -95,21 +95,23 @@ export const Catalog: React.FC<CatalogProps> = ({
       </div>
 
       {!selectedCategory && (
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
-          <button onClick={() => resetGlobalFilters()}
-            className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
-            style={{ backgroundColor: themeColor }}
-          >
-            Todos
-          </button>
-          {(config.categories || []).slice(0, 10).map(cat => (
-            <button key={cat} onClick={() => setSelectedCategory(cat)}
-              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold border bg-white transition-colors hover:shadow-sm"
-              style={{ borderColor: themeColor + '30', color: themeColor }}
+        <div className="-mx-4 px-4 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 w-max">
+            <button onClick={() => resetGlobalFilters()}
+              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
+              style={{ backgroundColor: themeColor }}
             >
-              {cat}
+              Todos
             </button>
-          ))}
+            {(config.categories || []).slice(0, 10).map(cat => (
+              <button key={cat} onClick={() => setSelectedCategory(cat)}
+                className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold border bg-white transition-colors hover:shadow-sm"
+                style={{ borderColor: themeColor + '30', color: themeColor }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -133,7 +135,7 @@ export const Catalog: React.FC<CatalogProps> = ({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {filtered.map(item => (
             <ProductCard key={item.id} item={item} config={config}
               onViewProductDetails={onViewProductDetails}
