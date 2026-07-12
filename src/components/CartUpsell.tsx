@@ -65,17 +65,17 @@ export const CartUpsell: React.FC<CartUpsellProps> = ({ onAddToCart }) => {
 
   return (
     <div className="p-3 border border-zinc-200 rounded-lg bg-amber-50/50">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-2">¿Algo más?</p>
+      <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700 mb-2">¿Algo más?</p>
       {suggestions.map((sug, si) => (
         <div key={si} className="mb-2 last:mb-0">
-          <p className="text-[10px] text-amber-600 mb-1.5">{sug.message}</p>
+          <p className="text-[11px] text-amber-600 mb-1.5">{sug.message}</p>
           <div className="flex gap-2">
             {sug.items.map(item => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => onAddToCart(item)}
-                className="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg text-[10px] font-semibold text-zinc-800 hover:border-amber-400 transition-all cursor-pointer flex-1"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg text-[11px] font-semibold text-zinc-800 hover:border-amber-400 transition-all cursor-pointer flex-1"
               >
                 <div className="w-8 h-8 rounded-md overflow-hidden bg-zinc-100 shrink-0">
                   <img src={item.imagen_urls[0]} alt={item.nombre} className="w-full h-full object-cover" />

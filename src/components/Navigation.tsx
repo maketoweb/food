@@ -95,7 +95,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </nav>
 
-          {/* Right: Sign In + Cart + Admin */}
+          {/* Right: Sign In + Cart */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -118,31 +118,6 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </span>
               )}
             </button>
-
-            {/* Admin acceso discreto - solo si no está autenticado */}
-            {!isAdminAuthenticated && (
-              <button
-                type="button"
-                onClick={onTriggerAdminLogin}
-                className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer opacity-40 hover:opacity-100"
-                title="Panel de administración"
-                aria-label="Acceso administrativo"
-              >
-                <ShieldAlert size={18} className="text-zinc-500" strokeWidth={1.5} />
-              </button>
-            )}
-            {isAdminAuthenticated && (
-              <button
-                type="button"
-                onClick={() => setTab('admin')}
-                className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer relative"
-                title="Ir al panel admin"
-                aria-label="Panel de administración"
-              >
-                <ShieldAlert size={18} className="text-emerald-600" strokeWidth={1.5} />
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500" />
-              </button>
-            )}
           </div>
         </div>
       </header>
@@ -185,31 +160,8 @@ export const Navigation: React.FC<NavigationProps> = ({
           </button>
         </div>
 
-        {/* Right: Cart + Admin */}
+        {/* Right: Cart */}
         <div className="flex items-center gap-1">
-          {!isAdminAuthenticated && (
-            <button
-              type="button"
-              onClick={onTriggerAdminLogin}
-              className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer opacity-30 hover:opacity-80"
-              title="Panel de administración"
-              aria-label="Acceso administrativo"
-            >
-              <ShieldAlert size={18} className="text-zinc-500" strokeWidth={1.5} />
-            </button>
-          )}
-          {isAdminAuthenticated && (
-            <button
-              type="button"
-              onClick={() => setTab('admin')}
-              className="p-2 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer relative"
-              title="Ir al panel admin"
-              aria-label="Panel de administración"
-            >
-              <ShieldAlert size={18} className="text-emerald-600" strokeWidth={1.5} />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            </button>
-          )}
           <button
             type="button"
             onClick={() => setTab('checkout')}
@@ -311,33 +263,9 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
           </div>
 
-          {/* Admin login */}
+          {/* Version */}
           <div className="p-3 border-t border-zinc-100">
-            {isAdminAuthenticated ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 px-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[11px] text-zinc-400 font-mono">Sesión Admin Activa</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { logoutAdmin(); setDrawerOpen(false); setTab('home'); }}
-                  className="w-full bg-red-50 hover:bg-red-100 text-red-600 text-xs py-2 rounded-lg font-semibold transition-all cursor-pointer"
-                >
-                  Cerrar Sesión Admin
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setDrawerOpen(false); onTriggerAdminLogin(); }}
-                className="w-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 text-xs py-2 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <ShieldAlert size={14} className="text-zinc-400" />
-                Acceso Administrativo
-              </button>
-            )}
-            <div className="text-[9px] text-zinc-300 font-mono text-center mt-2">
+            <div className="text-[9px] text-zinc-300 font-mono text-center">
               {config.site_nombre || 'FoodPop'} v2.0.0
             </div>
           </div>

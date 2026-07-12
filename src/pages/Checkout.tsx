@@ -109,8 +109,8 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       title="Copiar"
     >
       {copiedField === fieldId
-        ? <Check size={12} className="text-emerald-500" />
-        : <Copy size={12} className="text-zinc-400 hover:text-zinc-600" />
+        ? <Check size={14} className="text-emerald-500" />
+        : <Copy size={14} className="text-zinc-400 hover:text-zinc-600" />
       }
     </button>
   );
@@ -365,8 +365,8 @@ ${productosDetailText}
           <ArrowLeft size={18} className="text-zinc-600" />
         </button>
         <div className="flex-1">
-          <h1 className="text-sm font-bold text-zinc-900">Checkout</h1>
-          <p className="text-[10px] text-zinc-400">Paso {currentStep} de 3</p>
+          <h1 className="text-base font-bold text-zinc-900">Checkout</h1>
+          <p className="text-[11px] text-zinc-400">Paso {currentStep} de 3</p>
         </div>
       </div>
 
@@ -392,7 +392,7 @@ ${productosDetailText}
                 >
                   {stepCompleted(step) ? <Check size={14} /> : icon}
                 </div>
-                <span className={`text-[10px] font-bold ${stepActive(step) ? 'text-zinc-900' : 'text-zinc-400'}`}>{label}</span>
+                <span className={`text-[11px] font-bold ${stepActive(step) ? 'text-zinc-900' : 'text-zinc-400'}`}>{label}</span>
               </div>
               {idx < 2 && (
                 <div className="flex-1 h-0.5 mx-2 rounded-full mt-[-12px]" style={{ backgroundColor: stepCompleted(step + 1) ? '#10b981' : stepActive(step + 1) ? themeColor : '#e4e4e7' }} />
@@ -422,8 +422,8 @@ ${productosDetailText}
                   {/* Cart summary */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-800">Tu Carrito ({cart.reduce((s, ci) => s + ci.quantity, 0)} items)</h3>
-                      <button onClick={() => setTab('catalog')} className="text-[10px] font-bold underline" style={{ color: themeColor }}>Editar</button>
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800">Tu Carrito ({cart.reduce((s, ci) => s + ci.quantity, 0)} items)</h3>
+                      <button onClick={() => setTab('catalog')} className="text-[11px] font-bold underline" style={{ color: themeColor }}>Editar</button>
                     </div>
                     <div className="flex flex-col gap-2.5 max-h-48 overflow-y-auto pr-1">
                       {cart.map(item => {
@@ -435,11 +435,11 @@ ${productosDetailText}
                               <img src={item.item.imagen_urls[0]} alt={item.item.nombre} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-[11px] font-bold text-zinc-800 truncate">{item.item.nombre}</h4>
+                              <h4 className="text-xs font-bold text-zinc-800 truncate">{item.item.nombre}</h4>
                               {item.selected_options && item.selected_options.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-0.5">
                                   {item.selected_options.map((opt, idx) => (
-                                    <span key={idx} className="text-[8px] px-1 py-0.5 rounded-full bg-violet-50 text-violet-600 font-semibold border border-violet-100">
+                                    <span key={idx} className="text-[9px] px-1 py-0.5 rounded-full bg-violet-50 text-violet-600 font-semibold border border-violet-100">
                                       {opt.option_name}{opt.precio_usd > 0 ? ` +$${opt.precio_usd.toFixed(2)}` : ''}
                                     </span>
                                   ))}
@@ -447,10 +447,10 @@ ${productosDetailText}
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <div className="flex items-center border border-zinc-200 rounded-lg bg-white h-7">
-                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity - 1)} className="w-6 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-800 text-[10px] transition-all cursor-pointer">-</button>
-                                <span className="text-[10px] px-1.5 text-zinc-900 font-bold">{item.quantity}</span>
-                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity + 1)} className="w-6 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-800 text-[10px] transition-all cursor-pointer">+</button>
+                              <div className="flex items-center border border-zinc-200 rounded-lg bg-white h-8">
+                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity - 1)} className="w-7 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-800 text-xs transition-all cursor-pointer">-</button>
+                                <span className="text-xs px-1.5 text-zinc-900 font-bold">{item.quantity}</span>
+                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity + 1)} className="w-7 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-800 text-xs transition-all cursor-pointer">+</button>
                               </div>
                               <button onClick={() => removeFromCart(item.item.id)} className="text-zinc-400 hover:text-red-500 p-1 rounded transition-all cursor-pointer">
                                 <Trash2 size={12} />
@@ -464,27 +464,27 @@ ${productosDetailText}
 
                   {/* Contact form */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-800 mb-3">Datos de Contacto</h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Datos de Contacto</h3>
                     {currentUser ? (
                       <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
                         <div className="w-9 h-9 text-white rounded-full flex items-center justify-center font-bold text-xs" style={{ backgroundColor: themeColor }}>{currentUser.nombre[0]}</div>
                         <div>
                           <p className="text-xs font-bold text-zinc-900">{currentUser.nombre}</p>
-                          <p className="text-[10px] text-zinc-500">{currentUser.email || currentUser.telefono}</p>
+                          <p className="text-[11px] text-zinc-500">{currentUser.email || currentUser.telefono}</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
+                          <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
                           <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-zinc-500 mb-1 block">Nombre (opcional)</label>
+                          <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Nombre (opcional)</label>
                           <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-zinc-500 mb-1 block">Correo (opcional)</label>
+                          <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Correo (opcional)</label>
                           <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" />
                         </div>
                       </div>
@@ -493,12 +493,12 @@ ${productosDetailText}
 
                   {/* Coupon */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                    <label className="text-[10px] font-bold uppercase text-zinc-500 mb-2 block">Cupón</label>
+                    <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Cupón</label>
                     <div className="flex gap-2">
                       <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="CÓDIGO" className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 font-bold uppercase" />
                       <button onClick={handleApplyCoupon} className="text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-colors" style={{ backgroundColor: themeColor }}>Aplicar</button>
                     </div>
-                    {couponError && <span className="text-[10px] text-red-500 mt-1 block">{couponError}</span>}
+                    {couponError && <span className="text-[11px] text-red-500 mt-1 block">{couponError}</span>}
                     {appliedCoupon && (
                       <p className="text-xs font-bold mt-2" style={{ color: themeColor }}>
                         ✓ "{appliedCoupon.code}" aplicado: -{appliedCoupon.discount_percent}%
@@ -514,7 +514,7 @@ ${productosDetailText}
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Entrega</h3>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Entrega</h3>
 
                 <div className="flex gap-2 mb-4">
                   {config.recogida_en_local && (
@@ -582,7 +582,7 @@ ${productosDetailText}
                 {/* Multiple sedes */}
                 {hasMultipleSedes && (
                   <div className="mt-4">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
+                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
                     <div className="flex flex-wrap gap-2">
                       {activeSedes.map(sede => (
                         <button key={sede.id} onClick={() => setSelectedSedeId(sede.id)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${
@@ -606,7 +606,7 @@ ${productosDetailText}
 
               {/* Notes */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mt-4">
-                <label className="text-[10px] font-bold uppercase text-zinc-500 mb-2 block">Notas del pedido (opcional)</label>
+                <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Notas del pedido (opcional)</label>
                 <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none" rows={2} />
               </div>
             </motion.div>
@@ -617,7 +617,7 @@ ${productosDetailText}
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {/* Order summary */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-800 mb-3">Resumen del Pedido</h3>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Resumen del Pedido</h3>
                 <div className="space-y-2">
                   {cart.map(item => {
                     const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
@@ -657,7 +657,7 @@ ${productosDetailText}
 
               {/* Payment methods */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Pago</h3>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Pago</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { key: 'Pago Móvil', label: 'Pago Móvil Bs', icon: 'Bs', enabled: config.pagomovil_enabled },
@@ -676,26 +676,26 @@ ${productosDetailText}
                 </div>
 
                 {/* Payment details */}
-                <div className="mt-3 p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-[10px] text-zinc-700 leading-relaxed font-mono">
+                <div className="mt-3 p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-[11px] text-zinc-700 leading-relaxed font-mono">
                   {selectedPayment === 'Pago Móvil' && (
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Banco / Titular</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Banco / Titular</span>
                           <span className="text-zinc-800 font-bold">{(config.pagomovil_data || 'Banesco (0134)').split('-')[0]?.trim()}</span>
                         </div>
                         <CopyButton text={config.pagomovil_data || 'Banesco (0134)'} fieldId="pm-data" />
                       </div>
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Teléfono</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Teléfono</span>
                           <span className="text-zinc-800 font-bold">{(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'}</span>
                         </div>
                         <CopyButton text={(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'} fieldId="pm-phone" />
                       </div>
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Cédula / RIF</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Cédula / RIF</span>
                           <span className="text-zinc-800 font-bold">{(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'}</span>
                         </div>
                         <CopyButton text={(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'} fieldId="pm-ci" />
@@ -707,14 +707,14 @@ ${productosDetailText}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Correo Zelle</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Correo Zelle</span>
                           <span className="text-zinc-800 font-bold">{config.zelle_data || 'pagos@email.com'}</span>
                         </div>
                         <CopyButton text={config.zelle_data || 'pagos@email.com'} fieldId="zelle-email" />
                       </div>
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Monto a enviar</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Monto a enviar</span>
                           <span className="font-black" style={{ color: themeColor }}>${totalUsd.toFixed(2)} USD</span>
                         </div>
                         <CopyButton text={`$${totalUsd.toFixed(2)}`} fieldId="zelle-amount" />
@@ -731,14 +731,14 @@ ${productosDetailText}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Datos Bancarios</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Datos Bancarios</span>
                           <span className="text-zinc-800 font-bold">{config.transferencia_data || `Banesco - ${config.site_nombre}`}</span>
                         </div>
                         <CopyButton text={config.transferencia_data || `Banesco - ${config.site_nombre}`} fieldId="transfer-data" />
                       </div>
                       <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
                         <div>
-                          <span className="text-[8px] text-zinc-400 uppercase block">Monto</span>
+                          <span className="text-[9px] text-zinc-400 uppercase block">Monto</span>
                           <span className="font-black" style={{ color: themeColor }}>${totalUsd.toFixed(2)} USD</span>
                         </div>
                         <CopyButton text={`$${totalUsd.toFixed(2)}`} fieldId="transfer-amount" />
@@ -746,13 +746,13 @@ ${productosDetailText}
                     </div>
                   )}
                   {selectedPayment === 'Otro' && (
-                    <textarea value={customPaymentNote} onChange={(e) => setCustomPaymentNote(e.target.value)} placeholder="Describe cómo vas a pagar..." className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-[10px] outline-none focus:border-zinc-950 resize-none" rows={3} />
+                    <textarea value={customPaymentNote} onChange={(e) => setCustomPaymentNote(e.target.value)} placeholder="Describe cómo vas a pagar..." className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-zinc-950 resize-none" rows={3} />
                   )}
                 </div>
               </div>
 
               {/* CartUpsell */}
-              <CartUpsell onAddToCart={(item: FoodItem) => {}} />
+              <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
             </motion.div>
           )}
         </AnimatePresence>

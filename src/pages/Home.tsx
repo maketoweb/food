@@ -31,13 +31,15 @@ interface HomeProps {
   navigateToCatalog: (filters?: { category?: string }) => void;
   deferredPrompt?: any;
   onInstallClick?: () => void;
+  onAdminClick?: () => void;
+  isAdminAuthenticated?: boolean;
 }
 
 export const Home: React.FC<HomeProps> = ({
   setTab, setSelectedCategory,
   onViewProductDetails, globalSearch: _globalSearch, setGlobalSearch: _setGlobalSearch,
   navigateToCatalog: _navigateToCatalog,
-  deferredPrompt: _deferredPrompt, onInstallClick
+  deferredPrompt: _deferredPrompt, onInstallClick, onAdminClick, isAdminAuthenticated
 }) => {
   const { foodItems, config, cart, addToCart, getProductAverageRating, getProductReviews, promotions } = useApp();
   const themeColor = config.theme_color || '#E31837';
@@ -617,7 +619,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           SECTION 7: FOOTER (componente reutilizable)
           ═══════════════════════════════════════════════════════════ */}
-      <Footer config={config} onInstallClick={onInstallClick} />
+      <Footer config={config} onInstallClick={onInstallClick} onAdminClick={onAdminClick} isAdminAuthenticated={isAdminAuthenticated} />
 
       {/* ═══════════════════════════════════════════════════════════
           FLOATING CART BUTTON

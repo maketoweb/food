@@ -120,6 +120,8 @@ function AppContent() {
               navigateToCatalog={navigateToCatalog}
               deferredPrompt={deferredPrompt}
               onInstallClick={handleInstallClick}
+              onAdminClick={() => setIsAdminLoginOpen(true)}
+              isAdminAuthenticated={isAdminAuthenticated}
             />
           )}
 

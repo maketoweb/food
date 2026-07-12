@@ -1,14 +1,16 @@
 import React from 'react';
-import { Smartphone, MapPin, Instagram, Twitter, Facebook, MessageCircle, ChevronDown } from 'lucide-react';
+import { Smartphone, MapPin, Instagram, Twitter, Facebook, MessageCircle, ChevronDown, ShieldAlert } from 'lucide-react';
 import { FAQSection } from './FAQSection';
 import { StoreConfig } from '../types/store';
 
 interface FooterProps {
   config: StoreConfig;
   onInstallClick?: () => void;
+  onAdminClick?: () => void;
+  isAdminAuthenticated?: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = ({ config, onInstallClick }) => {
+export const Footer: React.FC<FooterProps> = ({ config, onInstallClick, onAdminClick, isAdminAuthenticated }) => {
   const themeColor = config.theme_color || '#E31837';
 
   const getWhatsAppPhone = () => {
@@ -184,7 +186,7 @@ export const Footer: React.FC<FooterProps> = ({ config, onInstallClick }) => {
         </div>
       </div>
 
-      {/* ═══ SECCIÓN 5: Copyright ═══ */}
+      {/* ═══ SECCIÓN 5: Copyright + Admin ═══ */}
       <div className="border-t border-white/10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-2">
           <p className="text-[10px] text-white/30">
@@ -193,6 +195,16 @@ export const Footer: React.FC<FooterProps> = ({ config, onInstallClick }) => {
           <div className="flex items-center gap-4">
             <a href="#" className="text-[10px] text-white/30 hover:text-white/60 transition-colors">Privacidad</a>
             <a href="#" className="text-[10px] text-white/30 hover:text-white/60 transition-colors">Términos</a>
+            {onAdminClick && (
+              <button
+                onClick={onAdminClick}
+                className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors cursor-pointer"
+                title="Acceso administrativo"
+              >
+                <ShieldAlert size={10} />
+                {isAdminAuthenticated ? 'Admin ✓' : 'Admin'}
+              </button>
+            )}
           </div>
         </div>
       </div>
