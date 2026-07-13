@@ -14,7 +14,7 @@ interface CheckoutProps {
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
-  const { cart, config, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon } = useApp();
+  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon } = useApp();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
