@@ -6,6 +6,7 @@ interface LeafletMapProps {
   onLocationSelected: (lat: number, lng: number, distance: number, cost: number, zoneName: string) => void;
   shopCoords: { lat: number; lng: number };
   config?: { delivery_gratis?: boolean; costo_delivery_km?: number; site_nombre?: string; delivery_zonas?: DeliveryZone[] };
+  initialUserCoords?: { lat: number; lng: number } | null;
 }
 
 // Zonas de Valencia predefinidas (fallback si no hay zonas configuradas)
@@ -57,7 +58,7 @@ export const calculateShippingCostSymbolic = (distanceKm: number, config?: Leafl
   return { cost, zone: 'Zona General Valencia' };
 };
 
-export const LeafletMap: React.FC<LeafletMapProps> = ({ onLocationSelected, shopCoords, config }) => {
+export const LeafletMap: React.FC<LeafletMapProps> = ({ onLocationSelected, shopCoords, config, initialUserCoords }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -163,8 +164,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({ onLocationSelected, shop
       `);
 
     // Add User delivery marker at custom location
-    const initialUserLat = shopCoords.lat + 0.012;
-    const initialUserLng = shopCoords.lng + 0.012;
+    const initialUserLat = initialUserCoords?.lat ?? shopCoords.lat + 0.012;
+    const initialUserLng = initialUserCoords?.lng ?? shopCoords.lng + 0.012;
     
     const userMarker = L.marker([initialUserLat, initialUserLng], { 
       icon: userIcon,
@@ -239,7 +240,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({ onLocationSelected, shop
         mapInstanceRef.current = null;
       }
     };
-  }, [mapLoaded, shopCoords]);
+  }, [mapLoaded, shopCoords, initialUserCoords?.lat, initialUserCoords?.lng]);
 
   return (
     <div className="flex flex-col gap-4 font-sans text-zinc-900">

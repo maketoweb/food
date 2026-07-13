@@ -14,7 +14,7 @@ interface CheckoutProps {
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
-  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon } = useApp();
+  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon, orders } = useApp();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -76,8 +76,46 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
     if (currentUser) {
       const savedMethod = localStorage.getItem('trv_checkout_method') as 'mapa' | 'recogida' | 'zonas' | null;
       if (savedMethod) setShippingMethod(savedMethod);
+
+      // Restaurar última dirección de entrega
+      const savedDelivery = localStorage.getItem('trv_last_delivery');
+      if (savedDelivery) {
+        try {
+          const parsed = JSON.parse(savedDelivery);
+          if (parsed.lat) setShippingLat(parsed.lat);
+          if (parsed.lng) setShippingLng(parsed.lng);
+          if (parsed.method) setShippingMethod(parsed.method);
+          if (parsed.zone) setShippingZone(parsed.zone);
+          if (parsed.distance !== undefined) setShippingDistance(parsed.distance);
+          if (parsed.cost !== undefined) setShippingCost(parsed.cost);
+          if (parsed.zoneIndex !== undefined && parsed.zoneIndex !== null) setSelectedZoneIndex(parsed.zoneIndex);
+          if (parsed.sedeId) setSelectedSedeId(parsed.sedeId);
+        } catch {}
+      } else if (orders.length > 0) {
+        // Fallback: usar la última orden del usuario
+        const lastOrder = orders.find(o =>
+          o.usuario_id === currentUser.id || o.cliente_telefono === currentUser.telefono
+        );
+        if (lastOrder) {
+          if (lastOrder.lat) setShippingLat(lastOrder.lat);
+          if (lastOrder.lng) setShippingLng(lastOrder.lng);
+          if (lastOrder.tipo_entrega === 'pickup') {
+            setShippingMethod('recogida');
+          } else if (config.entrega_por_zonas) {
+            setShippingMethod('zonas');
+          } else {
+            setShippingMethod('mapa');
+          }
+          if (lastOrder.direccion_envio) {
+            const zoneMatch = lastOrder.direccion_envio.match(/^(.+?)\s*\(Distancia:/);
+            if (zoneMatch) setShippingZone(zoneMatch[1]);
+          }
+          if (lastOrder.distancia_km) setShippingDistance(lastOrder.distancia_km);
+          if (lastOrder.costo_envio_usd) setShippingCost(lastOrder.costo_envio_usd);
+        }
+      }
     }
-  }, [currentUser?.id]);
+  }, [currentUser?.id, orders.length]);
 
   // Auto-skip Step 1 for logged-in users
   useEffect(() => {
@@ -306,6 +344,16 @@ ${productosDetailText}
       localStorage.setItem('trv_active_order_id', created.id);
       localStorage.setItem('trv_checkout_contact', JSON.stringify({ nombre: clientName, telefono: clientPhone, email: clientEmail }));
       localStorage.setItem('trv_checkout_method', shippingMethod);
+      localStorage.setItem('trv_last_delivery', JSON.stringify({
+        lat: shippingLat,
+        lng: shippingLng,
+        method: shippingMethod,
+        zone: shippingZone,
+        distance: shippingDistance,
+        cost: shippingCost,
+        zoneIndex: selectedZoneIndex,
+        sedeId: selectedSedeId
+      }));
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     } else {
       setValidationError('Error: No se pudo registrar el pedido. Verifique su conexión.');
@@ -562,7 +610,16 @@ ${productosDetailText}
 
                 {/* Delivery por mapa */}
                 {shippingMethod === 'mapa' && (
-                  <LeafletMap shopCoords={config.coordenadas_tienda} onLocationSelected={handleLocationPicked} config={config} />
+                  <LeafletMap
+                    shopCoords={config.coordenadas_tienda}
+                    onLocationSelected={handleLocationPicked}
+                    config={config}
+                    initialUserCoords={
+                      (shippingLat !== config.coordenadas_tienda.lat || shippingLng !== config.coordenadas_tienda.lng)
+                        ? { lat: shippingLat, lng: shippingLng }
+                        : null
+                    }
+                  />
                 )}
 
                 {/* Delivery por zonas */}
