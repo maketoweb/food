@@ -402,7 +402,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
   }, [orders]); // Depender del estado global para mayor velocidad
 
   return (
-    <div className="flex flex-col gap-5 pb-20 text-zinc-900 bg-zinc-50 min-h-screen overflow-x-hidden max-w-md mx-auto lg:max-w-lg xl:max-w-xl">
+    <div className="flex flex-col lg:flex-row gap-5 pb-20 lg:pb-6 text-zinc-900 bg-zinc-50 min-h-screen overflow-x-hidden max-w-full mx-auto px-0 lg:px-8 lg:pt-6">
       <SEOHead title={currentUser ? `Mi Cuenta - ${currentUser.nombre}` : "Mi Cuenta"} />
 
       {/* Pop-up de Instalación Automática (PWA) */}
@@ -711,76 +711,86 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
         </div>
       ) : (
         /* LOGGED IN VIEW */
-        <div className="flex flex-col gap-5 px-4">
-          {/* USER CHROME HEADER AND QUICK STATS */}
-          <div className="p-5 border border-zinc-200 rounded-2xl bg-white shadow-sm divide-y divide-zinc-200/80 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full text-white font-bold flex items-center justify-center text-lg shadow-inner" style={{ backgroundColor: themeColor }}>
-                  {currentUser.nombre.charAt(0).toUpperCase()}
+        <div className="flex flex-col lg:flex-row gap-5 px-4 lg:px-0 w-full">
+          {/* LEFT SIDEBAR (Desktop) / TOP CARD (Mobile) */}
+          <div className="w-full lg:w-[300px] shrink-0 flex flex-col gap-5">
+            {/* USER CHROME HEADER AND QUICK STATS */}
+            <div className="p-5 border border-zinc-200 rounded-2xl bg-white shadow-sm divide-y divide-zinc-200/80 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full text-white font-bold flex items-center justify-center text-lg shadow-inner" style={{ backgroundColor: themeColor }}>
+                    {currentUser.nombre.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-zinc-900 leading-tight text-sm">
+                      {currentUser.nombre}
+                    </h3>
+                    <p className="text-[12px] text-zinc-500 font-mono flex items-center gap-1 mt-0.5">
+                      <Mail size={11} className="text-zinc-400" /> {currentUser.email || currentUser.telefono}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-zinc-900 leading-tight text-sm">
-                    {currentUser.nombre}
-                  </h3>
-                  <p className="text-[12px] text-zinc-500 font-mono flex items-center gap-1 mt-0.5">
-                    <Mail size={11} className="text-zinc-400" /> {currentUser.email || currentUser.telefono}
-                  </p>
-                </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  logoutUser();
-                  setTab('home');
-                }}
-                className="bg-white hover:bg-red-50 text-red-500 hover:text-red-700 hover:border-red-300 transition-all border border-zinc-200 text-[11px] font-bold uppercase tracking-wider py-1.5 px-2.5 rounded-xl cursor-pointer flex items-center gap-1"
-              >
-                <LogOut size={11} /> Salir
-              </button>
-            </div>
-
-            {/* PWA Install Badge */}
-            {currentUser.is_pwa_installed && (
-              <div className="flex items-center gap-2 text-[11px] font-bold rounded-xl px-3 py-2" style={{ backgroundColor: themeColor + '12', color: themeColor }}>
-                <Smartphone size={13} /> App Instalada — Bonus x1.5 en puntos
-              </div>
-            )}
-
-            {/* SUB-TABS INTERIOR */}
-            <div className="pt-4 flex gap-2 bg-transparent overflow-x-auto no-scrollbar">
-              {[
-                { id: 'orders' as const, label: 'Pedidos', icon: Package, count: userOrders.length },
-                { id: 'notifications' as const, label: 'Mensajes', icon: MessageSquare, count: unreadCount },
-                { id: 'promos' as const, label: 'Ofertas', icon: Tag, count: activePromos.length },
-                { id: 'coupons' as const, label: 'Cupones', icon: Gift, count: availableCoupons.length },
-                { id: 'rewards' as const, label: 'Puntos', icon: Star, count: getUserLoyaltyPoints(currentUser.id) },
-                { id: 'profile' as const, label: 'Cuenta', icon: Edit2 },
-              ].map(tabItem => (
                 <button
-                  key={tabItem.id}
                   type="button"
-                  onClick={() => { setActiveSubTab(tabItem.id); setShowEditFields(tabItem.id === 'profile'); }}
-                  className={`flex-shrink-0 py-2 px-3 rounded-xl text-[11px] font-bold font-display tracking-wider text-center flex items-center justify-center gap-1 transition-all ${
-                    activeSubTab === tabItem.id ? 'text-white shadow-md' : 'text-zinc-500 bg-white border border-zinc-200 hover:bg-zinc-50'
-                  }`}
-                  style={activeSubTab === tabItem.id ? { backgroundColor: themeColor } : {}}
+                  onClick={() => {
+                    logoutUser();
+                    setTab('home');
+                  }}
+                  className="bg-white hover:bg-red-50 text-red-500 hover:text-red-700 hover:border-red-300 transition-all border border-zinc-200 text-[11px] font-bold uppercase tracking-wider py-1.5 px-2.5 rounded-xl cursor-pointer flex items-center gap-1"
+                  aria-label="Cerrar sesión"
                 >
-                  <tabItem.icon size={12} /> {tabItem.label}
-                  {tabItem.count !== undefined && tabItem.count > 0 && (
-                    <span className="ml-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full text-[9px] font-bold px-1 text-white" style={{ backgroundColor: themeColor + 'CC' }}>
-                      {tabItem.count > 99 ? '99+' : tabItem.count}
-                    </span>
-                  )}
+                  <LogOut size={11} /> Salir
                 </button>
-              ))}
+              </div>
+
+              {/* PWA Install Badge */}
+              {currentUser.is_pwa_installed && (
+                <div className="flex items-center gap-2 text-[11px] font-bold rounded-xl px-3 py-2" style={{ backgroundColor: themeColor + '12', color: themeColor }}>
+                  <Smartphone size={13} /> App Instalada — Bonus x1.5 en puntos
+                </div>
+              )}
+
+              {/* SUB-TABS — Horizontal on mobile, vertical sidebar on desktop */}
+              <div className="pt-4 flex lg:flex-col gap-1.5 bg-transparent overflow-x-auto no-scrollbar lg:overflow-x-visible">
+                {[
+                  { id: 'orders' as const, label: 'Pedidos', icon: Package, count: userOrders.length },
+                  { id: 'notifications' as const, label: 'Mensajes', icon: MessageSquare, count: unreadCount },
+                  { id: 'promos' as const, label: 'Ofertas', icon: Tag, count: activePromos.length },
+                  { id: 'coupons' as const, label: 'Cupones', icon: Gift, count: availableCoupons.length },
+                  { id: 'rewards' as const, label: 'Puntos', icon: Star, count: getUserLoyaltyPoints(currentUser.id) },
+                  { id: 'profile' as const, label: 'Cuenta', icon: Edit2 },
+                ].map(tabItem => (
+                  <button
+                    key={tabItem.id}
+                    type="button"
+                    onClick={() => { setActiveSubTab(tabItem.id); setShowEditFields(tabItem.id === 'profile'); }}
+                    className={`flex-shrink-0 lg:flex-shrink py-2.5 px-3 lg:px-4 rounded-xl text-[11px] font-bold font-display tracking-wider text-left flex items-center justify-start gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+                      activeSubTab === tabItem.id
+                        ? 'text-white shadow-md focus:ring-white/50'
+                        : 'text-zinc-500 bg-white border border-zinc-200 hover:bg-zinc-50 focus:ring-zinc-300'
+                    }`}
+                    style={activeSubTab === tabItem.id ? { backgroundColor: themeColor } : {}}
+                  >
+                    <tabItem.icon size={14} />
+                    <span className="flex-1">{tabItem.label}</span>
+                    {tabItem.count !== undefined && tabItem.count > 0 && (
+                      <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[9px] font-bold px-1 text-white" style={{ backgroundColor: (activeSubTab === tabItem.id ? 'rgba(255,255,255,0.3)' : themeColor + 'CC') }}>
+                        {tabItem.count > 99 ? '99+' : tabItem.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
+          {/* RIGHT CONTENT AREA */}
+          <div className="flex-1 min-w-0 flex flex-col gap-5">
+
           {/* EDIT PROFILE FIELDS CONTAINER */}
           {activeSubTab === 'profile' && showEditFields && (
-            <div className="mx-4 p-5 border border-zinc-200 rounded-2xl bg-white flex flex-col gap-4 text-sm">
+            <div className="p-5 border border-zinc-200 rounded-2xl bg-white flex flex-col gap-4 text-sm">
               <h3 className="text-sm font-bold font-display text-zinc-900 border-b border-zinc-100 pb-3">Editar Datos de Perfil</h3>
               
               <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
@@ -975,7 +985,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
           {activeSubTab === 'notifications' && (
             <div className="flex flex-col gap-4 text-sm px-0">
               {/* Push Notifications Settings */}
-              <div className="mx-4 p-4 border rounded-2xl relative overflow-hidden flex flex-col gap-3" style={{ borderColor: themeColor + '30', backgroundColor: themeColor + '08' }}>
+              <div className="p-4 border rounded-2xl relative overflow-hidden flex flex-col gap-3" style={{ borderColor: themeColor + '30', backgroundColor: themeColor + '08' }}>
                 <div className="flex gap-2.5 items-start">
                   <div className="p-2 rounded-xl shrink-0" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
                     <Bell size={16} />
@@ -1049,7 +1059,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               </div>
 
               {/* Chat input - Send message to business */}
-              <div className="mx-4 p-4 border border-zinc-200 bg-white rounded-2xl flex flex-col gap-3 shadow-sm">
+              <div className="p-4 border border-zinc-200 bg-white rounded-2xl flex flex-col gap-3 shadow-sm">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-xl" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
                     <Send size={14} />
@@ -1080,10 +1090,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                   >
                     <Send size={16} />
                   </button>
-                </div>
-              </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
+        </div>
 
           {/* ═══ PROMOCIONES / OFERTAS ═══ */}
           {activeSubTab === 'promos' && (

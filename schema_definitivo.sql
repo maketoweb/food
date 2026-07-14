@@ -241,7 +241,7 @@ CREATE TABLE IF NOT EXISTS reward_catalog (
     points_cost INTEGER NOT NULL,
     reward_type TEXT NOT NULL DEFAULT 'discount',
     reward_value NUMERIC(10,2) DEFAULT 0,
-    product_id UUID REFERENCES products(id),
+    product_id UUID,
     imagen_url TEXT,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -249,15 +249,6 @@ CREATE TABLE IF NOT EXISTS reward_catalog (
 ALTER TABLE reward_catalog ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can read active rewards" ON reward_catalog FOR SELECT USING (active = TRUE);
 CREATE POLICY "Admin full access rewards" ON reward_catalog FOR ALL USING (TRUE);
-
--- Columnas extras en coupons
-DO $$
-BEGIN
-    PERFORM add_column_if_not_exists('coupons', 'description', 'TEXT DEFAULT ''''');
-    PERFORM add_column_if_not_exists('coupons', 'min_purchase', 'NUMERIC(10,2) DEFAULT 0');
-    PERFORM add_column_if_not_exists('coupons', 'coupon_type', 'TEXT DEFAULT ''percentage''');
-    PERFORM add_column_if_not_exists('coupons', 'discount_amount', 'NUMERIC(10,2) DEFAULT 0');
-END $$;
 
 -- ----------------------------------------------------------------------------
 -- 3. products (MENÚ)
@@ -393,6 +384,15 @@ CREATE TABLE IF NOT EXISTS coupons (
     valid_until TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Columnas extras en coupons
+DO $$
+BEGIN
+    PERFORM add_column_if_not_exists('coupons', 'description', 'TEXT DEFAULT ''''');
+    PERFORM add_column_if_not_exists('coupons', 'min_purchase', 'NUMERIC(10,2) DEFAULT 0');
+    PERFORM add_column_if_not_exists('coupons', 'coupon_type', 'TEXT DEFAULT ''percentage''');
+    PERFORM add_column_if_not_exists('coupons', 'discount_amount', 'NUMERIC(10,2) DEFAULT 0');
+END $$;
 
 -- ----------------------------------------------------------------------------
 -- 4.6 push_subscriptions

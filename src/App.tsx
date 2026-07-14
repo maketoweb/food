@@ -110,6 +110,7 @@ function AppContent() {
           onTriggerAdminLogin={() => setIsAdminLoginOpen(true)}
           drawerOpen={drawerOpen}
           setDrawerOpen={setDrawerOpen}
+          navigateToCatalog={navigateToCatalog}
         />
 
         {/* Offset for fixed header - hidden on catalog mobile */}
