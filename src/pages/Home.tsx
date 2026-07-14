@@ -147,7 +147,7 @@ export const Home: React.FC<HomeProps> = ({
     : '';
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -530,7 +530,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           SECTION 5: REWARDS PROGRAM
           ═══════════════════════════════════════════════════════════ */}
-      <section className="w-full py-8 sm:py-10 md:py-16" style={{ backgroundColor: '#2D0A00' }}>
+      <section className="w-full py-8 sm:py-10 md:py-16" style={{ backgroundColor: themeColor }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <div className="w-full md:w-1/2 flex justify-center">
@@ -603,21 +603,7 @@ export const Home: React.FC<HomeProps> = ({
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 6: FAQ INLINE (if not in footer)
-          ═══════════════════════════════════════════════════════════ */}
-      {(!config.faq_items || config.faq_items.length === 0) && (
-        <section className="w-full py-8 sm:py-10 md:py-12 bg-zinc-50">
-          <div className="max-w-3xl mx-auto px-4 sm:px-5 md:px-8 text-center">
-            <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight mb-2">
-              Preguntas Frecuentes
-            </h2>
-            <p className="text-xs text-zinc-500 mb-6">Las preguntas frecuentes se configuran desde el panel de administración.</p>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 7: FOOTER (componente reutilizable)
+          FOOTER (incluye FAQ)
           ═══════════════════════════════════════════════════════════ */}
       <Footer config={config} onInstallClick={onInstallClick} onAdminClick={onAdminClick} isAdminAuthenticated={isAdminAuthenticated} />
 

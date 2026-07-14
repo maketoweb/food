@@ -402,7 +402,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
   }, [orders]); // Depender del estado global para mayor velocidad
 
   return (
-    <div className="flex flex-col gap-5 pb-20 text-zinc-900 bg-zinc-50 min-h-screen overflow-x-hidden max-w-md mx-auto">
+    <div className="flex flex-col gap-5 pb-20 text-zinc-900 bg-zinc-50 min-h-screen overflow-x-hidden max-w-md mx-auto lg:max-w-lg xl:max-w-xl">
       <SEOHead title={currentUser ? `Mi Cuenta - ${currentUser.nombre}` : "Mi Cuenta"} />
 
       {/* Pop-up de Instalación Automática (PWA) */}

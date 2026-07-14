@@ -8,6 +8,7 @@ import {
   User,
   MessageCircle,
   Tag,
+  LogOut,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
@@ -26,9 +27,10 @@ export const Navigation: React.FC<NavigationProps> = ({
   drawerOpen,
   setDrawerOpen,
 }) => {
-  const { cart, config, currentUser } = useApp();
+  const { cart, config, currentUser, logoutUser } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const logoUrl = config.logo_url || '';
+  const themeColor = config.theme_color || '#E31837';
 
   // Hide mobile header on catalog page for native app feel
   const hideMobileHeader = currentTab === 'catalog';
@@ -96,13 +98,33 @@ export const Navigation: React.FC<NavigationProps> = ({
 
           {/* Right: Sign In + Cart */}
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setTab('profile')}
-              className="text-[13px] font-bold tracking-wide uppercase text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
-            >
-              {currentUser ? `HOLA, ${currentUser.nombre.split(' ')[0].toUpperCase()}` : 'INICIAR SESIÓN'}
-            </button>
+            {currentUser ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTab('profile')}
+                  className="text-[13px] font-bold tracking-wide uppercase text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+                >
+                  HOLA, {currentUser.nombre.split(' ')[0].toUpperCase()}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { logoutUser(); setTab('home'); }}
+                  className="p-2 rounded-full hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                  title="Cerrar Sesión"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setTab('profile')}
+                className="text-[13px] font-bold tracking-wide uppercase text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+              >
+                INICIAR SESIÓN
+              </button>
+            )}
 
             <button
               type="button"
@@ -112,7 +134,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             >
               <ShoppingCart size={22} className="text-zinc-800" strokeWidth={1.8} />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold px-1 leading-none">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 leading-none" style={{ backgroundColor: themeColor }}>
                   {cartCount}
                 </span>
               )}
@@ -169,7 +191,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           >
             <ShoppingCart size={22} className="text-zinc-800" strokeWidth={1.8} />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold px-1 leading-none">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 leading-none" style={{ backgroundColor: themeColor }}>
                 {cartCount}
               </span>
             )}
@@ -251,6 +273,15 @@ export const Navigation: React.FC<NavigationProps> = ({
               >
                 <MessageCircle size={16} className="text-green-500" /> WhatsApp Directo
               </a>
+              {currentUser && (
+                <button
+                  type="button"
+                  onClick={() => { logoutUser(); setTab('home'); setDrawerOpen(false); }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-lg font-medium transition-all cursor-pointer"
+                >
+                  <LogOut size={16} /> Cerrar Sesión
+                </button>
+              )}
             </div>
 
             {/* Store info */}
