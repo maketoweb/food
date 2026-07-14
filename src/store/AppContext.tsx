@@ -1754,7 +1754,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           recogida_en_local: dbConfig.recogida_en_local ?? prev.recogida_en_local,
           entrega_por_zonas: dbConfig.entrega_por_zonas ?? prev.entrega_por_zonas,
           delivery_zonas: dbConfig.delivery_zonas ?? prev.delivery_zonas,
-          loyalty: dbConfig.loyalty ? { ...prev.loyalty, ...dbConfig.loyalty, bonus_actions: { ...(prev.loyalty?.bonus_actions || {}), ...(dbConfig.loyalty?.bonus_actions || {}) } } : prev.loyalty,
+          loyalty: dbConfig.loyalty ? {
+            ...prev.loyalty,
+            ...dbConfig.loyalty,
+            tiers: dbConfig.loyalty.tiers?.length ? dbConfig.loyalty.tiers : (prev.loyalty?.tiers || []),
+            bonus_actions: { ...(prev.loyalty?.bonus_actions || {}), ...(dbConfig.loyalty?.bonus_actions || {}) },
+          } : prev.loyalty,
         }));
       }
 
