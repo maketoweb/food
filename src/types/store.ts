@@ -129,6 +129,13 @@ export interface Sede {
   horario_detallado?: SedeHorario;
   esta_abierta_manual?: boolean;
   imagen_url?: string;
+  delivery_mode?: 'zonas' | 'km' | 'both';
+  delivery_zonas?: DeliveryZone[];
+  costo_delivery_km?: number;
+  delivery_gratis?: boolean;
+  delivery_gratis_threshold?: number;
+  permite_delivery?: boolean;
+  permite_pickup?: boolean;
 }
 
 export interface DeliveryZone {

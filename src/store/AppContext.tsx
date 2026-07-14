@@ -2137,6 +2137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       guest_phone: orderData.guest_phone || null,
       guest_email: (!currentUser && orderData.cliente_email) ? orderData.cliente_email : null,
       crear_cuenta: orderData.crear_cuenta || false,
+      sede_id: (orderData as any).sede_id || '',
       notas_admin: orderData.notas_admin || '',
       fecha: new Date().toISOString()
     }]);

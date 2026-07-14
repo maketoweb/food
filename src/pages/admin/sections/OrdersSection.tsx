@@ -24,11 +24,15 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({
 }) => {
   const { orders, config } = useApp();
   const [orderFilter, setOrderFilter] = useState<Order['status'] | 'Todos'>('Todos');
+  const [sedeFilter, setSedeFilter] = useState<string>('');
+  const activeSedes = config.sedes?.filter(s => s.activa) || [];
 
   const activeOrdersMapped = useMemo(() => {
-    if (orderFilter === 'Todos') return orders;
-    return orders.filter(o => o.status === orderFilter);
-  }, [orders, orderFilter]);
+    let result = orders;
+    if (sedeFilter) result = result.filter(o => o.sede_id === sedeFilter || !o.sede_id);
+    if (orderFilter !== 'Todos') result = result.filter(o => o.status === orderFilter);
+    return result;
+  }, [orders, orderFilter, sedeFilter]);
 
   const exportOrdersToCSV = () => {
     if (orders.length === 0) {
@@ -73,6 +77,20 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({
           >
             <Download size={14} /> Exportar CSV
           </button>
+
+          {/* Sede filter */}
+          {activeSedes.length > 1 && (
+            <select
+              value={sedeFilter}
+              onChange={(e) => setSedeFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-slate-200 text-slate-700 cursor-pointer"
+            >
+              <option value="">Todas las sedes</option>
+              {activeSedes.map(s => (
+                <option key={s.id} value={s.id}>{s.nombre}</option>
+              ))}
+            </select>
+          )}
           
           {/* Status filters */}
           <div className="flex gap-1 text-[10px] font-mono bg-slate-100 p-1 border border-slate-200 rounded-lg overflow-x-auto no-scrollbar w-full sm:w-auto">

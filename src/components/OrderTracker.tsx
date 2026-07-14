@@ -59,6 +59,12 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({ order, onClose, onCo
   }, [adProducts.length]);
 
   const getWhatsAppPhone = (): string => {
+    if (order.sede_id) {
+      const sede = config.sedes?.find(s => s.id === order.sede_id);
+      if (sede?.whatsapp_numero || sede?.telefono) {
+        return (sede.whatsapp_numero || sede.telefono).replace(/\D/g, '').replace(/^0/, '58');
+      }
+    }
     const active = config.sedes?.filter(s => s.activa);
     const phone = active && active.length > 0 ? active[0].telefono : config.telefono_soporte;
     return (phone || '584124976451').replace(/\D/g, '').replace(/^0/, '58');

@@ -18,7 +18,9 @@ const STATUS_CONFIG: Record<string, { color: string; bg: string; border: string;
 
 const TrackingSection: React.FC = () => {
   const { config } = useApp();
-  const { activeOrders, advanceStatus } = useOrders();
+  const [sedeFilter, setSedeFilter] = useState<string>('');
+  const activeSedes = config.sedes?.filter(s => s.activa) || [];
+  const { activeOrders, advanceStatus } = useOrders(sedeFilter || undefined);
   const themeColor = config.theme_color || '#0f5d34';
 
   const [statusFilter, setStatusFilter] = useState<Order['status'] | 'Todos'>('Todos');
@@ -51,6 +53,19 @@ const TrackingSection: React.FC = () => {
     <div className="flex flex-col h-[calc(100vh-120px)] lg:h-[calc(100vh-80px)]">
       {/* Status Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar shrink-0">
+        {/* Sede filter */}
+        {activeSedes.length > 1 && (
+          <select
+            value={sedeFilter}
+            onChange={(e) => setSedeFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl text-[11px] font-bold bg-white border border-slate-200 text-slate-700 cursor-pointer"
+          >
+            <option value="">Todas las sedes</option>
+            {activeSedes.map(s => (
+              <option key={s.id} value={s.id}>{s.nombre}</option>
+            ))}
+          </select>
+        )}
         {(['Todos', 'En camino', 'Listo', 'Procesando', 'En preparación', 'Pendiente'] as const).map(status => {
           const count = statusCounts[status] || 0;
           const isActive = statusFilter === status;

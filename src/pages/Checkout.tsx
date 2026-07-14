@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, X, Rocket, Copy, Check, ArrowRight, ArrowLeft, Clock, Store, Truck } from 'lucide-react';
+import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, X, Rocket, Copy, Check, ArrowRight, ArrowLeft, Clock, Store, Truck, Navigation } from 'lucide-react';
 import { LeafletMap } from '../components/LeafletMap';
 import { SEOHead } from '../components/SEOHead';
 import { CartUpsell } from '../components/CartUpsell';
@@ -56,6 +56,63 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const activeSedes = config.sedes?.filter(s => s.activa) || [];
   const hasMultipleSedes = activeSedes.length > 1;
   const [selectedSedeId, setSelectedSedeId] = useState<string>('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [showAlgoMas, setShowAlgoMas] = useState(false);
+
+  // Haversine distance between two coordinates
+  const haversineDistance = useCallback((lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }, []);
+
+  // Detect nearest sede from user location
+  const detectNearestSede = useCallback((userLat: number, userLng: number) => {
+    if (activeSedes.length === 0) return;
+    let nearest = activeSedes[0];
+    let minDist = Infinity;
+    for (const sede of activeSedes) {
+      const dist = haversineDistance(userLat, userLng, sede.coordenadas.lat, sede.coordenadas.lng);
+      if (dist < minDist) { minDist = dist; nearest = sede; }
+    }
+    setSelectedSedeId(nearest.id);
+    // Use sede's delivery settings
+    if (nearest.delivery_mode === 'km' || (!nearest.delivery_mode && !config.entrega_por_zonas)) {
+      setShippingMethod('mapa');
+    } else if (nearest.delivery_mode === 'zonas' || (nearest.delivery_mode === 'both' && config.entrega_por_zonas)) {
+      setShippingMethod('zonas');
+    }
+  }, [activeSedes, config.entrega_por_zonas, haversineDistance]);
+
+  // Request user location
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Tu navegador no soporta geolocalización');
+      return;
+    }
+    setIsDetectingLocation(true);
+    setLocationError('');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setShippingLat(latitude);
+        setShippingLng(longitude);
+        // Save to localStorage for future visits
+        localStorage.setItem('trv_user_location', JSON.stringify({ lat: latitude, lng: longitude }));
+        // Detect nearest sede
+        if (hasMultipleSedes) detectNearestSede(latitude, longitude);
+        setIsDetectingLocation(false);
+      },
+      () => {
+        setLocationError('No se pudo obtener tu ubicación. Selecciona manualmente en el mapa.');
+        setIsDetectingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+  }, [hasMultipleSedes, detectNearestSede]);
 
   // Restore saved data
   useEffect(() => {
@@ -71,6 +128,18 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
         if (parsed.nombre) setClientName(parsed.nombre);
         if (parsed.telefono) setClientPhone(parsed.telefono);
         if (parsed.email) setClientEmail(parsed.email);
+      } catch {}
+    }
+    // Restore saved user location
+    const savedLocation = localStorage.getItem('trv_user_location');
+    if (savedLocation) {
+      try {
+        const parsed = JSON.parse(savedLocation);
+        if (parsed.lat && parsed.lng) {
+          setShippingLat(parsed.lat);
+          setShippingLng(parsed.lng);
+          if (hasMultipleSedes) detectNearestSede(parsed.lat, parsed.lng);
+        }
       } catch {}
     }
   }, [currentUser?.id]);
@@ -120,12 +189,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
     }
   }, [currentUser?.id, orders.length]);
 
-  // Auto-skip Step 1 for logged-in users
-  useEffect(() => {
-    if (currentUser && currentStep === 1 && cart.length > 0) {
-      setCurrentStep(2);
-    }
-  }, [currentUser?.id]);
+  // Delivery method - restore saved
 
   const handleCopy = async (text: string, fieldId: string) => {
     try {
@@ -187,15 +251,17 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const handleShippingMethodChange = (method: 'mapa' | 'recogida' | 'zonas') => {
     setShippingMethod(method);
     setSelectedZoneIndex(null);
+    const sede = activeSedes.find(s => s.id === selectedSedeId);
+    const sedeCoords = sede?.coordenadas || config.coordenadas_tienda;
     if (method === 'recogida') {
-      setShippingLat(config.coordenadas_tienda.lat);
-      setShippingLng(config.coordenadas_tienda.lng);
+      setShippingLat(sedeCoords.lat);
+      setShippingLng(sedeCoords.lng);
       setShippingCost(0);
       setShippingDistance(0);
       setShippingZone('Retiro en Tienda');
     } else if (method === 'zonas') {
-      setShippingLat(config.coordenadas_tienda.lat);
-      setShippingLng(config.coordenadas_tienda.lng);
+      setShippingLat(sedeCoords.lat);
+      setShippingLng(sedeCoords.lng);
       setShippingCost(0);
       setShippingDistance(0);
       setShippingZone('Selecciona una zona');
@@ -203,11 +269,12 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   };
 
   const handleZoneSelect = (index: number) => {
-    const zones = config.delivery_zonas || [];
+    const zones = activeSedes.find(s => s.id === selectedSedeId)?.delivery_zonas || config.delivery_zonas || [];
     if (index >= zones.length) return;
     setSelectedZoneIndex(index);
     const selected = zones[index];
-    setShippingCost(config.delivery_gratis ? 0 : selected.cost);
+    const sede = activeSedes.find(s => s.id === selectedSedeId);
+    setShippingCost((sede?.delivery_gratis ?? config.delivery_gratis) ? 0 : selected.cost);
     setShippingDistance((selected.minKm + selected.maxKm) / 2);
     setShippingZone(selected.name);
   };
@@ -225,9 +292,26 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   };
 
   const validateStep1 = (): boolean => {
+    if (shippingMethod === 'zonas' && selectedZoneIndex === null) {
+      setValidationError('Selecciona una zona de entrega.');
+      return false;
+    }
+    if (shippingMethod === 'mapa' && shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng) {
+      setValidationError('Selecciona tu dirección de entrega en el mapa.');
+      return false;
+    }
+    setValidationError('');
+    return true;
+  };
+
+  const validateGuestContact = (): boolean => {
     const cleanedPhone = clientPhone.replace(/[\s\-()]/g, '');
+    if (!clientName.trim()) {
+      setValidationError('Ingresa tu nombre.');
+      return false;
+    }
     if (!cleanedPhone) {
-      setValidationError('Por favor, ingrese su número de teléfono.');
+      setValidationError('Ingresa tu número de teléfono.');
       return false;
     }
     if (!/^\+?[0-9]{7,15}$/.test(cleanedPhone)) {
@@ -244,10 +328,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
 
   const handleNextStep = () => {
     if (currentStep === 1 && !validateStep1()) return;
-    if (currentStep === 2 && shippingMethod === 'zonas' && selectedZoneIndex === null) {
-      setValidationError('Selecciona una zona de entrega.');
-      return;
-    }
     setValidationError('');
     setCurrentStep(prev => (prev < 3 ? (prev + 1) as 1 | 2 | 3 : prev));
   };
@@ -259,6 +339,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser && !validateGuestContact()) return;
     if (!paymentConfirmed) {
       setValidationError('Confirma el método de pago para continuar.');
       return;
@@ -341,6 +422,7 @@ ${productosDetailText}
       direccion_envio: `${shippingZone} (Distancia: ${shippingDistance}km)`,
       distancia_km: shippingDistance,
       notas_admin: orderNotes,
+      sede_id: selectedSedeId || undefined,
       crear_cuenta: createAccount || undefined,
       guest_phone: !currentUser ? cleanedPhone : undefined,
       guest_password: createAccount ? cleanedPhone : undefined,
@@ -432,8 +514,8 @@ ${productosDetailText}
       <div className="bg-white border-b border-zinc-200 px-4 py-3">
         <div className="flex items-center justify-between max-w-sm mx-auto">
           {[
-            { step: 1, label: 'Datos', icon: <User size={14} /> },
-            { step: 2, label: 'Entrega', icon: <MapPin size={14} /> },
+            { step: 1, label: 'Entrega', icon: <MapPin size={14} /> },
+            { step: 2, label: 'Resumen', icon: <Truck size={14} /> },
             { step: 3, label: 'Pago', icon: <CheckCircle size={14} /> },
           ].map(({ step, label, icon }, idx) => (
             <React.Fragment key={step}>
@@ -463,7 +545,7 @@ ${productosDetailText}
       {/* ═══════════ CONTENT ═══════════ */}
       <div className="flex-1 overflow-y-auto pb-32">
         <AnimatePresence mode="wait">
-          {/* ═══ PASO 1: DATOS DE CONTACTO ═══ */}
+          {/* ═══ PASO 1: MÉTODO DE ENTREGA ═══ */}
           {currentStep === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {cart.length === 0 ? (
@@ -520,33 +602,156 @@ ${productosDetailText}
                     </div>
                   </div>
 
-                  {/* Contact form */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Datos de Contacto</h3>
-                    {currentUser ? (
-                      <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
-                        <div className="w-9 h-9 text-white rounded-full flex items-center justify-center font-bold text-xs" style={{ backgroundColor: themeColor }}>{currentUser.nombre[0]}</div>
-                        <div>
-                          <p className="text-xs font-bold text-zinc-900">{currentUser.nombre}</p>
-                          <p className="text-[11px] text-zinc-500">{currentUser.email || currentUser.telefono}</p>
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Entrega</h3>
+
+                    <div className="flex gap-2 mb-4">
+                      {(() => {
+                        const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
+                        const allowsPickup = sede?.permite_pickup ?? config.recogida_en_local;
+                        const deliveryMode = sede?.delivery_mode || (config.entrega_por_zonas ? 'zonas' : 'km');
+                        const showZonas = deliveryMode === 'zonas' || deliveryMode === 'both';
+                        const showMapa = deliveryMode === 'km' || deliveryMode === 'both';
+                        return (
+                          <>
+                            {allowsPickup && (
+                              <button onClick={() => handleShippingMethodChange('recogida')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
+                                shippingMethod === 'recogida' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                              }`} style={shippingMethod === 'recogida' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
+                                <Store size={16} className="mx-auto mb-1" />
+                                Recoger en Tienda
+                              </button>
+                            )}
+                            {showZonas && (
+                              <button onClick={() => handleShippingMethodChange('zonas')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
+                                shippingMethod === 'zonas' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                              }`} style={shippingMethod === 'zonas' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
+                                <Truck size={16} className="mx-auto mb-1" />
+                                Delivery por Zonas
+                              </button>
+                            )}
+                            {showMapa && (
+                              <button onClick={() => handleShippingMethodChange('mapa')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
+                                shippingMethod === 'mapa' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                              }`} style={shippingMethod === 'mapa' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
+                                <MapPin size={16} className="mx-auto mb-1" />
+                                Delivery por Mapa
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Recogida */}
+                    {shippingMethod === 'recogida' && (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Store size={16} className="text-emerald-600" />
+                          <span className="text-xs font-bold text-emerald-800">Retiro en Tienda</span>
                         </div>
+                        {(() => {
+                          const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
+                          return sede ? (
+                            <>
+                              <p className="text-xs font-bold text-emerald-800">{sede.nombre}</p>
+                              <p className="text-xs text-emerald-700 font-medium">{sede.direccion || config.direccion_fisica}</p>
+                              <p className="text-[10px] text-emerald-600 mt-1">{sede.horario || '10:00 AM - 10:00 PM'}</p>
+                              <a
+                                href={`https://www.google.com/maps?q=${sede.coordenadas.lat},${sede.coordenadas.lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 underline"
+                              >
+                                <MapPin size={10} /> Cómo llegar
+                              </a>
+                              <div className="mt-3 rounded-xl overflow-hidden border border-emerald-200 h-32">
+                                <LeafletMap shopCoords={sede.coordenadas} onLocationSelected={() => {}} config={config} />
+                              </div>
+                            </>
+                          ) : null;
+                        })()}
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
-                          <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Nombre (opcional)</label>
-                          <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Correo (opcional)</label>
-                          <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" />
+                    )}
+
+                    {/* Delivery por mapa */}
+                    {shippingMethod === 'mapa' && (
+                      <LeafletMap
+                        shopCoords={activeSedes.find(s => s.id === selectedSedeId)?.coordenadas || config.coordenadas_tienda}
+                        onLocationSelected={handleLocationPicked}
+                        config={config}
+                        initialUserCoords={
+                          (shippingLat !== config.coordenadas_tienda.lat || shippingLng !== config.coordenadas_tienda.lng)
+                            ? { lat: shippingLat, lng: shippingLng }
+                            : null
+                        }
+                      />
+                    )}
+
+                    {/* Delivery por zonas */}
+                    {shippingMethod === 'zonas' && (
+                      <div className="space-y-2">
+                        {(activeSedes.find(s => s.id === selectedSedeId)?.delivery_zonas || config.delivery_zonas || []).map((z, i) => (
+                          <button key={z.id} onClick={() => handleZoneSelect(i)} className={`w-full p-3 rounded-xl text-left flex items-center justify-between text-xs font-bold transition-all cursor-pointer border-2 ${
+                            selectedZoneIndex === i ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                          }`} style={selectedZoneIndex === i ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
+                            <span>{z.name}</span>
+                            <span className="font-mono">{(activeSedes.find(s => s.id === selectedSedeId)?.delivery_gratis ?? config.delivery_gratis) ? 'Gratis' : `$${z.cost.toFixed(2)}`}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Multiple sedes */}
+                    {hasMultipleSedes && (
+                      <div className="mt-4">
+                        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {activeSedes.map(sede => (
+                            <button key={sede.id} onClick={() => setSelectedSedeId(sede.id)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${
+                              selectedSedeId === sede.id ? 'text-white shadow-md' : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                            }`} style={selectedSedeId === sede.id ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
+                              {sede.nombre}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}
+
+                    {/* Shipping cost summary */}
+                    <div className="mt-4 flex justify-between items-center pt-3 border-t border-zinc-100">
+                      <span className="text-xs text-zinc-500">Envío:</span>
+                      <span className="text-xs font-bold" style={{ color: themeColor }}>
+                        {hasFreeDeliveryItem ? 'GRATIS' : effectiveShippingCost === 0 ? 'Retiro / Gratis' : `$${effectiveShippingCost.toFixed(2)}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Location request */}
+                  {shippingMethod !== 'recogida' && (shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng) && (
+                    <div className="bg-white rounded-2xl border border-zinc-200 p-4">
+                      <button
+                        onClick={requestLocation}
+                        disabled={isDetectingLocation}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-zinc-300 text-xs font-bold text-zinc-600 hover:border-zinc-400 hover:text-zinc-800 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <Navigation size={14} className={isDetectingLocation ? 'animate-spin' : ''} />
+                        {isDetectingLocation ? 'Detectando ubicación...' : 'Usar mi ubicación actual'}
+                      </button>
+                      {locationError && <p className="text-[11px] text-amber-600 mt-2 text-center">{locationError}</p>}
+                      {hasMultipleSedes && (
+                        <p className="text-[10px] text-zinc-400 mt-1.5 text-center">Encontraremos la tienda más cercana a ti</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* CartUpsell - Algo Más */}
+                  <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
+
+                  {/* Notes */}
+                  <div className="bg-white rounded-2xl border border-zinc-200 p-4">
+                    <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Notas del pedido (opcional)</label>
+                    <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none" rows={2} />
                   </div>
 
                   {/* Coupon */}
@@ -568,123 +773,12 @@ ${productosDetailText}
             </motion.div>
           )}
 
-          {/* ═══ PASO 2: MÉTODO DE ENTREGA ═══ */}
+          {/* ═══ PASO 2: RESUMEN DE COSTOS ═══ */}
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
-              <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Entrega</h3>
-
-                <div className="flex gap-2 mb-4">
-                  {config.recogida_en_local && (
-                    <button onClick={() => handleShippingMethodChange('recogida')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
-                      shippingMethod === 'recogida' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                    }`} style={shippingMethod === 'recogida' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
-                      <Store size={16} className="mx-auto mb-1" />
-                      Recoger en Tienda
-                    </button>
-                  )}
-                  {config.entrega_por_zonas && (
-                    <button onClick={() => handleShippingMethodChange('zonas')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
-                      shippingMethod === 'zonas' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                    }`} style={shippingMethod === 'zonas' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
-                      <Truck size={16} className="mx-auto mb-1" />
-                      Delivery
-                    </button>
-                  )}
-                  {!config.entrega_por_zonas && (
-                    <button onClick={() => handleShippingMethodChange('mapa')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
-                      shippingMethod === 'mapa' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                    }`} style={shippingMethod === 'mapa' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
-                      <MapPin size={16} className="mx-auto mb-1" />
-                      Delivery
-                    </button>
-                  )}
-                </div>
-
-                {/* Recogida */}
-                {shippingMethod === 'recogida' && (
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Store size={16} className="text-emerald-600" />
-                      <span className="text-xs font-bold text-emerald-800">Retiro en Tienda</span>
-                    </div>
-                    <p className="text-xs text-emerald-700 font-medium">{config.direccion_fisica || 'Dirección de la tienda'}</p>
-                    <div className="mt-3 rounded-xl overflow-hidden border border-emerald-200 h-32">
-                      <LeafletMap shopCoords={config.coordenadas_tienda} onLocationSelected={() => {}} config={config} />
-                    </div>
-                    <p className="text-[10px] text-emerald-600 mt-2 flex items-center gap-1">
-                      <Clock size={10} /> Horario: 10:00 AM - 10:00 PM
-                    </p>
-                  </div>
-                )}
-
-                {/* Delivery por mapa */}
-                {shippingMethod === 'mapa' && (
-                  <LeafletMap
-                    shopCoords={config.coordenadas_tienda}
-                    onLocationSelected={handleLocationPicked}
-                    config={config}
-                    initialUserCoords={
-                      (shippingLat !== config.coordenadas_tienda.lat || shippingLng !== config.coordenadas_tienda.lng)
-                        ? { lat: shippingLat, lng: shippingLng }
-                        : null
-                    }
-                  />
-                )}
-
-                {/* Delivery por zonas */}
-                {shippingMethod === 'zonas' && (
-                  <div className="space-y-2">
-                    {(config.delivery_zonas || []).map((z, i) => (
-                      <button key={z.id} onClick={() => handleZoneSelect(i)} className={`w-full p-3 rounded-xl text-left flex items-center justify-between text-xs font-bold transition-all cursor-pointer border-2 ${
-                        selectedZoneIndex === i ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
-                      }`} style={selectedZoneIndex === i ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
-                        <span>{z.name}</span>
-                        <span className="font-mono">{config.delivery_gratis ? 'Gratis' : `$${z.cost.toFixed(2)}`}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Multiple sedes */}
-                {hasMultipleSedes && (
-                  <div className="mt-4">
-                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {activeSedes.map(sede => (
-                        <button key={sede.id} onClick={() => setSelectedSedeId(sede.id)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${
-                          selectedSedeId === sede.id ? 'text-white shadow-md' : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                        }`} style={selectedSedeId === sede.id ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
-                          {sede.nombre}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Shipping cost summary */}
-                <div className="mt-4 flex justify-between items-center pt-3 border-t border-zinc-100">
-                  <span className="text-xs text-zinc-500">Envío:</span>
-                  <span className="text-xs font-bold" style={{ color: themeColor }}>
-                    {hasFreeDeliveryItem ? 'GRATIS' : effectiveShippingCost === 0 ? 'Retiro / Gratis' : `$${effectiveShippingCost.toFixed(2)}`}
-                  </span>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mt-4">
-                <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Notas del pedido (opcional)</label>
-                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none" rows={2} />
-              </div>
-            </motion.div>
-          )}
-
-          {/* ═══ PASO 3: PAGO Y CONFIRMACIÓN ═══ */}
-          {currentStep === 3 && (
-            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {/* Order summary */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Resumen del Pedido</h3>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tu Pedido</h3>
                 <div className="space-y-2">
                   {cart.map(item => {
                     const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
@@ -697,7 +791,12 @@ ${productosDetailText}
                     );
                   })}
                 </div>
-                <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1.5">
+              </div>
+
+              {/* Cost breakdown */}
+              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Detalle de Costos</h3>
+                <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-zinc-500">Subtotal:</span>
                     <span className="font-bold">${subtotalUsd.toFixed(2)}</span>
@@ -709,7 +808,7 @@ ${productosDetailText}
                     </div>
                   )}
                   <div className="flex justify-between text-xs">
-                    <span className="text-zinc-500">Envío:</span>
+                    <span className="text-zinc-500">Envío ({shippingMethod === 'recogida' ? 'Recogida' : shippingZone}):</span>
                     <span className="font-bold">{effectiveShippingCost === 0 ? 'Gratis' : `$${effectiveShippingCost.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-zinc-100">
@@ -721,6 +820,98 @@ ${productosDetailText}
                   </div>
                 </div>
               </div>
+
+              {/* Delivery info */}
+              {shippingMethod !== 'recogida' && (
+                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-2">Dirección de Entrega</h3>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-zinc-800">{shippingZone}</p>
+                      <p className="text-[11px] text-zinc-500">{shippingDistance > 0 ? `${shippingDistance.toFixed(1)} km de distancia` : ''}</p>
+                      <a
+                        href={`https://www.google.com/maps?q=${shippingLat},${shippingLng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold underline mt-1 inline-block"
+                        style={{ color: themeColor }}
+                      >Ver en mapa</a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pickup info */}
+              {shippingMethod === 'recogida' && (
+                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-2">Retiro en Tienda</h3>
+                  {(() => {
+                    const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
+                    return sede ? (
+                      <div className="flex items-start gap-2">
+                        <Store size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold text-zinc-800">{sede.nombre}</p>
+                          <p className="text-[11px] text-zinc-500">{sede.direccion || config.direccion_fisica}</p>
+                          <a
+                            href={`https://www.google.com/maps?q=${sede.coordenadas.lat},${sede.coordenadas.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-bold underline mt-1 inline-block"
+                            style={{ color: themeColor }}
+                          >Cómo llegar</a>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ═══ PASO 3: DATOS + PAGO ═══ */}
+          {currentStep === 3 && (
+            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
+              {/* Contact data - only for guests */}
+              {!currentUser && (
+                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tus Datos</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
+                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Nombre *</label>
+                      <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Correo *</label>
+                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                    </div>
+                  </div>
+                  <div className="mt-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
+                    <p className="text-[11px] text-zinc-600 leading-relaxed">
+                      <span className="font-bold" style={{ color: themeColor }}>Se crea tu cuenta automáticamente.</span>{' '}
+                      Tu contraseña es tu número de teléfono. Podrás cambiarla desde tu panel de cliente.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Logged in user info */}
+              {currentUser && (
+                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 text-white rounded-full flex items-center justify-center font-bold text-xs" style={{ backgroundColor: themeColor }}>{currentUser.nombre[0]}</div>
+                    <div>
+                      <p className="text-xs font-bold text-zinc-900">{currentUser.nombre}</p>
+                      <p className="text-[11px] text-zinc-500">{currentUser.email || currentUser.telefono}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Payment methods */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
@@ -858,9 +1049,6 @@ ${productosDetailText}
                   </span>
                 </label>
               </div>
-
-              {/* CartUpsell */}
-              <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
 
               {/* Guest: Toggle Crear Cuenta */}
               {!currentUser && (

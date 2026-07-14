@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
 import {
@@ -7,14 +7,21 @@ import {
 
 const DashboardSection: React.FC = () => {
   const { orders, config, foodItems } = useApp();
+  const [sedeFilter, setSedeFilter] = useState<string>('');
+  const activeSedes = config.sedes?.filter(s => s.activa) || [];
+
+  const filteredOrders = useMemo(() => {
+    if (!sedeFilter) return orders;
+    return orders.filter(o => o.sede_id === sedeFilter || !o.sede_id);
+  }, [orders, sedeFilter]);
 
   const reportTotals = useMemo(() => {
-    const totalVentasUsd = orders.reduce((acc, o) => acc + (Number(o.total_usd) || 0), 0);
-    const totalAhorroCuponesUsd = orders.reduce((acc, o) => acc + (Number(o.descuento_cupon_usd) || 0), 0);
-    const totalPedidosCount = orders.length;
+    const totalVentasUsd = filteredOrders.reduce((acc, o) => acc + (Number(o.total_usd) || 0), 0);
+    const totalAhorroCuponesUsd = filteredOrders.reduce((acc, o) => acc + (Number(o.descuento_cupon_usd) || 0), 0);
+    const totalPedidosCount = filteredOrders.length;
     let partsSold = 0;
     
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       o.items.forEach(it => {
         partsSold += (Number(it.cantidad) || 0);
       });
@@ -28,7 +35,7 @@ const DashboardSection: React.FC = () => {
 
     let dayTotal = 0, weekTotal = 0, monthTotal = 0, prevMonthTotal = 0;
 
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       const orderTime = new Date(o.fecha).getTime();
       const amount = Number(o.total_usd) || 0;
       if (orderTime >= startOfDay) dayTotal += amount;
@@ -48,7 +55,7 @@ const DashboardSection: React.FC = () => {
       monthTotal,
       prevMonthTotal
     };
-  }, [orders, config.tasa_cambio]);
+  }, [filteredOrders, config.tasa_cambio]);
 
   const salesChartData = useMemo(() => {
     const datesMap: { [date: string]: number } = {};
@@ -59,7 +66,7 @@ const DashboardSection: React.FC = () => {
       datesMap[d.toLocaleDateString([], { month: 'short', day: 'numeric' })] = 0;
     }
 
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       const orderUsd = Number(o.total_usd) || 0;
       try {
         const rawDate = new Date(o.fecha);
@@ -79,7 +86,7 @@ const DashboardSection: React.FC = () => {
       fecha: k,
       Ventas: parseFloat(Number(datesMap[k] || 0).toFixed(2)),
     }));
-  }, [orders]);
+  }, [filteredOrders]);
 
   const couponUsageChartData = useMemo(() => {
     const datesMap: { [date: string]: number } = {};
@@ -90,7 +97,7 @@ const DashboardSection: React.FC = () => {
       datesMap[d.toLocaleDateString([], { month: 'short', day: 'numeric' })] = 0;
     }
 
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       if (o.cupon_codigo) {
         try {
           const rawDate = new Date(o.fecha);
@@ -111,7 +118,7 @@ const DashboardSection: React.FC = () => {
       fecha: k,
       Usos: datesMap[k],
     }));
-  }, [orders]);
+  }, [filteredOrders]);
 
   const topProductsChartData = useMemo(() => {
     const productsMap: { [name: string]: number } = {};
@@ -119,7 +126,7 @@ const DashboardSection: React.FC = () => {
       productsMap[p.nombre.substring(0, 22)] = p.stock > 10 ? 4 : 2;
     });
 
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       o.items.forEach(it => {
         const abbreviated = it.nombre.substring(0, 22);
         if (productsMap[abbreviated] !== undefined) {
@@ -134,7 +141,7 @@ const DashboardSection: React.FC = () => {
       name: k,
       Unidades: productsMap[k]
     })).sort((a,b) => b.Unidades - a.Unidades).slice(0, 5);
-  }, [orders, foodItems]);
+  }, [filteredOrders, foodItems]);
 
   const monthlyComparisonData = useMemo(() => {
     return [
@@ -145,6 +152,23 @@ const DashboardSection: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Sede filter */}
+      {activeSedes.length > 1 && (
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Filtrar por tienda:</span>
+          <select
+            value={sedeFilter}
+            onChange={(e) => setSedeFilter(e.target.value)}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-slate-200 text-slate-700 cursor-pointer"
+          >
+            <option value="">Todas las sedes</option>
+            {activeSedes.map(s => (
+              <option key={s.id} value={s.id}>{s.nombre}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Sales Performance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl text-white shadow-lg shadow-emerald-200">
@@ -179,7 +203,7 @@ const DashboardSection: React.FC = () => {
               <ShoppingBag size={14} />
             </div>
           </div>
-          <p className="text-xl font-bold font-mono text-slate-900 mt-1">{orders.filter(o => o.status !== 'Entregado' && o.status !== 'Cancelado').length}</p>
+          <p className="text-xl font-bold font-mono text-slate-900 mt-1">{filteredOrders.filter(o => o.status !== 'Entregado' && o.status !== 'Cancelado').length}</p>
         </div>
         <div className="p-4 border border-slate-200 rounded-xl bg-white shadow-sm hover:border-violet-300 transition-all duration-300 group">
           <div className="flex justify-between items-start">

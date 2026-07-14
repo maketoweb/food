@@ -1,35 +1,40 @@
 import { useMemo } from 'react';
 import { useApp } from '../../../store/AppContext';
 
-export function useDashboard() {
+export function useDashboard(sedeId?: string) {
   const { orders, foodItems, config, coupons } = useApp();
+
+  const filteredOrders = useMemo(() => {
+    if (!sedeId) return orders;
+    return orders.filter(o => o.sede_id === sedeId || !o.sede_id);
+  }, [orders, sedeId]);
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const todayOrders = useMemo(() => orders.filter(o => o.fecha?.startsWith(today)), [orders, today]);
+  const todayOrders = useMemo(() => filteredOrders.filter(o => o.fecha?.startsWith(today)), [filteredOrders, today]);
   const todayRevenue = useMemo(() =>
     todayOrders.filter(o => o.status === 'Entregado').reduce((sum, o) => sum + (Number(o.total_usd) || 0), 0),
     [todayOrders]
   );
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const weekOrders = useMemo(() => orders.filter(o => o.fecha && o.fecha >= weekAgo), [orders, weekAgo]);
+  const weekOrders = useMemo(() => filteredOrders.filter(o => o.fecha && o.fecha >= weekAgo), [filteredOrders, weekAgo]);
   const weekRevenue = useMemo(() =>
     weekOrders.filter(o => o.status === 'Entregado').reduce((sum, o) => sum + (Number(o.total_usd) || 0), 0),
     [weekOrders]
   );
 
   const monthStart = new Date().toISOString().slice(0, 7);
-  const monthOrders = useMemo(() => orders.filter(o => o.fecha?.startsWith(monthStart)), [orders, monthStart]);
+  const monthOrders = useMemo(() => filteredOrders.filter(o => o.fecha?.startsWith(monthStart)), [filteredOrders, monthStart]);
   const monthRevenue = useMemo(() =>
     monthOrders.filter(o => o.status === 'Entregado').reduce((sum, o) => sum + (Number(o.total_usd) || 0), 0),
     [monthOrders]
   );
 
-  const pendingOrders = useMemo(() => orders.filter(o => o.status === 'Pendiente'), [orders]);
+  const pendingOrders = useMemo(() => filteredOrders.filter(o => o.status === 'Pendiente'), [filteredOrders]);
   const activeOrders = useMemo(() =>
-    orders.filter(o => !['Entregado', 'Cancelado'].includes(o.status)),
-    [orders]
+    filteredOrders.filter(o => !['Entregado', 'Cancelado'].includes(o.status)),
+    [filteredOrders]
   );
 
   const topProducts = useMemo(() => {
@@ -39,10 +44,10 @@ export function useDashboard() {
   }, [foodItems]);
 
   const avgTicket = useMemo(() => {
-    const delivered = orders.filter(o => o.status === 'Entregado');
+    const delivered = filteredOrders.filter(o => o.status === 'Entregado');
     if (delivered.length === 0) return 0;
     return delivered.reduce((sum, o) => sum + (Number(o.total_usd) || 0), 0) / delivered.length;
-  }, [orders]);
+  }, [filteredOrders]);
 
   const usedCoupons = useMemo(() =>
     coupons.filter(c => c.usage_count > 0).length,
@@ -51,7 +56,7 @@ export function useDashboard() {
 
   const dailySalesData = useMemo(() => {
     const map = new Map<string, number>();
-    for (const o of orders) {
+    for (const o of filteredOrders) {
       if (o.status === 'Entregado' && o.fecha) {
         const date = o.fecha.slice(0, 10);
         map.set(date, (map.get(date) || 0) + (Number(o.total_usd) || 0));
@@ -61,11 +66,11 @@ export function useDashboard() {
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-30)
       .map(([date, total]) => ({ date: date.slice(5), total: Math.round(total * 100) / 100 }));
-  }, [orders]);
+  }, [filteredOrders]);
 
   const monthlyComparisonData = useMemo(() => {
     const map = new Map<string, number>();
-    for (const o of orders) {
+    for (const o of filteredOrders) {
       if (o.status === 'Entregado' && o.fecha) {
         const month = o.fecha.slice(0, 7);
         map.set(month, (map.get(month) || 0) + (Number(o.total_usd) || 0));
@@ -74,7 +79,7 @@ export function useDashboard() {
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([period, total]) => ({ period, total: Math.round(total * 100) / 100 }));
-  }, [orders]);
+  }, [filteredOrders]);
 
   return {
     todayOrders,
@@ -90,7 +95,7 @@ export function useDashboard() {
     usedCoupons,
     dailySalesData,
     monthlyComparisonData,
-    totalOrders: orders.length,
+    totalOrders: filteredOrders.length,
     totalProducts: foodItems.length,
   };
 }
