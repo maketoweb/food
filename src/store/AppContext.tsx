@@ -2155,45 +2155,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (orderData.cliente_email && !currentUser) {
       const cleanPhone = orderData.cliente_telefono.replace(/[\s\-()]/g, '');
       const email = orderData.cliente_email.trim().toLowerCase();
+      let userId = '';
+      let authSucceeded = false;
 
-      // 1. Intentar signUp primero
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // 1. Primero intentar signIn (si ya tiene cuenta)
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password: cleanPhone,
-        options: {
-          data: {
-            nombre: orderData.cliente_nombre,
-            telefono: cleanPhone
-          }
-        }
+        password: cleanPhone
       });
+      if (!signInError && signInData?.user) {
+        userId = signInData.user.id;
+        authSucceeded = true;
+      }
 
-      let userId = authData?.user?.id;
-      let signUpSuccess = !authError && !!authData?.user;
-
-      // 2. Si el email ya existe, intentar signIn
-      if (authError && authError.message?.includes('already registered')) {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      // 2. Si signIn falla, intentar signUp
+      if (!authSucceeded) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
-          password: cleanPhone
+          password: cleanPhone,
+          options: {
+            data: {
+              nombre: orderData.cliente_nombre,
+              telefono: cleanPhone
+            }
+          }
         });
-        if (!signInError && signInData?.user) {
-          userId = signInData.user.id;
-          signUpSuccess = true;
+        if (!authError && authData?.user) {
+          userId = authData.user.id;
+          authSucceeded = true;
         }
       }
 
-      // 3. Auto-login: crear AppUser y setCurrentUser
-      if (signUpSuccess && userId) {
-        const newUser: AppUser = {
-          id: userId,
-          nombre: orderData.cliente_nombre,
-          email,
-          telefono: cleanPhone,
-          contrasena: 'auth_managed',
-          createdAt: new Date().toISOString()
-        };
-        setCurrentUser(newUser);
+      // 3. Si auth falló, usar ID local para que el usuario quede logueado
+      if (!userId) {
+        userId = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      // 4. SIEMPRE hacer setCurrentUser para que el cliente quede logueado
+      const newUser: AppUser = {
+        id: userId,
+        nombre: orderData.cliente_nombre,
+        email,
+        telefono: cleanPhone,
+        contrasena: 'auth_managed',
+        createdAt: new Date().toISOString()
+      };
+      setCurrentUser(newUser);
+
+      if (authSucceeded) {
         addNotification(
           '¡Cuenta Creada! 🎉',
           `Hola ${newUser.nombre}. Tu cuenta fue creada automáticamente. Tu contraseña es tu número de teléfono (${cleanPhone}).`,

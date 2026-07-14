@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../store/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, X, Rocket, Copy, Check, ArrowRight, ArrowLeft, Clock, Store, Truck, Navigation } from 'lucide-react';
+import { ListOrdered, Trash2, MapPin, Phone, User, CheckCircle, X, Copy, Check, ArrowRight, ArrowLeft, Store, Truck, Navigation, Search, LocateFixed, ChevronDown, FileText } from 'lucide-react';
 import { LeafletMap } from '../components/LeafletMap';
 import { SEOHead } from '../components/SEOHead';
 import { CartUpsell } from '../components/CartUpsell';
@@ -19,7 +19,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
-  // Coupon state
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
@@ -27,7 +26,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
 
   const hasFreeDeliveryItem = cart.some(item => item.item.delivery_gratis);
 
-  // Guest form fields
   const [clientName, setClientName] = useState(currentUser?.nombre || '');
   const [clientPhone, setClientPhone] = useState(currentUser?.telefono || '');
   const [clientEmail, setClientEmail] = useState(currentUser?.email || '');
@@ -37,14 +35,12 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const [customPaymentNote, setCustomPaymentNote] = useState('');
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Map metrics
   const [shippingLat, setShippingLat] = useState<number>(config.coordenadas_tienda.lat);
   const [shippingLng, setShippingLng] = useState<number>(config.coordenadas_tienda.lng);
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [shippingDistance, setShippingDistance] = useState<number>(0);
   const [shippingZone, setShippingZone] = useState<string>('Retiro en Tienda');
 
-  // Shipping method
   const [shippingMethod, setShippingMethod] = useState<'mapa' | 'recogida' | 'zonas'>('mapa');
   const [selectedZoneIndex, setSelectedZoneIndex] = useState<number | null>(null);
 
@@ -59,7 +55,8 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const [locationError, setLocationError] = useState('');
   const [showAlgoMas, setShowAlgoMas] = useState(false);
 
-  // Haversine distance between two coordinates
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
   const haversineDistance = useCallback((lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -68,7 +65,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }, []);
 
-  // Detect nearest sede from user location
   const detectNearestSede = useCallback((userLat: number, userLng: number) => {
     if (activeSedes.length === 0) return;
     let nearest = activeSedes[0];
@@ -78,7 +74,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       if (dist < minDist) { minDist = dist; nearest = sede; }
     }
     setSelectedSedeId(nearest.id);
-    // Use sede's delivery settings
     if (nearest.delivery_mode === 'km' || (!nearest.delivery_mode && !config.entrega_por_zonas)) {
       setShippingMethod('mapa');
     } else if (nearest.delivery_mode === 'zonas' || (nearest.delivery_mode === 'both' && config.entrega_por_zonas)) {
@@ -86,7 +81,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
     }
   }, [activeSedes, config.entrega_por_zonas, haversineDistance]);
 
-  // Request user location
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationError('Tu navegador no soporta geolocalización');
@@ -99,21 +93,30 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
         const { latitude, longitude } = position.coords;
         setShippingLat(latitude);
         setShippingLng(longitude);
-        // Save to localStorage for future visits
         localStorage.setItem('trv_user_location', JSON.stringify({ lat: latitude, lng: longitude }));
-        // Detect nearest sede
         if (hasMultipleSedes) detectNearestSede(latitude, longitude);
         setIsDetectingLocation(false);
+        setShowLocationModal(false);
+        const dist = haversineDistance(latitude, longitude, config.coordenadas_tienda.lat, config.coordenadas_tienda.lng);
+        setShippingDistance(Math.round(dist * 10) / 10);
+        const zones = activeSedes.find(s => s.id === selectedSedeId)?.delivery_zonas || config.delivery_zonas || [];
+        const matchedZone = zones.find(z => dist >= z.minKm && dist <= z.maxKm);
+        if (matchedZone) {
+          setShippingZone(matchedZone.name);
+          setShippingCost(matchedZone.cost);
+        } else {
+          setShippingZone(`${dist.toFixed(1)} km`);
+          setShippingCost(dist * (activeSedes.find(s => s.id === selectedSedeId)?.costo_delivery_km || config.costo_delivery_km || 1.5));
+        }
       },
       () => {
-        setLocationError('No se pudo obtener tu ubicación. Selecciona manualmente en el mapa.');
+        setLocationError('No se pudo obtener tu ubicación. Intenta de nuevo o introduce la dirección manualmente.');
         setIsDetectingLocation(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
     );
-  }, [hasMultipleSedes, detectNearestSede]);
+  }, [hasMultipleSedes, detectNearestSede, haversineDistance, config, activeSedes, selectedSedeId]);
 
-  // Restore saved data
   useEffect(() => {
     if (currentUser) {
       setClientName(currentUser.nombre);
@@ -129,7 +132,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
         if (parsed.email) setClientEmail(parsed.email);
       } catch {}
     }
-    // Restore saved user location
     const savedLocation = localStorage.getItem('trv_user_location');
     if (savedLocation) {
       try {
@@ -148,7 +150,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       const savedMethod = localStorage.getItem('trv_checkout_method') as 'mapa' | 'recogida' | 'zonas' | null;
       if (savedMethod) setShippingMethod(savedMethod);
 
-      // Restaurar última dirección de entrega
       const savedDelivery = localStorage.getItem('trv_last_delivery');
       if (savedDelivery) {
         try {
@@ -163,7 +164,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
           if (parsed.sedeId) setSelectedSedeId(parsed.sedeId);
         } catch {}
       } else if (orders.length > 0) {
-        // Fallback: usar la última orden del usuario
         const lastOrder = orders.find(o =>
           o.usuario_id === currentUser.id || o.cliente_telefono === currentUser.telefono
         );
@@ -187,8 +187,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       }
     }
   }, [currentUser?.id, orders.length]);
-
-  // Delivery method - restore saved
 
   const handleCopy = async (text: string, fieldId: string) => {
     try {
@@ -264,6 +262,19 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       setShippingCost(0);
       setShippingDistance(0);
       setShippingZone('Selecciona una zona');
+    } else if (method === 'mapa') {
+      const savedLocation = localStorage.getItem('trv_user_location');
+      if (savedLocation) {
+        try {
+          const parsed = JSON.parse(savedLocation);
+          if (parsed.lat && parsed.lng) {
+            setShippingLat(parsed.lat);
+            setShippingLng(parsed.lng);
+            const dist = haversineDistance(parsed.lat, parsed.lng, sedeCoords.lat, sedeCoords.lng);
+            setShippingDistance(Math.round(dist * 10) / 10);
+          }
+        } catch {}
+      }
     }
   };
 
@@ -296,7 +307,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       return false;
     }
     if (shippingMethod === 'mapa' && shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng) {
-      setValidationError('Selecciona tu dirección de entrega en el mapa.');
+      setValidationError('Selecciona tu dirección de entrega.');
       return false;
     }
     setValidationError('');
@@ -317,7 +328,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
       setValidationError('El número de teléfono no es válido.');
       return false;
     }
-    if (clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
+    if (!clientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
       setValidationError('El correo electrónico no es válido.');
       return false;
     }
@@ -463,12 +474,13 @@ ${productosDetailText}
   const themeColor = config.theme_color || '#E31837';
   const stepCompleted = (s: number) => s < currentStep;
   const stepActive = (s: number) => s === currentStep;
+  const selectedSede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
+  const isLocationSet = !(shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng);
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-zinc-50 text-zinc-900">
       <SEOHead title="Checkout" />
 
-      {/* Celebration */}
       <AnimatePresence>
         {showCelebration && (
           <div className="fixed inset-0 pointer-events-none z-[300] flex items-center justify-center">
@@ -487,16 +499,14 @@ ${productosDetailText}
         )}
       </AnimatePresence>
 
-      {/* Processing overlay */}
       {isProcessing && (
         <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white/80 backdrop-blur-md">
           <div className="w-14 h-14 border-4 rounded-full" style={{ borderColor: `${themeColor}20` }} />
           <div className="absolute w-14 h-14 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${themeColor} transparent` }} />
-          <p className="mt-6 text-sm font-bold uppercase tracking-wide" style={{ color: themeColor }}>Procesando...</p>
+          <p className="mt-6 text-sm font-bold uppercase tracking-wide" style={{ color: themeColor }}>Procesando pedido...</p>
         </div>
       )}
 
-      {/* ═══════════ HEADER ═══════════ */}
       <div className="bg-white border-b border-zinc-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-20">
         <button onClick={() => currentStep === 1 ? setTab('home') : handlePrevStep()} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
           <ArrowLeft size={18} className="text-zinc-600" />
@@ -507,12 +517,11 @@ ${productosDetailText}
         </div>
       </div>
 
-      {/* ═══════════ TIMELINE ═══════════ */}
       <div className="bg-white border-b border-zinc-200 px-4 py-3">
         <div className="flex items-center justify-between max-w-sm mx-auto">
           {[
             { step: 1, label: 'Delivery', icon: <MapPin size={14} /> },
-            { step: 2, label: 'Resumen', icon: <Truck size={14} /> },
+            { step: 2, label: 'Resumen', icon: <FileText size={14} /> },
             { step: 3, label: 'Pago', icon: <CheckCircle size={14} /> },
           ].map(({ step, label, icon }, idx) => (
             <React.Fragment key={step}>
@@ -539,10 +548,8 @@ ${productosDetailText}
         </div>
       </div>
 
-      {/* ═══════════ CONTENT ═══════════ */}
       <div className="flex-1 overflow-y-auto pb-32">
         <AnimatePresence mode="wait">
-          {/* ═══ PASO 1: DATOS DEL DELIVERY ═══ */}
           {currentStep === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {cart.length === 0 ? (
@@ -556,7 +563,6 @@ ${productosDetailText}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Cart summary */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800">Tu Carrito ({cart.reduce((s, ci) => s + ci.quantity, 0)} items)</h3>
@@ -565,7 +571,6 @@ ${productosDetailText}
                     <div className="flex flex-col gap-2.5 max-h-48 overflow-y-auto pr-1">
                       {cart.map(item => {
                         const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
-                        const subTotalItem = (item.item.precio_usd + extrasTotal) * item.quantity;
                         return (
                           <div key={item.item.id} className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
@@ -601,7 +606,6 @@ ${productosDetailText}
 
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
                     <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Entrega</h3>
-
                     <div className="flex gap-2 mb-4">
                       {(() => {
                         const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
@@ -640,66 +644,87 @@ ${productosDetailText}
                       })()}
                     </div>
 
-                    {/* Recogida */}
                     {shippingMethod === 'recogida' && (
                       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Store size={16} className="text-emerald-600" />
                           <span className="text-xs font-bold text-emerald-800">Retiro en Tienda</span>
                         </div>
-                        {(() => {
-                          const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
-                          return sede ? (
-                            <>
-                              <p className="text-xs font-bold text-emerald-800">{sede.nombre}</p>
-                              <p className="text-xs text-emerald-700 font-medium">{sede.direccion || config.direccion_fisica}</p>
-                              <p className="text-[10px] text-emerald-600 mt-1">{sede.horario || '10:00 AM - 10:00 PM'}</p>
-                              <a
-                                href={`https://www.google.com/maps?q=${sede.coordenadas.lat},${sede.coordenadas.lng}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 underline"
-                              >
-                                <MapPin size={10} /> Cómo llegar
-                              </a>
-                              <div className="mt-3 rounded-xl overflow-hidden border border-emerald-200 h-32">
-                                <LeafletMap shopCoords={sede.coordenadas} onLocationSelected={() => {}} config={config} />
-                              </div>
-                            </>
-                          ) : null;
-                        })()}
+                        {selectedSede ? (
+                          <>
+                            <p className="text-xs font-bold text-emerald-800">{selectedSede.nombre}</p>
+                            <p className="text-xs text-emerald-700 font-medium">{selectedSede.direccion || config.direccion_fisica}</p>
+                            <p className="text-[10px] text-emerald-600 mt-1">{selectedSede.horario || '10:00 AM - 10:00 PM'}</p>
+                            <div className="mt-2 flex items-center gap-2 text-[10px] text-emerald-700 font-mono bg-emerald-100 rounded-lg px-2 py-1.5">
+                              <MapPin size={10} />
+                              <span>Lat: {selectedSede.coordenadas.lat}, Lng: {selectedSede.coordenadas.lng}</span>
+                              <CopyButton text={`${selectedSede.coordenadas.lat}, ${selectedSede.coordenadas.lng}`} fieldId="sede-coords" />
+                            </div>
+                            <a
+                              href={`https://www.google.com/maps?q=${selectedSede.coordenadas.lat},${selectedSede.coordenadas.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 w-full flex items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 transition-colors"
+                            >
+                              <Navigation size={12} /> Cómo llegar en Google Maps
+                            </a>
+                            <div className="mt-3 rounded-xl overflow-hidden border border-emerald-200 h-40">
+                              <LeafletMap shopCoords={selectedSede.coordenadas} onLocationSelected={() => {}} config={config} />
+                            </div>
+                          </>
+                        ) : null}
                       </div>
                     )}
 
-                    {/* Delivery por mapa */}
                     {shippingMethod === 'mapa' && (
-                      <LeafletMap
-                        shopCoords={activeSedes.find(s => s.id === selectedSedeId)?.coordenadas || config.coordenadas_tienda}
-                        onLocationSelected={handleLocationPicked}
-                        config={config}
-                        initialUserCoords={
-                          (shippingLat !== config.coordenadas_tienda.lat || shippingLng !== config.coordenadas_tienda.lng)
-                            ? { lat: shippingLat, lng: shippingLng }
-                            : null
-                        }
-                      />
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setShowLocationModal(true)}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed text-left transition-all cursor-pointer hover:shadow-md"
+                          style={{ borderColor: isLocationSet ? themeColor : '#d4d4d8', backgroundColor: isLocationSet ? `${themeColor}08` : 'white' }}
+                        >
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: isLocationSet ? themeColor : '#f4f4f5' }}>
+                            <LocateFixed size={18} className={isLocationSet ? 'text-white' : 'text-zinc-400'} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold" style={{ color: isLocationSet ? themeColor : '#52525b' }}>
+                              {isLocationSet ? 'Ubicación seleccionada' : 'Seleccionar dirección de entrega'}
+                            </p>
+                            {isLocationSet ? (
+                              <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+                                {shippingZone} · {shippingDistance.toFixed(1)} km · ${effectiveShippingCost.toFixed(2)}
+                              </p>
+                            ) : (
+                              <p className="text-[10px] text-zinc-400 mt-0.5">Toca para abrir el mapa y elegir tu dirección</p>
+                            )}
+                          </div>
+                          <ChevronDown size={16} className="text-zinc-400 shrink-0" />
+                        </button>
+                        {isLocationSet && (
+                          <button
+                            onClick={() => setShowLocationModal(true)}
+                            className="w-full text-[11px] font-bold underline text-center py-1"
+                            style={{ color: themeColor }}
+                          >
+                            Cambiar dirección
+                          </button>
+                        )}
+                      </div>
                     )}
 
-                    {/* Delivery por zonas */}
                     {shippingMethod === 'zonas' && (
                       <div className="space-y-2">
-                        {(activeSedes.find(s => s.id === selectedSedeId)?.delivery_zonas || config.delivery_zonas || []).map((z, i) => (
+                        {(selectedSede?.delivery_zonas || config.delivery_zonas || []).map((z, i) => (
                           <button key={z.id} onClick={() => handleZoneSelect(i)} className={`w-full p-3 rounded-xl text-left flex items-center justify-between text-xs font-bold transition-all cursor-pointer border-2 ${
                             selectedZoneIndex === i ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
                           }`} style={selectedZoneIndex === i ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                             <span>{z.name}</span>
-                            <span className="font-mono">{(activeSedes.find(s => s.id === selectedSedeId)?.delivery_gratis ?? config.delivery_gratis) ? 'Gratis' : `$${z.cost.toFixed(2)}`}</span>
+                            <span className="font-mono">{(selectedSede?.delivery_gratis ?? config.delivery_gratis) ? 'Gratis' : `$${z.cost.toFixed(2)}`}</span>
                           </button>
                         ))}
                       </div>
                     )}
 
-                    {/* Multiple sedes */}
                     {hasMultipleSedes && (
                       <div className="mt-4">
                         <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
@@ -715,7 +740,6 @@ ${productosDetailText}
                       </div>
                     )}
 
-                    {/* Shipping cost summary */}
                     <div className="mt-4 flex justify-between items-center pt-3 border-t border-zinc-100">
                       <span className="text-xs text-zinc-500">Envío:</span>
                       <span className="text-xs font-bold" style={{ color: themeColor }}>
@@ -724,26 +748,7 @@ ${productosDetailText}
                     </div>
                   </div>
 
-                  {/* Location request */}
-                  {shippingMethod !== 'recogida' && (shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng) && (
-                    <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                      <button
-                        onClick={requestLocation}
-                        disabled={isDetectingLocation}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-zinc-300 text-xs font-bold text-zinc-600 hover:border-zinc-400 hover:text-zinc-800 transition-all cursor-pointer disabled:opacity-50"
-                      >
-                        <Navigation size={14} className={isDetectingLocation ? 'animate-spin' : ''} />
-                        {isDetectingLocation ? 'Detectando ubicación...' : 'Usar mi ubicación actual'}
-                      </button>
-                      {locationError && <p className="text-[11px] text-amber-600 mt-2 text-center">{locationError}</p>}
-                      {hasMultipleSedes && (
-                        <p className="text-[10px] text-zinc-400 mt-1.5 text-center">Encontraremos la tienda más cercana a ti</p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Botón reusar última dirección (solo si hay pedidos anteriores en delivery) */}
-                  {currentUser && shippingMethod !== 'recogida' && (shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng) && (() => {
+                  {currentUser && shippingMethod !== 'recogida' && !isLocationSet && (() => {
                     const lastDelivery = orders.find(o =>
                       (o.usuario_id === currentUser.id || o.cliente_telefono === currentUser.telefono) &&
                       o.tipo_entrega === 'delivery' && o.lat && o.lng
@@ -776,16 +781,13 @@ ${productosDetailText}
                     );
                   })()}
 
-                  {/* CartUpsell - Algo Más */}
                   <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
 
-                  {/* Notes */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
                     <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Notas del pedido (opcional)</label>
                     <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none" rows={2} />
                   </div>
 
-                  {/* Coupon */}
                   <div className="bg-white rounded-2xl border border-zinc-200 p-4">
                     <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Cupón</label>
                     <div className="flex gap-2">
@@ -804,10 +806,8 @@ ${productosDetailText}
             </motion.div>
           )}
 
-          {/* ═══ PASO 2: RESUMEN DEL PEDIDO ═══ */}
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
-              {/* Order summary */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tu Pedido</h3>
                 <div className="space-y-2">
@@ -824,7 +824,6 @@ ${productosDetailText}
                 </div>
               </div>
 
-              {/* Cost breakdown */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Detalle de Costos</h3>
                 <div className="space-y-2">
@@ -852,7 +851,6 @@ ${productosDetailText}
                 </div>
               </div>
 
-              {/* Delivery info */}
               {shippingMethod !== 'recogida' && (
                 <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-2">Dirección de Entrega</h3>
@@ -873,38 +871,33 @@ ${productosDetailText}
                 </div>
               )}
 
-              {/* Pickup info */}
-              {shippingMethod === 'recogida' && (
+              {shippingMethod === 'recogida' && selectedSede && (
                 <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-2">Retiro en Tienda</h3>
-                  {(() => {
-                    const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
-                    return sede ? (
-                      <div className="flex items-start gap-2">
-                        <Store size={14} className="text-zinc-400 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-xs font-bold text-zinc-800">{sede.nombre}</p>
-                          <p className="text-[11px] text-zinc-500">{sede.direccion || config.direccion_fisica}</p>
-                          <a
-                            href={`https://www.google.com/maps?q=${sede.coordenadas.lat},${sede.coordenadas.lng}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] font-bold underline mt-1 inline-block"
-                            style={{ color: themeColor }}
-                          >Cómo llegar</a>
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
+                  <div className="flex items-start gap-2">
+                    <Store size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-zinc-800">{selectedSede.nombre}</p>
+                      <p className="text-[11px] text-zinc-500">{selectedSede.direccion || config.direccion_fisica}</p>
+                      <p className="text-[10px] text-zinc-400 font-mono mt-1">
+                        Coordenadas: {selectedSede.coordenadas.lat}, {selectedSede.coordenadas.lng}
+                      </p>
+                      <a
+                        href={`https://www.google.com/maps?q=${selectedSede.coordenadas.lat},${selectedSede.coordenadas.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold underline mt-1 inline-block"
+                        style={{ color: themeColor }}
+                      >Cómo llegar</a>
+                    </div>
+                  </div>
                 </div>
               )}
             </motion.div>
           )}
 
-          {/* ═══ PASO 3: DATOS + PAGO ═══ */}
           {currentStep === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
-              {/* Contact data - only for guests */}
               {!currentUser && (
                 <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tus Datos</h3>
@@ -931,7 +924,6 @@ ${productosDetailText}
                 </div>
               )}
 
-              {/* Logged in user info */}
               {currentUser && (
                 <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                   <div className="flex items-center gap-3">
@@ -944,7 +936,6 @@ ${productosDetailText}
                 </div>
               )}
 
-              {/* Payment methods */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Pago</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -964,7 +955,6 @@ ${productosDetailText}
                   ))}
                 </div>
 
-                {/* Payment details */}
                 <div className="mt-3 p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-[11px] text-zinc-700 leading-relaxed font-mono">
                   {selectedPayment === 'Pago Móvil' && (
                     <div className="flex flex-col gap-2">
@@ -1040,7 +1030,6 @@ ${productosDetailText}
                 </div>
               </div>
 
-              {/* Recordatorio de Pago */}
               <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
                 {(selectedPayment === 'Pago Móvil' || selectedPayment === 'Zelle' || selectedPayment === 'Transferencia') && (
                   <div className="mb-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
@@ -1053,9 +1042,8 @@ ${productosDetailText}
                 {selectedPayment === 'Efectivo' && (
                   <div className="mb-3">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5 block">
-                      Con qué billetes vas a cancelar $${totalUsd.toFixed(2)} USD
+                      Con qué billetes vas a cancelar ${totalUsd.toFixed(2)} USD
                     </label>
-                    <p className="text-[11px] text-zinc-400 mb-2">Ejemplo: 1x $20, 2x $10, 1x $5...</p>
                     <textarea
                       value={cashBills}
                       onChange={(e) => setCashBills(e.target.value)}
@@ -1080,13 +1068,11 @@ ${productosDetailText}
                   </span>
                 </label>
               </div>
-
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ═══════════ BOTTOM BAR ═══════════ */}
       {cart.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 p-4 z-20">
           {validationError && (
@@ -1106,6 +1092,197 @@ ${productosDetailText}
           )}
         </div>
       )}
+
+      <AnimatePresence>
+        {showLocationModal && (
+          <LocationModal
+            themeColor={themeColor}
+            shopCoords={selectedSede?.coordenadas || config.coordenadas_tienda}
+            initialLat={isLocationSet ? shippingLat : null}
+            initialLng={isLocationSet ? shippingLng : null}
+            config={config}
+            onDetectLocation={requestLocation}
+            isDetecting={isDetectingLocation}
+            locationError={locationError}
+            onConfirm={(lat, lng, distance, cost, zone) => {
+              setShippingLat(lat);
+              setShippingLng(lng);
+              setShippingDistance(distance);
+              setShippingCost(cost);
+              setShippingZone(zone);
+              setShowLocationModal(false);
+            }}
+            onClose={() => setShowLocationModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+};
+
+interface LocationModalProps {
+  themeColor: string;
+  shopCoords: { lat: number; lng: number };
+  initialLat: number | null;
+  initialLng: number | null;
+  config: any;
+  onDetectLocation: () => void;
+  isDetecting: boolean;
+  locationError: string;
+  onConfirm: (lat: number, lng: number, distance: number, cost: number, zone: string) => void;
+  onClose: () => void;
+}
+
+const LocationModal: React.FC<LocationModalProps> = ({
+  themeColor, shopCoords, initialLat, initialLng, config,
+  onDetectLocation, isDetecting, locationError,
+  onConfirm, onClose
+}) => {
+  const [manualAddress, setManualAddress] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [pickedLat, setPickedLat] = useState<number | null>(initialLat);
+  const [pickedLng, setPickedLng] = useState<number | null>(initialLng);
+  const [pickedDistance, setPickedDistance] = useState<number>(0);
+  const [pickedCost, setPickedCost] = useState<number>(0);
+  const [pickedZone, setPickedZone] = useState<string>('');
+
+  const calcDistance = useCallback((lat: number, lng: number) => {
+    const R = 6371;
+    const dLat = (lat - shopCoords.lat) * Math.PI / 180;
+    const dLng = (lng - shopCoords.lng) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(shopCoords.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(dist * 10) / 10;
+  }, [shopCoords]);
+
+  const calcCost = useCallback((dist: number) => {
+    const zones = config.delivery_zonas || [];
+    const matched = zones.find((z: any) => dist >= z.minKm && dist <= z.maxKm);
+    if (matched) return { cost: matched.cost, zone: matched.name };
+    return { cost: dist * (config.costo_delivery_km || 1.5), zone: `${dist} km` };
+  }, [config]);
+
+  const handleLocationPicked = useCallback((lat: number, lng: number, distance: number, cost: number, zoneName: string) => {
+    setPickedLat(lat);
+    setPickedLng(lng);
+    setPickedDistance(distance);
+    setPickedCost(cost);
+    setPickedZone(zoneName);
+  }, []);
+
+  const handleUseCurrentLocation = () => {
+    onDetectLocation();
+  };
+
+  useEffect(() => {
+    if (!isDetecting && initialLat === null) {
+      const saved = localStorage.getItem('trv_user_location');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.lat && parsed.lng) {
+            setPickedLat(parsed.lat);
+            setPickedLng(parsed.lng);
+            const d = calcDistance(parsed.lat, parsed.lng);
+            setPickedDistance(d);
+            const c = calcCost(d);
+            setPickedCost(c.cost);
+            setPickedZone(c.zone);
+          }
+        } catch {}
+      }
+    }
+  }, [isDetecting]);
+
+  const handleConfirm = () => {
+    if (pickedLat && pickedLng) {
+      onConfirm(pickedLat, pickedLng, pickedDistance, pickedCost, pickedZone);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[150] flex flex-col bg-white"
+    >
+      <div className="flex items-center justify-between p-4 border-b border-zinc-200 shrink-0">
+        <h3 className="text-sm font-bold text-zinc-900">Ubicación de entrega</h3>
+        <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-zinc-100 cursor-pointer">
+          <X size={18} className="text-zinc-500" />
+        </button>
+      </div>
+
+      <div className="flex-1 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <LeafletMap
+            shopCoords={shopCoords}
+            onLocationSelected={handleLocationPicked}
+            config={config}
+            initialUserCoords={pickedLat && pickedLng ? { lat: pickedLat, lng: pickedLng } : null}
+          />
+        </div>
+
+        <div className="absolute top-3 left-3 right-3 z-[1000]">
+          <button
+            onClick={() => setShowManualInput(!showManualInput)}
+            className="w-full flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 shadow-lg border border-zinc-200 text-xs"
+          >
+            <Search size={14} className="text-zinc-400 shrink-0" />
+            <span className="text-zinc-400 truncate">
+              {showManualInput ? 'Escribe tu dirección...' : 'Buscar dirección o escribir referencia'}
+            </span>
+          </button>
+          {showManualInput && (
+            <div className="mt-2 bg-white rounded-xl shadow-lg border border-zinc-200 p-3">
+              <input
+                type="text"
+                value={manualAddress}
+                onChange={(e) => setManualAddress(e.target.value)}
+                placeholder="Ej: Calle 5, Edif. 3, aparto 2, Valencia"
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-zinc-950 mb-2"
+              />
+              <p className="text-[10px] text-zinc-400">
+                Arrastra el mapa para ajustar la ubicación exacta. Esta referencia se enviará con tu pedido.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-zinc-200 bg-white p-4 space-y-3">
+        <button
+          onClick={handleUseCurrentLocation}
+          disabled={isDetecting}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+          style={{ borderColor: themeColor, color: themeColor }}
+        >
+          <LocateFixed size={14} className={isDetecting ? 'animate-spin' : ''} />
+          {isDetecting ? 'Detectando ubicación...' : 'Usar mi ubicación actual'}
+        </button>
+        {locationError && <p className="text-[11px] text-amber-600 text-center">{locationError}</p>}
+
+        {pickedLat && pickedLng && (
+          <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl">
+            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
+              <MapPin size={10} />
+              <span>{pickedLat.toFixed(6)}, {pickedLng.toFixed(6)} · {pickedDistance} km · ${pickedCost.toFixed(2)}</span>
+            </div>
+            {pickedZone && <p className="text-[10px] text-zinc-400 mt-1">Zona: {pickedZone}</p>}
+            {manualAddress && <p className="text-[10px] text-zinc-600 mt-1 font-medium">Ref: {manualAddress}</p>}
+          </div>
+        )}
+
+        <button
+          onClick={handleConfirm}
+          disabled={!pickedLat || !pickedLng}
+          className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+          style={{ backgroundColor: pickedLat && pickedLng ? themeColor : '#9ca3af' }}
+        >
+          Confirmar Ubicación
+        </button>
+      </div>
+    </motion.div>
   );
 };
