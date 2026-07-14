@@ -2151,11 +2151,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
 
-    // Auto-register guest after successful order
-    if (orderData.crear_cuenta && orderData.guest_password && orderData.cliente_email && !currentUser) {
+    // Auto-register guest after successful order (siempre, sin checkbox)
+    if (orderData.cliente_email && !currentUser) {
       const cleanPhone = orderData.cliente_telefono.replace(/[\s\-()]/g, '');
       const email = orderData.cliente_email.trim().toLowerCase();
 
+      // 1. Intentar signUp primero
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: cleanPhone,
@@ -2167,9 +2168,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       });
 
-      if (!authError && authData.user) {
+      let userId = authData?.user?.id;
+      let signUpSuccess = !authError && !!authData?.user;
+
+      // 2. Si el email ya existe, intentar signIn
+      if (authError && authError.message?.includes('already registered')) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: cleanPhone
+        });
+        if (!signInError && signInData?.user) {
+          userId = signInData.user.id;
+          signUpSuccess = true;
+        }
+      }
+
+      // 3. Auto-login: crear AppUser y setCurrentUser
+      if (signUpSuccess && userId) {
         const newUser: AppUser = {
-          id: authData.user.id,
+          id: userId,
           nombre: orderData.cliente_nombre,
           email,
           telefono: cleanPhone,
@@ -2470,6 +2487,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .update({
         nombre: updatedUser.nombre,
         telefono: updatedUser.telefono,
+        email: updatedUser.email,
         contrasena: updatedUser.contrasena
       })
       .eq('id', currentUser.id)
@@ -2479,7 +2497,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addNotification(
       'Datos Actualizados ⚙️',
-      `Tus datos han sido guardados. Nombre: ${updatedUser.nombre}, Teléfono: ${updatedUser.telefono}. Tus credenciales de acceso son tu nombre, teléfono y contraseña guardada.`,
+      `Tus datos han sido guardados. Nombre: ${updatedUser.nombre}, Teléfono: ${updatedUser.telefono}. Tus credenciales de acceso son tu correo, teléfono y contraseña guardada.`,
       'personal',
       updatedUser.telefono
     );

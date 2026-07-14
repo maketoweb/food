@@ -325,7 +325,7 @@ CREATE TABLE IF NOT EXISTS orders (
     tiempo_estimado_entrega TEXT DEFAULT '',
     notas_admin TEXT DEFAULT '',
     sede_id TEXT DEFAULT '',
-    crear_cuenta BOOLEAN DEFAULT FALSE,
+    crear_cuenta BOOLEAN DEFAULT FALSE, -- DEPRECATED: auto-registro siempre activo desde Checkout
     fecha TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -520,6 +520,13 @@ CREATE INDEX IF NOT EXISTS idx_loyalty_created ON loyalty_transactions(created_a
 -- ----------------------------------------------------------------------------
 -- 11. FUNCIONES Y TRIGGERS
 -- ----------------------------------------------------------------------------
+
+-- FLUJO DE AUTO-LOGIN PARA GUESTS:
+-- 1. Guest completa checkout con email + teléfono
+-- 2. AppContext intenta signUp con email y password=teléfono
+-- 3. Si email ya existe, intenta signInWithPassword
+-- 4. En ambos casos, setCurrentUser() hace auto-login
+-- 5. Trigger on_auth_user_created crea perfil en usuarios_clientes
 
 -- Función para sincronizar perfiles desde Auth
 CREATE OR REPLACE FUNCTION public.handle_auth_user_created()

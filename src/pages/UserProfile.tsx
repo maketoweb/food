@@ -264,6 +264,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
     // Show credentials reminder modal
     setShowReminderModal({
       nombre: userCreated.nombre,
+      email: userCreated.email,
       telefono: userCreated.telefono,
       contrasena: userCreated.contrasena
     });
@@ -306,19 +307,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
       setEditPassword(loggedUser.contrasena);
       setActiveSubTab('orders');
     } else {
-      setAuthError('Credenciales incorrectas. Verifique el teléfono y contraseña.');
+      setAuthError('Credenciales incorrectas. Verifique el correo y contraseña.');
     }
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editName.trim() || !editPhone.trim() || !editPassword.trim()) {
+    if (!editName.trim() || !editEmail.trim() || !editPhone.trim() || !editPassword.trim()) {
       setAuthError('No se permiten campos vacíos.');
       return;
     }
 
     updateUser({
       nombre: editName.trim(),
+      email: editEmail.trim(),
       telefono: editPhone.trim(),
       contrasena: editPassword.trim()
     });
@@ -335,6 +337,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
     // Show credentials reminder modal for updating too
     setShowReminderModal({
       nombre: editName.trim(),
+      email: editEmail.trim(),
       telefono: editPhone.trim(),
       contrasena: editPassword.trim(),
       is_update: true
@@ -504,7 +507,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
           <div className="p-5 flex flex-col gap-4">
             <div className="text-center">
               <p className="text-[11px] text-zinc-500 leading-relaxed">
-                {authMode === 'login' && 'Inicia sesión con tus datos personales para consultar el estado en tiempo real de tus compras.'}
+                {authMode === 'login' && 'Inicia sesión con tu correo electrónico y contraseña para consultar el estado en tiempo real de tus compras.'}
                 {authMode === 'register' && 'Regístrate para recibir notificaciones de promociones, envíos exprés de alimentos y ver el estatus de tus órdenes.'}
                 {authMode === 'forgot' && 'Ingresa tu correo electrónico para recibir un enlace de recuperación de contraseña.'}
               </p>
@@ -522,14 +525,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5 text-xs">
                 <div className="flex flex-col gap-1.5">
                   <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <Phone size={11} className="text-violet-500" /> Telefono del Checkout
+                    <Mail size={11} className="text-violet-500" /> Correo Electrónico
                   </label>
                   <input
-                    type="tel"
+                    type="email"
                     required
                     value={logPhone}
                     onChange={(e) => setLogPhone(e.target.value)}
-                    placeholder="Ej: +584124976451 o 04124976451"
+                    placeholder="ejemplo@correo.com"
                     className="bg-zinc-50 px-3 py-2 border border-zinc-200 rounded-lg outline-none focus:border-zinc-950 text-sm"
                   />
                 </div>
@@ -689,7 +692,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
             {/* Easy credentials reminder banner */}
             <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-lg flex items-start gap-2.5 text-[10px] sm:text-xs leading-relaxed text-zinc-700 font-mono">
               <div>
-                Tu <strong>Nombre</strong> y tu <strong>Telefono Movil</strong> combinados con tu clave elegida, seran tu usuario y contrasena vital para seguir tus pedidos en Valencia.
+                Tu <strong>Correo Electrónico</strong> y tu <strong>Telefono Movil</strong> combinados con tu clave elegida, seran tu usuario y contrasena vital para seguir tus pedidos en Valencia.
               </div>
             </div>
           </div>
@@ -709,7 +712,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     {currentUser.nombre}
                   </h3>
                   <p className="text-xs text-zinc-500 font-mono flex items-center gap-1 mt-0.5">
-                    <Phone size={11} className="text-zinc-400" /> {currentUser.telefono}
+                    <Mail size={11} className="text-zinc-400" /> {currentUser.email || currentUser.telefono}
                   </p>
                 </div>
               </div>
@@ -780,6 +783,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     required
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
+                    className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-zinc-900 text-sm"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold text-zinc-650">Correo Electrónico</span>
+                  <input
+                    type="email"
+                    required
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
                     className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-zinc-900 text-sm"
                   />
                 </div>
@@ -1495,6 +1509,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                 </div>
               </div>
 
+              {/* 2b. EMAIL CREDENTIAL */}
+              <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-zinc-50 border border-zinc-200 transition-all hover:bg-zinc-100/50">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase font-mono tracking-wider text-zinc-400">
+                  <span className="flex items-center gap-1">Correo Electrónico</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-mono font-black text-zinc-900 truncate leading-none">
+                    {showReminderModal.email || 'Sin correo'}
+                  </span>
+                </div>
+              </div>
+
               {/* 3. PASSWORD CREDENTIAL */}
               <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-zinc-50 border border-zinc-200 transition-all hover:bg-zinc-100/50">
                 <div className="flex justify-between items-center text-[10px] font-bold uppercase font-mono tracking-wider text-zinc-400">
@@ -1535,6 +1561,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 `MIS CREDENCIALES DE MARKETO:
 ======================================
 Cliente/Usuario: ${showReminderModal.nombre}
+Correo Electrónico: ${showReminderModal.email || 'Sin correo'}
 Teléfono Móvil: ${showReminderModal.telefono}
 Contraseña/Clave: ${showReminderModal.contrasena}
 ======================================

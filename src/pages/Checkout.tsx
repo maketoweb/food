@@ -48,7 +48,6 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const [shippingMethod, setShippingMethod] = useState<'mapa' | 'recogida' | 'zonas'>('mapa');
   const [selectedZoneIndex, setSelectedZoneIndex] = useState<number | null>(null);
 
-  const [createAccount, setCreateAccount] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [cashBills, setCashBills] = useState('');
   const [processedOrder, setProcessedOrder] = useState<any>(null);
@@ -423,9 +422,7 @@ ${productosDetailText}
       distancia_km: shippingDistance,
       notas_admin: orderNotes,
       sede_id: selectedSedeId || undefined,
-      crear_cuenta: createAccount || undefined,
       guest_phone: !currentUser ? cleanedPhone : undefined,
-      guest_password: createAccount ? cleanedPhone : undefined,
     }, preOrderId);
 
     if (created) {
@@ -514,7 +511,7 @@ ${productosDetailText}
       <div className="bg-white border-b border-zinc-200 px-4 py-3">
         <div className="flex items-center justify-between max-w-sm mx-auto">
           {[
-            { step: 1, label: 'Entrega', icon: <MapPin size={14} /> },
+            { step: 1, label: 'Delivery', icon: <MapPin size={14} /> },
             { step: 2, label: 'Resumen', icon: <Truck size={14} /> },
             { step: 3, label: 'Pago', icon: <CheckCircle size={14} /> },
           ].map(({ step, label, icon }, idx) => (
@@ -545,7 +542,7 @@ ${productosDetailText}
       {/* ═══════════ CONTENT ═══════════ */}
       <div className="flex-1 overflow-y-auto pb-32">
         <AnimatePresence mode="wait">
-          {/* ═══ PASO 1: MÉTODO DE ENTREGA ═══ */}
+          {/* ═══ PASO 1: DATOS DEL DELIVERY ═══ */}
           {currentStep === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {cart.length === 0 ? (
@@ -745,6 +742,40 @@ ${productosDetailText}
                     </div>
                   )}
 
+                  {/* Botón reusar última dirección (solo si hay pedidos anteriores en delivery) */}
+                  {currentUser && shippingMethod !== 'recogida' && (shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng) && (() => {
+                    const lastDelivery = orders.find(o =>
+                      (o.usuario_id === currentUser.id || o.cliente_telefono === currentUser.telefono) &&
+                      o.tipo_entrega === 'delivery' && o.lat && o.lng
+                    );
+                    if (!lastDelivery) return null;
+                    return (
+                      <div className="bg-white rounded-2xl border border-zinc-200 p-4">
+                        <button
+                          onClick={() => {
+                            setShippingLat(lastDelivery.lat);
+                            setShippingLng(lastDelivery.lng);
+                            if (lastDelivery.sede_id) setSelectedSedeId(lastDelivery.sede_id);
+                            if (lastDelivery.distancia_km) setShippingDistance(lastDelivery.distancia_km);
+                            if (lastDelivery.costo_envio_usd) setShippingCost(lastDelivery.costo_envio_usd);
+                            if (lastDelivery.direccion_envio) {
+                              const zoneMatch = lastDelivery.direccion_envio.match(/^(.+?)\s*\(Distancia:/);
+                              if (zoneMatch) setShippingZone(zoneMatch[1]);
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed text-xs font-bold transition-all cursor-pointer"
+                          style={{ borderColor: `${themeColor}40`, color: themeColor }}
+                        >
+                          <MapPin size={14} />
+                          Usar mi última dirección
+                        </button>
+                        <p className="text-[10px] text-zinc-400 mt-1.5 text-center">
+                          {lastDelivery.direccion_envio?.split(' (Distancia:')[0] || 'Última dirección guardada'}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
                   {/* CartUpsell - Algo Más */}
                   <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
 
@@ -773,7 +804,7 @@ ${productosDetailText}
             </motion.div>
           )}
 
-          {/* ═══ PASO 2: RESUMEN DE COSTOS ═══ */}
+          {/* ═══ PASO 2: RESUMEN DEL PEDIDO ═══ */}
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {/* Order summary */}
@@ -879,16 +910,16 @@ ${productosDetailText}
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tus Datos</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
-                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Correo *</label>
+                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
                     </div>
                     <div>
                       <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Nombre *</label>
                       <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Correo *</label>
-                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
+                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
                     </div>
                   </div>
                   <div className="mt-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
@@ -1050,26 +1081,6 @@ ${productosDetailText}
                 </label>
               </div>
 
-              {/* Guest: Toggle Crear Cuenta */}
-              {!currentUser && (
-                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={createAccount}
-                      onChange={(e) => setCreateAccount(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-current cursor-pointer"
-                      style={{ color: themeColor }}
-                    />
-                    <div>
-                      <p className="text-xs font-bold text-zinc-900">Crear cuenta gratis</p>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
-                        Para seguir tus pedidos y recibir notificaciones. Tu contraseña será tu número de teléfono.
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
