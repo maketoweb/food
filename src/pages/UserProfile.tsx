@@ -39,13 +39,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
     toggleHaptic,
     getUserLoyaltyPoints,
     getUserLoyaltyTier,
-    getLoyaltyTransactions
+    getLoyaltyTransactions,
+    promotions,
+    coupons: allCoupons,
+    rewardCatalog,
+    redeemRewardItem,
+    markUserAsPwaInstalled
   } = useApp();
+
+  const themeColor = config.theme_color || '#E31837';
 
   const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
 
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'orders' | 'notifications' | 'rewards'>('orders');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'orders' | 'notifications' | 'rewards' | 'promos' | 'coupons'>('orders');
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
+
+  // Derived data for tabs
+  const activePromos = promotions.filter(p => p.status === 'active' && new Date(p.end_date) > new Date());
+  const availableCoupons = allCoupons.filter(c => c.active && (!c.valid_until || new Date(c.valid_until) > new Date()));
 
   // ── Lógica de Popup Automático de Instalación (PWA) ────────────────────────
   const [showAutoPopup, setShowAutoPopup] = useState(false);
@@ -391,8 +402,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
   }, [orders]); // Depender del estado global para mayor velocidad
 
   return (
-    <div className="flex flex-col gap-6 pb-24 text-zinc-900 bg-white">
-      <SEOHead title={currentUser ? `Panel de ${currentUser.nombre}` : "Panel de Usuario"} />
+    <div className="flex flex-col gap-5 pb-20 text-zinc-900 bg-zinc-50 min-h-screen overflow-x-hidden max-w-md mx-auto">
+      <SEOHead title={currentUser ? `Mi Cuenta - ${currentUser.nombre}` : "Mi Cuenta"} />
 
       {/* Pop-up de Instalación Automática (PWA) */}
       {showAutoPopup && deferredPrompt && (
@@ -402,7 +413,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
             animate={{ y: 0, opacity: 1 }}
             className="w-full max-w-[340px] bg-white rounded-[32px] shadow-2xl border border-zinc-200 overflow-hidden mb-16 sm:mb-0"
           >
-            {/* Imagen de Captura de Pantalla / Preview */}
             <div className="relative h-44 bg-zinc-100 overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800" 
@@ -416,19 +426,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               >
                 <X size={16} />
               </button>
-              <div className="absolute bottom-4 left-6 bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-lg">
+              <div className="absolute bottom-4 left-6 text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-lg" style={{ backgroundColor: themeColor }}>
                 App Oficial
               </div>
             </div>
 
             <div className="p-5 flex flex-col gap-4">
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 bg-violet-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-violet-200 shrink-0">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0" style={{ backgroundColor: themeColor }}>
                   <Smartphone size={22} />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <h4 className="text-[15px] font-black text-zinc-900 uppercase tracking-tight">Lleva {config.site_nombre || 'la tienda'} en tu móvil</h4>
-                  <p className="text-[11px] text-zinc-500 font-medium leading-tight">Seguimiento en mapa, alertas de pedidos y compras offline más rápidas.</p>
+                  <h4 className="text-[15px] font-black text-zinc-900 uppercase tracking-tight">Lleva {config.site_nombre || 'la tienda'} en tu celular</h4>
+                  <p className="text-[12px] text-zinc-500 font-medium leading-tight">Seguimiento en mapa, alertas de pedidos y compras más rápidas.</p>
                 </div>
               </div>
               
@@ -438,13 +448,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     if (onInstallClick) onInstallClick();
                     setShowAutoPopup(false);
                   }}
-                  className="w-full bg-zinc-950 hover:bg-zinc-800 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 cursor-pointer"
+                  className="w-full hover:opacity-90 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 cursor-pointer"
+                  style={{ backgroundColor: themeColor }}
                 >
                   Instalar Ahora
                 </button>
                 <button
                   onClick={() => setShowAutoPopup(false)}
-                  className="w-full bg-transparent text-zinc-400 hover:text-zinc-600 font-bold py-1 rounded-xl text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                  className="w-full bg-transparent text-zinc-400 hover:text-zinc-600 font-bold py-1 rounded-xl text-[11px] uppercase tracking-wider transition-all cursor-pointer"
                 >
                   Quizás luego
                 </button>
@@ -479,26 +490,27 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
       )}
 
       {/* Title */}
-      <div>
-
-        <span className="text-[10px] font-mono text-violet-600 font-bold uppercase tracking-wider">Espacio del Cliente</span>
-        <h2 className="text-xl font-bold font-display text-zinc-900">Panel de Usuario Inteligente</h2>
+      <div className="px-4">
+        <span className="text-[11px] font-mono font-bold uppercase tracking-wider" style={{ color: themeColor }}>{config.site_nombre || 'Mi Cuenta'}</span>
+        <h2 className="text-xl font-bold font-display text-zinc-900">{currentUser ? `Hola, ${currentUser.nombre.split(' ')[0]}` : 'Bienvenido'}</h2>
       </div>
 
       {/* NOT LOGGED IN ZONE */}
       {!currentUser ? (
-        <div className="w-full flex flex-col border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="w-full flex flex-col border border-zinc-200 rounded-2xl overflow-hidden shadow-sm mx-4">
           {/* Tabs header */}
           <div className="flex border-b border-zinc-200">
             <button
               onClick={() => { setAuthMode('login'); setAuthError(''); setResetSent(false); }}
-              className={`flex-1 py-3 text-xs font-bold uppercase font-display tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${authMode === 'login' || authMode === 'forgot' ? 'bg-zinc-950 text-white font-black' : 'bg-zinc-55 text-zinc-600 hover:bg-zinc-100'}`}
+              className={`flex-1 py-3 text-sm font-bold uppercase font-display tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${authMode === 'login' || authMode === 'forgot' ? 'text-white font-black' : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100'}`}
+              style={authMode === 'login' || authMode === 'forgot' ? { backgroundColor: themeColor } : {}}
             >
-              <LogIn size={14} /> Acceder
+              <LogIn size={14} /> Entrar
             </button>
             <button
               onClick={() => { setAuthMode('register'); setAuthError(''); setResetSent(false); }}
-              className={`flex-1 py-3 text-xs font-bold uppercase font-display tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${authMode === 'register' ? 'bg-zinc-950 text-white font-black' : 'bg-zinc-55 text-zinc-600 hover:bg-zinc-100'}`}
+              className={`flex-1 py-3 text-sm font-bold uppercase font-display tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${authMode === 'register' ? 'text-white font-black' : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100'}`}
+              style={authMode === 'register' ? { backgroundColor: themeColor } : {}}
             >
               <UserPlus size={14} /> Registrarse
             </button>
@@ -506,15 +518,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
           <div className="p-5 flex flex-col gap-4">
             <div className="text-center">
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
-                {authMode === 'login' && 'Inicia sesión con tu correo electrónico y contraseña para consultar el estado en tiempo real de tus compras.'}
-                {authMode === 'register' && 'Regístrate para recibir notificaciones de promociones, envíos exprés de alimentos y ver el estatus de tus órdenes.'}
-                {authMode === 'forgot' && 'Ingresa tu correo electrónico para recibir un enlace de recuperación de contraseña.'}
+              <p className="text-[12px] text-zinc-500 leading-relaxed">
+                {authMode === 'login' && 'Inicia sesión para ver el estado de tus pedidos y acumular puntos.'}
+                {authMode === 'register' && 'Crea tu cuenta para recibir ofertas y seguir tus pedidos.'}
+                {authMode === 'forgot' && 'Ingresa tu correo para recuperar tu contraseña.'}
               </p>
             </div>
 
             {authError && (
-              <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg text-xs font-semibold text-red-650 flex items-center gap-2">
+              <div className="p-3 bg-red-50/50 border border-red-200 rounded-xl text-sm font-semibold text-red-650 flex items-center gap-2">
                 <AlertCircle size={14} className="shrink-0 text-red-600" />
                 <span>{authError}</span>
               </div>
@@ -522,10 +534,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
             {/* LOGIN FORM */}
             {authMode === 'login' && !resetSent && (
-              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5 text-xs">
+              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5 text-sm">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <Mail size={11} className="text-violet-500" /> Correo Electrónico
+                  <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[10px] tracking-wider">
+                    <Mail size={11} style={{ color: themeColor }} /> Correo Electrónico
                   </label>
                   <input
                     type="email"
@@ -533,13 +545,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     value={logPhone}
                     onChange={(e) => setLogPhone(e.target.value)}
                     placeholder="ejemplo@correo.com"
-                    className="bg-zinc-50 px-3 py-2 border border-zinc-200 rounded-lg outline-none focus:border-zinc-950 text-sm"
+                    className="bg-zinc-50 px-3 py-2.5 border border-zinc-200 rounded-xl outline-none focus:border-zinc-950 text-sm"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5 relative">
-                  <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <Lock size={11} className="text-violet-500" /> Contrasena Secreta
+                  <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[10px] tracking-wider">
+                    <Lock size={11} style={{ color: themeColor }} /> Contraseña
                   </label>
                   <div className="relative w-full">
                     <input
@@ -547,14 +559,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                       required
                       value={logPassword}
                       onChange={(e) => setLogPassword(e.target.value)}
-                      placeholder="Ingrese su contrasena..."
-                      className="bg-zinc-50 pl-3 pr-10 py-2 border border-zinc-200 rounded-lg outline-none focus:border-zinc-950 w-full text-sm"
+                      placeholder="Tu contraseña..."
+                      className="bg-zinc-50 pl-3 pr-10 py-2.5 border border-zinc-200 rounded-xl outline-none focus:border-zinc-950 w-full text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition"
-                      title={showPassword ? "Ocultar Contrasena" : "Mostrar Contrasena"}
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
@@ -563,17 +574,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
                 <button
                   type="submit"
-                  className="bg-violet-600 hover:bg-violet-750 text-white font-bold font-display uppercase tracking-wider py-2.5 rounded-lg text-xs mt-2 transition-transform cursor-pointer"
+                  className="hover:opacity-90 text-white font-bold font-display uppercase tracking-wider py-3 rounded-xl text-sm mt-2 transition-transform cursor-pointer"
+                  style={{ backgroundColor: themeColor }}
                 >
-                  Entrar a Mi Panel
+                  Entrar
                 </button>
                 
                 <button
                   type="button"
                   onClick={() => setAuthMode('forgot')}
-                  className="text-[10px] text-zinc-500 hover:text-violet-600 transition-colors font-medium mt-1 text-center"
+                  className="text-[11px] text-zinc-500 hover:underline transition-colors font-medium mt-1 text-center"
                 >
-                  ¿Olvidó su contraseña?
+                  ¿Olvidaste tu contraseña?
                 </button>
               </form>
             )}
@@ -583,7 +595,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               <form onSubmit={handleForgotSubmit} className="flex flex-col gap-3.5 text-xs">
                 <div className="flex flex-col gap-1.5">
                   <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <User size={11} className="text-violet-500" /> Correo Electrónico
+                    <User size={11} style={{ color: themeColor }} /> Correo Electrónico
                   </label>
                   <input
                     type="email"
@@ -596,14 +608,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                 </div>
                 <button
                   type="submit"
-                  className="bg-violet-600 hover:bg-violet-750 text-white font-bold font-display uppercase tracking-wider py-2.5 rounded-lg text-xs mt-2 transition-transform cursor-pointer"
+                  className="hover:opacity-90 text-white font-bold font-display uppercase tracking-wider py-3 rounded-xl text-sm mt-2 transition-transform cursor-pointer" style={{ backgroundColor: themeColor }}
                 >
                   Enviar Enlace de Recuperación
                 </button>
                 <button
                   type="button"
                   onClick={() => setAuthMode('login')}
-                  className="text-[10px] text-zinc-500 hover:text-violet-600 transition-colors font-medium mt-1 text-center"
+                  className="text-[11px] text-zinc-500 hover:underline transition-colors font-medium mt-1 text-center"
                 >
                   Volver al Inicio de Sesión
                 </button>
@@ -615,7 +627,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5 text-xs">
                 <div className="flex flex-col gap-1.5">
                   <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <User size={11} className="text-violet-500" /> Nombre Completo
+                    <User size={11} style={{ color: themeColor }} /> Nombre Completo
                   </label>
                   <input
                     type="text"
@@ -629,7 +641,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <Mail size={11} className="text-violet-500" /> Correo Electrónico
+                    <Mail size={11} style={{ color: themeColor }} /> Correo Electrónico
                   </label>
                   <input
                     type="email"
@@ -643,7 +655,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <Phone size={11} className="text-violet-500" /> Telefono (El mismo que usas en el checkout)
+                    <Phone size={11} style={{ color: themeColor }} /> Telefono (El mismo que usas en el checkout)
                   </label>
                   <input
                     type="tel"
@@ -658,7 +670,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
                 <div className="flex flex-col gap-1.5 relative">
                   <label className="font-bold text-zinc-650 flex items-center gap-1.5 uppercase font-mono text-[9px] tracking-wider">
-                    <Lock size={11} className="text-violet-500" /> Crear Contrasena Secreta
+                    <Lock size={11} style={{ color: themeColor }} /> Crear Contrasena Secreta
                   </label>
                   <div className="relative w-full">
                     <input
@@ -682,7 +694,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
                 <button
                   type="submit"
-                  className="bg-violet-600 hover:bg-violet-750 text-white font-bold font-display uppercase tracking-wider py-2.5 rounded-lg text-xs mt-2 transition-transform cursor-pointer"
+                  className="hover:opacity-90 text-white font-bold font-display uppercase tracking-wider py-3 rounded-xl text-sm mt-2 transition-transform cursor-pointer" style={{ backgroundColor: themeColor }}
                 >
                   Registrar e Ingresar
                 </button>
@@ -699,19 +711,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
         </div>
       ) : (
         /* LOGGED IN VIEW */
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 px-4">
           {/* USER CHROME HEADER AND QUICK STATS */}
-          <div className="p-5 border border-zinc-200 rounded-xl bg-gradient-to-br from-zinc-50 to-zinc-100/40 divide-y divide-zinc-200/80 flex flex-col gap-4">
+          <div className="p-5 border border-zinc-200 rounded-2xl bg-white shadow-sm divide-y divide-zinc-200/80 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center text-lg shadow-inner animate-fade-in animate-duration-500">
+                <div className="w-12 h-12 rounded-full text-white font-bold flex items-center justify-center text-lg shadow-inner" style={{ backgroundColor: themeColor }}>
                   {currentUser.nombre.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="font-bold text-zinc-900 leading-tight flex items-center gap-1.5">
+                  <h3 className="font-bold text-zinc-900 leading-tight text-sm">
                     {currentUser.nombre}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-mono flex items-center gap-1 mt-0.5">
+                  <p className="text-[12px] text-zinc-500 font-mono flex items-center gap-1 mt-0.5">
                     <Mail size={11} className="text-zinc-400" /> {currentUser.email || currentUser.telefono}
                   </p>
                 </div>
@@ -723,116 +735,77 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                   logoutUser();
                   setTab('home');
                 }}
-                className="bg-white hover:bg-zinc-100 text-red-500 hover:text-red-700 hover:border-red-600 transition-all border border-zinc-200 text-[10px] font-bold uppercase tracking-wider py-1.5 px-2.5 rounded-lg cursor-pointer flex items-center gap-1"
+                className="bg-white hover:bg-red-50 text-red-500 hover:text-red-700 hover:border-red-300 transition-all border border-zinc-200 text-[11px] font-bold uppercase tracking-wider py-1.5 px-2.5 rounded-xl cursor-pointer flex items-center gap-1"
               >
                 <LogOut size={11} /> Salir
               </button>
             </div>
 
+            {/* PWA Install Badge */}
+            {currentUser.is_pwa_installed && (
+              <div className="flex items-center gap-2 text-[11px] font-bold rounded-xl px-3 py-2" style={{ backgroundColor: themeColor + '12', color: themeColor }}>
+                <Smartphone size={13} /> App Instalada — Bonus x1.5 en puntos
+              </div>
+            )}
+
             {/* SUB-TABS INTERIOR */}
-            <div className="pt-4 flex justify-between items-center bg-transparent gap-2">
-              <button
-                type="button"
-                onClick={() => { setActiveSubTab('orders'); setShowEditFields(false); }}
-                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold font-display uppercase tracking-wider text-center flex items-center justify-center gap-1 ${activeSubTab === 'orders' ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:text-zinc-900 bg-white border border-zinc-200'}`}
-              >
-                <Package size={13} /> Pedidos ({userOrders.length})
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => { setActiveSubTab('notifications'); setShowEditFields(false); }}
-                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold font-display uppercase tracking-wider text-center flex items-center justify-center gap-1 relative ${activeSubTab === 'notifications' ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:text-zinc-900 bg-white border border-zinc-200'}`}
-              >
-                <Bell size={13} /> Mensajes
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1 bg-red-500 border border-white text-white font-mono text-[8px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center antialiased">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setActiveSubTab('rewards'); setShowEditFields(false); }}
-                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold font-display uppercase tracking-wider text-center flex items-center justify-center gap-1 ${activeSubTab === 'rewards' ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:text-zinc-900 bg-white border border-zinc-200'}`}
-              >
-                <Star size={13} /> Recompensas
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setActiveSubTab('profile'); setShowEditFields(true); }}
-                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold font-display uppercase tracking-wider text-center flex items-center justify-center gap-1 ${activeSubTab === 'profile' ? 'bg-zinc-950 text-white' : 'text-zinc-500 hover:text-zinc-900 bg-white border border-zinc-200'}`}
-              >
-                <Edit2 size={13} /> Mi Cuenta
-              </button>
+            <div className="pt-4 flex gap-2 bg-transparent overflow-x-auto no-scrollbar">
+              {[
+                { id: 'orders' as const, label: 'Pedidos', icon: Package, count: userOrders.length },
+                { id: 'notifications' as const, label: 'Mensajes', icon: MessageSquare, count: unreadCount },
+                { id: 'promos' as const, label: 'Ofertas', icon: Tag, count: activePromos.length },
+                { id: 'coupons' as const, label: 'Cupones', icon: Gift, count: availableCoupons.length },
+                { id: 'rewards' as const, label: 'Puntos', icon: Star, count: getUserLoyaltyPoints(currentUser.id) },
+                { id: 'profile' as const, label: 'Cuenta', icon: Edit2 },
+              ].map(tabItem => (
+                <button
+                  key={tabItem.id}
+                  type="button"
+                  onClick={() => { setActiveSubTab(tabItem.id); setShowEditFields(tabItem.id === 'profile'); }}
+                  className={`flex-shrink-0 py-2 px-3 rounded-xl text-[11px] font-bold font-display tracking-wider text-center flex items-center justify-center gap-1 transition-all ${
+                    activeSubTab === tabItem.id ? 'text-white shadow-md' : 'text-zinc-500 bg-white border border-zinc-200 hover:bg-zinc-50'
+                  }`}
+                  style={activeSubTab === tabItem.id ? { backgroundColor: themeColor } : {}}
+                >
+                  <tabItem.icon size={12} /> {tabItem.label}
+                  {tabItem.count !== undefined && tabItem.count > 0 && (
+                    <span className="ml-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full text-[9px] font-bold px-1 text-white" style={{ backgroundColor: themeColor + 'CC' }}>
+                      {tabItem.count > 99 ? '99+' : tabItem.count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* EDIT PROFILE FIELDS CONTAINER */}
           {activeSubTab === 'profile' && showEditFields && (
-            <div className="p-4 border border-zinc-200 rounded-xl bg-white flex flex-col gap-4 text-xs">
-              <h3 className="text-sm font-bold font-display text-zinc-900 border-b border-zinc-150 pb-2">Editar Datos de Perfil</h3>
+            <div className="mx-4 p-5 border border-zinc-200 rounded-2xl bg-white flex flex-col gap-4 text-sm">
+              <h3 className="text-sm font-bold font-display text-zinc-900 border-b border-zinc-100 pb-3">Editar Datos de Perfil</h3>
               
-              <form onSubmit={handleUpdateProfile} className="flex flex-col gap-3.5">
-                <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-zinc-650">Nombre Completo</span>
-                  <input
-                    type="text"
-                    required
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-zinc-900 text-sm"
-                  />
+              <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <span className="font-semibold text-zinc-600 text-[12px]">Nombre Completo</span>
+                  <input type="text" required value={editName} onChange={(e) => setEditName(e.target.value)} className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 outline-none focus:border-zinc-900 text-sm" />
                 </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-zinc-650">Correo Electrónico</span>
-                  <input
-                    type="email"
-                    required
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-zinc-900 text-sm"
-                  />
+                <div className="flex flex-col gap-1.5">
+                  <span className="font-semibold text-zinc-600 text-[12px]">Correo Electrónico</span>
+                  <input type="email" required value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 outline-none focus:border-zinc-900 text-sm" />
                 </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-zinc-650">Teléfono Registrado</span>
-                  <input
-                    type="tel"
-                    required
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-zinc-900 text-sm"
-                  />
+                <div className="flex flex-col gap-1.5">
+                  <span className="font-semibold text-zinc-600 text-[12px]">Teléfono</span>
+                  <input type="tel" required value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 outline-none focus:border-zinc-900 text-sm" />
                 </div>
-
-                <div className="flex flex-col gap-1 relative">
-                  <span className="font-semibold text-zinc-650">Contraseña Secreta</span>
+                <div className="flex flex-col gap-1.5 relative">
+                  <span className="font-semibold text-zinc-600 text-[12px]">Contraseña</span>
                   <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={editPassword}
-                      onChange={(e) => setEditPassword(e.target.value)}
-                      className="bg-zinc-50 border border-zinc-200 rounded-lg pl-3 pr-10 py-2 outline-none focus:border-zinc-900 w-full text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
-                    >
+                    <input type={showPassword ? "text" : "password"} required value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="bg-zinc-50 border border-zinc-200 rounded-xl pl-3 pr-10 py-2.5 outline-none focus:border-zinc-900 w-full text-sm" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700">
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 </div>
-
-                <button
-                  type="submit"
-                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider transition-colors uppercase font-display cursor-pointer"
-                >
+                <button type="submit" className="hover:opacity-90 text-white font-bold py-3 rounded-xl text-sm tracking-wider transition-all uppercase font-display cursor-pointer active:scale-[0.98]" style={{ backgroundColor: themeColor }}>
                   Guardar Cambios
                 </button>
               </form>
@@ -841,24 +814,21 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
           {/* ACTIVE TAB CONTENT Area: ORDERS */}
           {activeSubTab === 'orders' && (
-            <div className="flex flex-col gap-4 text-xs">
+            <div className="flex flex-col gap-4 px-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold font-display text-zinc-900">Mis Pedidos en Valencia</h3>
-                <span className="text-[10px] text-zinc-500 font-mono">Total: {userOrders.length}</span>
+                <h3 className="text-sm font-bold font-display text-zinc-900">Mis Pedidos</h3>
+                <span className="text-[11px] text-zinc-500 font-mono">{userOrders.length} pedido{userOrders.length !== 1 ? 's' : ''}</span>
               </div>
 
               {userOrders.length === 0 ? (
-                <div className="text-center py-12 p-6 bg-zinc-50 border border-zinc-200 rounded-xl flex flex-col items-center gap-2">
-                  <span className="text-2xl mt-1"></span>
-                  <h4 className="font-semibold text-zinc-800">No tienes pedidos registrados</h4>
-                  <p className="text-[11px] text-zinc-400 max-w-xs leading-normal">
-                    Si ya realizaste un checkout, asegurate de que tu numero de telefono registrado ({currentUser.telefono}) coincida exactamente con el de la factura de WhatsApp.
+                <div className="text-center py-12 bg-white border border-zinc-200 rounded-2xl flex flex-col items-center gap-2">
+                  <Package size={32} className="text-zinc-300" />
+                  <h4 className="font-semibold text-zinc-800 text-sm">Sin pedidos aún</h4>
+                  <p className="text-[12px] text-zinc-400 max-w-[240px] leading-relaxed">
+                    Tus pedidos aparecerán aquí. ¡Empieza a pedir!
                   </p>
-                  <button
-                    onClick={() => setTab('catalog')}
-                    className="mt-3 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg font-bold text-xs cursor-pointer"
-                  >
-                    Hacer Mi Primer Pedido
+                  <button onClick={() => setTab('catalog')} className="mt-2 text-white px-5 py-2.5 rounded-xl font-bold text-[12px] cursor-pointer active:scale-95 transition-all" style={{ backgroundColor: themeColor }}>
+                    Ver Menú
                   </button>
                 </div>
               ) : (
@@ -1001,328 +971,315 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
             </div>
           )}
 
-          {/* ACTIVE TAB CONTENT Area: NOTIFICATIONS & PROMOTIONS (Requested) */}
+          {/* ═══ NOTIFICACIONES / MENSAJES ═══ */}
           {activeSubTab === 'notifications' && (
-            <div className="flex flex-col gap-4 text-xs">
-              {/* Pestañas: Mensajes | Estado Pedido */}
-              <div className="flex gap-2 border-b border-slate-200 pb-2">
-                <button
-                  onClick={() => setNotifSubTab('messages')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${notifSubTab === 'messages' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  <MessageSquare size={14} /> Mensajes
-                  {unreadCount > 0 && <span className="w-5 h-5 bg-red-500 text-white rounded-full text-[9px] flex items-center justify-center">{unreadCount}</span>}
-                </button>
-                <button
-                  onClick={() => setNotifSubTab('orders')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${notifSubTab === 'orders' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  <Package size={14} /> Estado del Pedido
-                </button>
+            <div className="flex flex-col gap-4 text-sm px-0">
+              {/* Push Notifications Settings */}
+              <div className="mx-4 p-4 border rounded-2xl relative overflow-hidden flex flex-col gap-3" style={{ borderColor: themeColor + '30', backgroundColor: themeColor + '08' }}>
+                <div className="flex gap-2.5 items-start">
+                  <div className="p-2 rounded-xl shrink-0" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
+                    <Bell size={16} />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-0.5">
+                    <h4 className="font-bold text-zinc-950 text-sm">Avisos en tu celular</h4>
+                    <p className="text-[12px] text-zinc-600 leading-relaxed">
+                      Recibe avisos de pedidos y ofertas directamente en tu pantalla.
+                    </p>
+                  </div>
+                </div>
+                {notificationPermission === 'default' && (
+                  <button onClick={requestNotificationPermission} className="w-full text-white font-bold py-2.5 px-3 rounded-xl text-[12px] uppercase tracking-wider transition-all cursor-pointer active:scale-[0.98]" style={{ backgroundColor: themeColor }}>
+                    Activar Notificaciones
+                  </button>
+                )}
+                {notificationPermission === 'granted' && (
+                  <div className="flex items-center gap-2 text-[11px] font-medium" style={{ color: themeColor }}>
+                    <CheckCircle size={12} /> Notificaciones activas
+                  </div>
+                )}
               </div>
 
-              {/* Contenido basado en pestaña */}
-              {notifSubTab === 'messages' ? (
-                <>
-                  {/* Browser Push Notifications Utility Box */}
-                  <div id="browser-push-settings" className="p-4 border border-violet-200 bg-violet-50/10 rounded-xl relative overflow-hidden flex flex-col gap-3">
-                    <div className="flex gap-2.5 items-start">
-                      <div className="p-2 bg-violet-100 rounded-lg text-violet-600 shrink-0">
-                        <Bell size={16} />
-                      </div>
-                      <div className="flex-1 flex flex-col gap-0.5">
-                        <h4 className="font-bold text-zinc-950 text-xs">Notificaciones de Escritorio / Móvil</h4>
-                        <p className="text-[11px] text-zinc-650 leading-relaxed font-sans">
-                          Permite que la app te envíe avisos rápidos de promociones y estado de tus pedidos directamente en tu pantalla.
-                        </p>
-                      </div>
+              {/* Chat-style message list */}
+              <div className="flex flex-col gap-0.5">
+                {userNotifications.length === 0 ? (
+                  <div className="text-center py-12 mx-4 bg-white border border-zinc-200 rounded-2xl flex flex-col items-center gap-2">
+                    <MessageSquare size={32} className="text-zinc-300" />
+                    <p className="font-semibold text-zinc-700 text-sm">Sin mensajes nuevos</p>
+                    <p className="text-[12px] text-zinc-400 max-w-[240px] leading-relaxed">
+                      Aquí verás avisos de tus pedidos y ofertas de {config.site_nombre}.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-end px-4 mb-1">
+                      <button onClick={() => { if (confirm('¿Borrar todos los mensajes?')) clearAllNotifications(); }} className="flex items-center gap-1 text-[11px] text-red-500 font-bold">
+                        <Trash2 size={11} /> Borrar todo
+                      </button>
                     </div>
-
-                    {/* Sub-status control based on state */}
-                    {notificationPermission === 'unsupported' && (
-                      <div className="bg-zinc-100 border border-zinc-200 text-zinc-650 text-[10px] p-2.5 rounded-lg flex items-center gap-1.5 leading-normal">
-                         <AlertCircle size={12} className="shrink-0 text-zinc-500" />
-                        <span>Las notificaciones nativas no son soportadas por tu navegador en este contexto. Prueba abriendo en una pestaña aparte.</span>
-                      </div>
-                    )}
-
-                    {notificationPermission === 'denied' && (
-                      <div className="bg-rose-50 border border-rose-100 text-rose-800 text-[10px] p-2.5 rounded-lg flex flex-col gap-1 leading-normal font-sans">
-                        <div className="flex items-center gap-1.5 font-bold">
-                          <AlertCircle size={12} className="shrink-0 text-rose-500" />
-                          <span>Notificaciones Bloqueadas en tu Navegador</span>
-                        </div>
-                        <span>Has desactivado los permisos de notificación. Para habilitarlos, por favor haz clic en el ícono de candado junto a la URL del navegador y cambia el permiso a "Permitir".</span>
-                      </div>
-                    )}
-
-                    {notificationPermission === 'default' && (
-                      <div className="flex flex-col gap-2 pt-1 border-t border-violet-100/30 font-display">
-                        <button
-                          type="button"
-                          onClick={requestNotificationPermission}
-                          className="w-full bg-violet-600 hover:bg-violet-750 text-white font-extrabold py-2.5 px-3 rounded-lg text-[11px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
-                        >
-                          <span>Habilitar Notificaciones de Navegador</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {notificationPermission === 'granted' && (
-                      <div className="flex flex-col gap-2.5 pt-1 border-t border-violet-100/30">
-                        <div className="bg-violet-50 border border-violet-150 text-violet-850 text-[10px] p-2.5 rounded-lg flex items-center gap-1.5 font-medium leading-normal">
-                          <CheckCircle size={12} className="shrink-0 text-violet-600" />
-                          <span>¡Notificaciones Habilitadas Exitosamente para Valencia!</span>
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            onClick={sendTestPushNotification}
-                            className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-2.5 px-3.5 rounded-lg text-[11px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.97]"
+                    {userNotifications.map((notif) => {
+                      const isFromStore = notif.tipo === 'todos' || notif.tipo === 'personal';
+                      return (
+                        <div key={notif.id} className={`flex ${isFromStore ? 'justify-start' : 'justify-end'} px-4 py-1`}>
+                          <div
+                            onClick={() => { registerNotificationClick(notif.id); setSelectedNotification(notif); }}
+                            className={`max-w-[85%] p-3 rounded-2xl relative cursor-pointer transition-all ${
+                              isFromStore
+                                ? 'bg-white border border-zinc-200 rounded-tl-sm shadow-xs'
+                                : 'text-white rounded-tr-sm shadow-md'
+                            }`}
+                            style={!isFromStore ? { backgroundColor: themeColor } : {}}
                           >
-                            🔔 Enviar Notificación de Prueba
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {userNotifications.length === 0 ? (
-                    <div className="text-center py-16 bg-zinc-50 border border-zinc-200 rounded-xl flex flex-col items-center gap-2">
-                      <span className="text-3xl mt-1"></span>
-                      <p className="font-semibold text-zinc-700">Tu bandeja de avisos está limpia</p>
-                      <p className="text-[11px] text-zinc-400 max-w-xs mt-0.5 leading-relaxed">
-                        Aquí recibirás notificaciones de tus pedidos, ofertas especiales y cupones de descuento.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm('¿Seguro que deseas borrar todas las notificaciones?')) {
-                              clearAllNotifications();
-                            }
-                          }}
-                          className="flex items-center gap-1.5 text-[10px] text-rose-500 hover:text-rose-700 font-bold transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={12} /> Borrar todas
-                        </button>
-                      </div>
-                      <div className="flex flex-col gap-3">
-                      {userNotifications.map((notif) => (
-                        <div 
-                          key={notif.id} 
-                          onClick={() => {
-                            registerNotificationClick(notif.id);
-                            setSelectedNotification(notif);
-                          }}
-                          className={`p-3.5 border rounded-xl flex items-start gap-3 relative shadow-xs transition-colors cursor-pointer hover:shadow-md ${
-                            notif.leida 
-                              ? 'bg-zinc-50/40 border-zinc-200 text-zinc-700' 
-                              : 'bg-violet-50/10 border-violet-200 text-zinc-950 ring-1 ring-violet-500/5'
-                          }`}
-                        >
-                          {/* Read status dot */}
-                          {!notif.leida && (
-                            <div className="absolute top-3.5 right-3.5 w-1.5 h-1.5 rounded-full bg-violet-600 animate-pulse" />
-                          )}
-
-                          <div className="p-1.5 rounded-lg bg-violet-100/60 text-violet-600 font-bold shrink-0 mt-0.5 font-mono text-[10px]">
-                    {notif.tipo === 'personal' ? 'P' : notif.tipo === 'request' ? 'R' : 'T'}
-                  </div>
-
-                          <div className="flex-1 flex flex-col gap-1 pr-4">
-                            <div className="flex items-center gap-1.5">
-                              <h4 className="font-bold text-zinc-800 text-[12px] pr-2">{notif.titulo}</h4>
-                              {notif.tipo === 'personal' && (
-                                <span className="text-[8px] bg-indigo-50 border border-indigo-200 text-indigo-600 px-1 py-0.2 rounded font-mono font-bold tracking-tight uppercase">Personal</span>
-                              )}
-                              {notif.tipo === 'todos' && (
-                                <span className="text-[8px] bg-violet-50 border border-violet-200 text-violet-600 px-1 py-0.2 rounded font-mono font-bold tracking-tight uppercase">Promo</span>
-                              )}
-                              {notif.tipo === 'request' && (
-                                <span className="text-[8px] bg-amber-50 border border-amber-200 text-amber-600 px-1 py-0.2 rounded font-mono font-bold tracking-tight uppercase">Solicitud</span>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-[10px] font-bold" style={{ color: isFromStore ? themeColor : 'rgba(255,255,255,0.8)' }}>
+                                {notif.tipo === 'todos' ? config.site_nombre : notif.tipo === 'request' ? 'Tú' : config.site_nombre}
+                              </span>
+                              {!notif.leida && isFromStore && (
+                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: themeColor }} />
                               )}
                             </div>
-                            <p className="text-[11px] text-zinc-650 leading-relaxed font-sans mt-0.5">{notif.mensaje}</p>
-                            <span className="text-[9px] font-mono text-zinc-400 mt-1">{notif.fecha}</span>
-                          </div>
-
-                          <div className="absolute bottom-3 right-3 flex gap-2 items-center">
-                            {/* Action mark as read */}
-                            {!notif.leida && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Evita que se cuente como clic al marcar leída
-                                  markNotificationAsRead(notif.id);
-                                }}
-                                className="text-[10px] text-violet-600 hover:text-violet-800 hover:underline font-bold"
-                              >
-                                Marcar leída
-                              </button>
-                            )}
-
-                            {/* Delete notification (borrar mensajes) */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const ok = confirm('¿Seguro que deseas borrar este mensaje del panel?');
-                                if (ok) deleteNotification(notif.id);
-                              }}
-                              className="text-[10px] text-rose-600 hover:text-rose-800 hover:underline font-bold"
-                              title="Borrar mensaje"
-                            >
-                              Borrar
-                            </button>
+                            {notif.titulo && <p className={`font-bold text-[13px] mb-0.5 ${isFromStore ? 'text-zinc-900' : 'text-white'}`}>{notif.titulo}</p>}
+                            <p className={`text-[13px] leading-relaxed ${isFromStore ? 'text-zinc-600' : 'text-white/90'}`}>{notif.mensaje}</p>
+                            <p className={`text-[10px] mt-1 font-mono ${isFromStore ? 'text-zinc-400' : 'text-white/60'}`}>{notif.fecha}</p>
                           </div>
                         </div>
-                      ))}
-                      </div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Pestaña Estado del Pedido */}
-                  {notifSubTab === 'orders' && (
-                    <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
-                      <h4 className="text-xs font-bold text-violet-900 mb-3">Tu Pedido Reciente</h4>
-                      {orders.length === 0 ? (
-                        <p className="text-[11px] text-slate-500">No tienes pedidos activos.</p>
-                      ) : (
-                        orders.slice(0, 2).map(order => (
-                          <div key={order.id} className="p-3 bg-white border border-violet-100 rounded-lg mb-2">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-[10px] font-mono text-slate-600">{order.id}</span>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                            order.status === 'Pendiente' ? 'bg-amber-100 text-amber-700' :
-                            order.status === 'Procesando' ? 'bg-blue-100 text-blue-700' :
-                            order.status === 'En preparación' ? 'bg-indigo-100 text-indigo-700' :
-                            order.status === 'En camino' ? 'bg-violet-100 text-violet-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>{order.status}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-700">${order.total_usd?.toFixed(2)} USD</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                  )}
-                </>
-              )}
-
-              {/* Direct Message Module from User to Business */}
-              <div className="p-4 border border-indigo-100 bg-indigo-50/30 rounded-xl flex flex-col gap-3 mt-2">
-                <div className="flex gap-2 items-center">
-                  <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0">
-                    <Edit2 size={16} />
-                  </div>
-                  <h4 className="font-bold text-indigo-950 text-xs">Enviar Mensaje al Negocio</h4>
-                </div>
-                <p className="text-[11px] text-zinc-650 leading-relaxed font-sans">
-                  ¿Tienes alguna consulta o necesitas ayuda con un pedido? Escríbenos directamente y te responderemos por este mismo medio o a tu WhatsApp.
-                </p>
-                <textarea 
-                  value={directMsg}
-                  onChange={(e) => setDirectMsg(e.target.value)}
-                  className="w-full text-xs p-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white" 
-                  placeholder="Ej: Hola, quisiera saber si tienen disponibilidad para..."
-                  rows={3}
-                />
-                <button 
-                  onClick={async () => {
-                    console.log('📨 Usuario: Enviando consulta de producto...');
-                    if (directMsg.trim()) {
-                      console.log('📝 Contenido:', directMsg);
-                      const success = await requestPart(
-                        currentUser?.nombre || 'Anónimo',
-                        currentUser?.telefono || '',
-                        directMsg.trim()
                       );
-                      
-                      if (success) {
-                        console.log('✅ Mensaje enviado al Administrador y Usuario.');
-                        setDirectMsg('');
-                        alert('¡Mensaje enviado correctamente!');
-                      } else {
-                        console.error('❌ Error al enviar mensaje: Falló la operación requestPart.');
-                        alert('Error al enviar el mensaje. Intente de nuevo.');
+                    })}
+                  </>
+                )}
+              </div>
+
+              {/* Chat input - Send message to business */}
+              <div className="mx-4 p-4 border border-zinc-200 bg-white rounded-2xl flex flex-col gap-3 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
+                    <Send size={14} />
+                  </div>
+                  <h4 className="font-bold text-zinc-900 text-sm">Escribir a {config.site_nombre}</h4>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    value={directMsg}
+                    onChange={(e) => setDirectMsg(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && directMsg.trim()) {
+                        requestPart(currentUser?.nombre || '', currentUser?.telefono || '', directMsg.trim()).then(ok => { if (ok) setDirectMsg(''); });
                       }
-                    } else {
-                      alert('Por favor, escribe un mensaje.');
-                    }
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-2.5 font-bold text-xs transition-colors"
-                >
-                  Enviar Mensaje
-                </button>
+                    }}
+                    className="flex-1 text-[13px] p-3 border border-zinc-200 rounded-xl bg-zinc-50 focus:outline-none focus:border-zinc-400"
+                    placeholder="Escribe tu mensaje..."
+                  />
+                  <button
+                    onClick={async () => {
+                      if (directMsg.trim()) {
+                        const ok = await requestPart(currentUser?.nombre || '', currentUser?.telefono || '', directMsg.trim());
+                        if (ok) setDirectMsg('');
+                      }
+                    }}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 transition-transform active:scale-95"
+                    style={{ backgroundColor: themeColor }}
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          {/* REWARDS / LOYALTY SECTION */}
-          {activeSubTab === 'rewards' && currentUser && (
-            <div className="p-4 border border-zinc-200 rounded-xl bg-white flex flex-col gap-4">
-              <div className="flex items-center gap-3 border-b border-zinc-150 pb-3">
-                <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
-                  <Award size={18} />
+          {/* ═══ PROMOCIONES / OFERTAS ═══ */}
+          {activeSubTab === 'promos' && (
+            <div className="flex flex-col gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
+                  <Tag size={18} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-zinc-900 text-sm">Recompensas</h3>
-                  <p className="text-[10px] text-zinc-500">Acumula puntos y canjéalos en tus pedidos</p>
+                  <h3 className="font-bold text-zinc-900 text-sm">Ofertas Activas</h3>
+                  <p className="text-[11px] text-zinc-500">{activePromos.length} oferta{activePromos.length !== 1 ? 's' : ''} disponible{activePromos.length !== 1 ? 's' : ''}</p>
                 </div>
               </div>
+              {activePromos.length === 0 ? (
+                <div className="text-center py-12 bg-white border border-zinc-200 rounded-2xl flex flex-col items-center gap-2">
+                  <Tag size={32} className="text-zinc-300" />
+                  <p className="font-semibold text-zinc-700 text-sm">No hay ofertas ahora</p>
+                  <p className="text-[12px] text-zinc-400">Vuelve pronto para ver nuevas promociones.</p>
+                </div>
+              ) : (
+                activePromos.map(promo => (
+                  <div key={promo.id} className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+                    {promo.image_url && (
+                      <div className="h-32 bg-zinc-100 overflow-hidden">
+                        <img src={promo.image_url} alt={promo.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h4 className="font-bold text-zinc-900 text-sm">{promo.title}</h4>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg text-white shrink-0" style={{ backgroundColor: themeColor }}>
+                          {promo.discount_type === 'percent' ? `${promo.discount_value}% OFF` : promo.discount_type === '2x1' ? '2x1' : promo.discount_type === 'fixed' ? `$${promo.discount_value} OFF` : promo.discount_type.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-[13px] text-zinc-600 leading-relaxed mb-3">{promo.message}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-zinc-400 font-mono">Válido hasta {new Date(promo.end_date).toLocaleDateString('es-VE')}</span>
+                        {promo.coupon_code && (
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(promo.coupon_code!); alert('Cupón copiado: ' + promo.coupon_code); }}
+                            className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all active:scale-95"
+                            style={{ borderColor: themeColor, color: themeColor }}
+                          >
+                            <Copy size={11} /> {promo.coupon_code}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
-              {/* Points Balance */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 text-center">
-                <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider mb-1">Tus Puntos</p>
-                <p className="text-3xl font-black text-amber-900">{getUserLoyaltyPoints(currentUser.id)}</p>
-                <p className="text-[10px] text-amber-600 mt-1">
+          {/* ═══ CUPONES DISPONIBLES ═══ */}
+          {activeSubTab === 'coupons' && (
+            <div className="flex flex-col gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
+                  <Gift size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-zinc-900 text-sm">Mis Cupones</h3>
+                  <p className="text-[11px] text-zinc-500">{availableCoupons.length} cupón{availableCoupons.length !== 1 ? 'es' : ''} disponible{availableCoupons.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              {availableCoupons.length === 0 ? (
+                <div className="text-center py-12 bg-white border border-zinc-200 rounded-2xl flex flex-col items-center gap-2">
+                  <Gift size={32} className="text-zinc-300" />
+                  <p className="font-semibold text-zinc-700 text-sm">No hay cupones disponibles</p>
+                  <p className="text-[12px] text-zinc-400">Sigue pidiendo para recibir cupones de descuento.</p>
+                </div>
+              ) : (
+                availableCoupons.map(coupon => (
+                  <div key={coupon.id} className="bg-white border-2 border-dashed rounded-2xl p-4 relative overflow-hidden" style={{ borderColor: themeColor + '60' }}>
+                    <div className="absolute top-0 right-0 w-16 h-16 rounded-bl-full" style={{ backgroundColor: themeColor + '10' }} />
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: themeColor }}>Cupón de Descuento</p>
+                      <p className="text-3xl font-black" style={{ color: themeColor }}>{coupon.discount_percent}%</p>
+                      <p className="text-[11px] text-zinc-500 font-bold">de descuento</p>
+                      <div className="bg-zinc-100 border border-zinc-200 rounded-xl px-4 py-2 font-mono text-lg font-black tracking-wider text-zinc-800">
+                        {coupon.code}
+                      </div>
+                      {coupon.description && <p className="text-[12px] text-zinc-500">{coupon.description}</p>}
+                      {coupon.valid_until && (
+                        <p className="text-[10px] text-zinc-400 font-mono">Válido hasta {new Date(coupon.valid_until).toLocaleDateString('es-VE')}</p>
+                      )}
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(coupon.code); alert('Cupón copiado: ' + coupon.code); }}
+                        className="w-full text-white font-bold py-2.5 rounded-xl text-[12px] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                        style={{ backgroundColor: themeColor }}
+                      >
+                        <Copy size={12} /> Copiar Código
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* ═══ MIS PUNTOS / RECOMPENSAS ═══ */}
+          {activeSubTab === 'rewards' && currentUser && (
+            <div className="flex flex-col gap-4 px-4">
+              {/* Points Balance Card */}
+              <div className="rounded-2xl p-5 text-center text-white shadow-lg" style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}CC)` }}>
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Award size={18} />
+                  <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">Mis Puntos</p>
+                </div>
+                <p className="text-5xl font-black mb-1">{getUserLoyaltyPoints(currentUser.id)}</p>
+                <p className="text-[11px] opacity-80">
                   Nivel: {getUserLoyaltyTier(currentUser.id)?.name || 'Sin nivel'}
                 </p>
+                {!currentUser.is_pwa_installed && (
+                  <p className="text-[10px] mt-2 opacity-70 bg-white/20 rounded-lg px-2 py-1 inline-block">
+                    Descarga la app para ganar 1.5x puntos extra
+                  </p>
+                )}
               </div>
 
-              {/* Tier Info */}
+              {/* Tiers */}
               {config.loyalty?.tiers && config.loyalty.tiers.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Niveles Disponibles</p>
+                <div className="bg-white border border-zinc-200 rounded-2xl p-4 flex flex-col gap-2">
+                  <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">Niveles</p>
                   {config.loyalty.tiers.sort((a, b) => a.min_points - b.min_points).map((tier, idx) => {
                     const userPoints = getUserLoyaltyPoints(currentUser.id);
                     const isActive = userPoints >= tier.min_points;
                     return (
-                      <div key={idx} className={`p-3 border rounded-lg flex items-center gap-3 ${isActive ? 'bg-amber-50 border-amber-200' : 'bg-zinc-50 border-zinc-200 opacity-60'}`}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${isActive ? 'bg-amber-500 text-white' : 'bg-zinc-300 text-zinc-600'}`}>
+                      <div key={idx} className={`p-3 border rounded-xl flex items-center gap-3 ${isActive ? 'border-2' : 'border border-zinc-200 opacity-60'}`} style={isActive ? { borderColor: tier.color || themeColor, backgroundColor: (tier.color || themeColor) + '08' } : {}}>
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style={{ backgroundColor: tier.color || themeColor }}>
                           {tier.multiplier}x
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-zinc-900 text-xs">{tier.name}</p>
-                          <p className="text-[9px] text-zinc-500">{tier.min_points}+ puntos</p>
+                          <p className="font-bold text-zinc-900 text-sm">{tier.name}</p>
+                          <p className="text-[11px] text-zinc-500">{tier.min_points}+ puntos{tier.benefits?.length ? ` · ${tier.benefits[0]}` : ''}</p>
                         </div>
-                        {isActive && <span className="text-[9px] text-green-600 font-bold">ACTIVO</span>}
+                        {isActive && <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg text-white" style={{ backgroundColor: tier.color || themeColor }}>ACTIVO</span>}
                       </div>
                     );
                   })}
                 </div>
               )}
 
-              {/* Recent Transactions */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Historial Reciente</p>
+              {/* Canje de Puntos */}
+              {rewardCatalog.length > 0 && (
+                <div className="bg-white border border-zinc-200 rounded-2xl p-4 flex flex-col gap-3">
+                  <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">Canjear Puntos</p>
+                  {rewardCatalog.filter(r => r.active).map(reward => {
+                    const userPoints = getUserLoyaltyPoints(currentUser.id);
+                    const canRedeem = userPoints >= reward.points_cost;
+                    return (
+                      <div key={reward.id} className="p-3 border border-zinc-200 rounded-xl flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: themeColor + '15', color: themeColor }}>
+                          {reward.reward_type === 'discount' ? '$' : reward.reward_type === 'free_shipping' ? '🚚' : '🎁'}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-zinc-900 text-sm">{reward.name}</p>
+                          <p className="text-[11px] text-zinc-500">{reward.points_cost} puntos</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (canRedeem) {
+                              const ok = await redeemRewardItem(currentUser.id, reward.id);
+                              if (ok) alert(`¡Canjeaste "${reward.name}" por ${reward.points_cost} puntos!`);
+                              else alert('No se pudo completar el canje.');
+                            }
+                          }}
+                          disabled={!canRedeem}
+                          className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${canRedeem ? 'text-white active:scale-95' : 'bg-zinc-100 text-zinc-400'}`}
+                          style={canRedeem ? { backgroundColor: themeColor } : {}}
+                        >
+                          {canRedeem ? 'Canjear' : `Faltan ${reward.points_cost - userPoints}`}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Historial */}
+              <div className="bg-white border border-zinc-200 rounded-2xl p-4 flex flex-col gap-2">
+                <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">Últimos Movimientos</p>
                 {getLoyaltyTransactions(currentUser.id).length === 0 ? (
-                  <p className="text-[11px] text-zinc-400 text-center py-4">Aún no tienes transacciones de puntos</p>
+                  <p className="text-[13px] text-zinc-400 text-center py-6">Aún no tienes movimientos de puntos</p>
                 ) : (
-                  getLoyaltyTransactions(currentUser.id).slice(0, 5).map((tx, idx) => (
-                    <div key={idx} className="p-2.5 border border-zinc-100 rounded-lg flex items-center gap-2.5 text-[11px]">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.points > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                        {tx.points > 0 ? <Gift size={14} /> : <Star size={14} />}
+                  getLoyaltyTransactions(currentUser.id).slice(0, 8).map((tx, idx) => (
+                    <div key={idx} className="p-3 border border-zinc-100 rounded-xl flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: tx.points > 0 ? themeColor + '15' : '#FEE2E2', color: tx.points > 0 ? themeColor : '#DC2626' }}>
+                        {tx.points > 0 ? <Gift size={15} /> : <Star size={15} />}
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-zinc-800 text-[11px]">{tx.description}</p>
-                        <p className="text-[9px] text-zinc-400">{tx.created_at}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-zinc-800 text-[13px] truncate">{tx.description}</p>
+                        <p className="text-[10px] text-zinc-400 font-mono">{tx.created_at}</p>
                       </div>
-                      <span className={`font-bold text-[12px] ${tx.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="font-bold text-sm shrink-0" style={{ color: tx.points > 0 ? themeColor : '#DC2626' }}>
                         {tx.points > 0 ? '+' : ''}{tx.points}
                       </span>
                     </div>
@@ -1343,7 +1300,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden"
           >
-            <div className="p-5 bg-gradient-to-br from-violet-600 to-violet-800 text-white flex items-start justify-between gap-3">
+            <div className="p-5 text-white flex items-start justify-between gap-3" style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}DD)` }}>
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                   <Mail size={18} className="text-white" />

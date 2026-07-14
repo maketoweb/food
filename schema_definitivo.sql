@@ -226,6 +226,39 @@ BEGIN
     PERFORM add_column_if_not_exists('usuarios_clientes', 'sede_preferida_id', 'TEXT DEFAULT ''''');
 END $$;
 
+-- Migrar columnas de PWA install tracking
+DO $$
+BEGIN
+    PERFORM add_column_if_not_exists('usuarios_clientes', 'is_pwa_installed', 'BOOLEAN DEFAULT FALSE');
+    PERFORM add_column_if_not_exists('usuarios_clientes', 'pwa_installed_at', 'TIMESTAMP WITH TIME ZONE');
+END $$;
+
+-- Tabla de catálogo de recompensas canjeables
+CREATE TABLE IF NOT EXISTS reward_catalog (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    points_cost INTEGER NOT NULL,
+    reward_type TEXT NOT NULL DEFAULT 'discount',
+    reward_value NUMERIC(10,2) DEFAULT 0,
+    product_id UUID REFERENCES products(id),
+    imagen_url TEXT,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE reward_catalog ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can read active rewards" ON reward_catalog FOR SELECT USING (active = TRUE);
+CREATE POLICY "Admin full access rewards" ON reward_catalog FOR ALL USING (TRUE);
+
+-- Columnas extras en coupons
+DO $$
+BEGIN
+    PERFORM add_column_if_not_exists('coupons', 'description', 'TEXT DEFAULT ''''');
+    PERFORM add_column_if_not_exists('coupons', 'min_purchase', 'NUMERIC(10,2) DEFAULT 0');
+    PERFORM add_column_if_not_exists('coupons', 'coupon_type', 'TEXT DEFAULT ''percentage''');
+    PERFORM add_column_if_not_exists('coupons', 'discount_amount', 'NUMERIC(10,2) DEFAULT 0');
+END $$;
+
 -- ----------------------------------------------------------------------------
 -- 3. products (MENÚ)
 -- ----------------------------------------------------------------------------

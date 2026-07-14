@@ -9,6 +9,8 @@ export interface AppUser {
   loyalty_lifetime_points?: number;
   loyalty_tier_id?: string;
   sede_preferida_id?: string;
+  is_pwa_installed?: boolean;
+  pwa_installed_at?: string;
 }
 
 export interface FoodOption {
@@ -155,6 +157,10 @@ export interface Coupon {
   usage_count: number;
   valid_until?: string;
   created_at?: string;
+  description?: string;
+  min_purchase?: number;
+  coupon_type?: 'percentage' | 'fixed' | 'free_shipping';
+  discount_amount?: number;
 }
 
 export interface InAppNotification {
@@ -275,6 +281,19 @@ export interface LoyaltyTransaction {
   sede_id?: string;
   created_at: string;
   expires_at?: string;
+}
+
+export interface RewardItem {
+  id: string;
+  name: string;
+  description: string;
+  points_cost: number;
+  reward_type: 'discount' | 'free_product' | 'free_shipping' | 'custom';
+  reward_value: number;
+  product_id?: string;
+  imagen_url?: string;
+  active: boolean;
+  created_at?: string;
 }
 
 export const ALLERGEN_OPTIONS = [

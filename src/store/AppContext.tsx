@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier, Promotion } from '../types/store';
+import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier, Promotion, RewardItem } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
@@ -92,6 +92,16 @@ interface AppContextProps {
   getUserLoyaltyTier: (userId: string) => LoyaltyTier | null;
   adjustUserPoints: (userId: string, points: number, reason: string) => Promise<void>;
   getLoyaltyTransactions: (userId: string) => LoyaltyTransaction[];
+  
+  // PWA Install
+  markUserAsPwaInstalled: (userId: string) => Promise<void>;
+  
+  // Reward Catalog
+  rewardCatalog: RewardItem[];
+  addRewardItem: (item: Omit<RewardItem, 'id'>) => Promise<void>;
+  updateRewardItem: (id: string, updated: Partial<RewardItem>) => Promise<void>;
+  deleteRewardItem: (id: string) => Promise<void>;
+  redeemRewardItem: (userId: string, rewardId: string) => Promise<boolean>;
   
   // Auth
   authenticateAdmin: (email: string, pass: string) => Promise<boolean>;
@@ -1250,6 +1260,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [rewardCatalog, setRewardCatalog] = useState<RewardItem[]>(() => {
+    const saved = localStorage.getItem('trv_reward_catalog');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // --- MOTOR DE TIEMPO REAL (SUPABASE CHANNELS) ---
   const currentUserRef = useRef<AppUser | null>(currentUser);
   const isAdminAuthenticatedRef = useRef(isAdminAuthenticated);
@@ -1595,6 +1610,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('trv_loyalty_transactions', JSON.stringify(loyaltyTransactions));
   }, [loyaltyTransactions]);
 
+  useEffect(() => {
+    localStorage.setItem('trv_reward_catalog', JSON.stringify(rewardCatalog));
+  }, [rewardCatalog]);
+
   // Daily Exchange Rate Update Routine (BCV Oficial)
   const fetchExchangeRate = async (retryCount = 0): Promise<boolean> => {
     const MAX_RETRIES = 2;
@@ -1749,6 +1768,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Cargar flash sales activas
       const { data: dbFlashSales } = await supabase.from('flash_sales').select('*').eq('active', true);
       if (dbFlashSales) setFlashSales(dbFlashSales as FlashSale[]);
+
+      // Cargar catálogo de recompensas
+      const { data: dbRewards } = await supabase.from('reward_catalog').select('*').eq('active', true);
+      if (dbRewards) setRewardCatalog(dbRewards as RewardItem[]);
 
       if (isAdmin) {
         setIsAdminAuthenticated(true);
@@ -2453,14 +2476,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
 
-    // Build user from Supabase Auth data
+    // Load full user data from usuarios_clientes
+    const { data: dbUser } = await supabase
+      .from('usuarios_clientes')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
     const user: AppUser = {
       id: data.user.id,
-      nombre: data.user.user_metadata?.nombre || data.user.email?.split('@')[0] || 'Usuario',
-      email: data.user.email || '',
-      telefono: data.user.user_metadata?.telefono || '',
+      nombre: dbUser?.nombre || data.user.user_metadata?.nombre || data.user.email?.split('@')[0] || 'Usuario',
+      email: dbUser?.email || data.user.email || '',
+      telefono: dbUser?.telefono || data.user.user_metadata?.telefono || '',
       contrasena: 'auth_managed',
-      createdAt: data.user.created_at || new Date().toISOString()
+      createdAt: dbUser?.created_at || data.user.created_at || new Date().toISOString(),
+      loyalty_points: dbUser?.loyalty_points || 0,
+      loyalty_lifetime_points: dbUser?.loyalty_lifetime_points || 0,
+      loyalty_tier_id: dbUser?.loyalty_tier_id || '',
+      sede_preferida_id: dbUser?.sede_preferida_id || '',
+      is_pwa_installed: dbUser?.is_pwa_installed || false,
+      pwa_installed_at: dbUser?.pwa_installed_at || undefined,
     };
 
     setCurrentUser(user);
@@ -2470,6 +2505,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'personal',
       user.telefono
     );
+
+    // Check PWA install status on login
+    if (!user.is_pwa_installed && detectPwaInstalled()) {
+      markUserAsPwaInstalled(user.id);
+    }
+
     return user;
   };
 
@@ -2849,7 +2890,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     const tier = getUserLoyaltyTier(userId);
     const multiplier = tier?.multiplier || 1;
-    const pointsEarned = Math.floor(amountUsd * loyaltyConfig.points_per_dollar * multiplier);
+    const basePoints = Math.floor(amountUsd * loyaltyConfig.points_per_dollar * multiplier);
+    const pwaBonus = user.is_pwa_installed ? 1.5 : 1;
+    const pointsEarned = Math.floor(basePoints * pwaBonus);
     
     if (pointsEarned <= 0) return;
     
@@ -2858,7 +2901,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       user_id: userId,
       type: 'earn',
       points: pointsEarned,
-      description: `Compra #${orderId.slice(-8)}`,
+      description: user.is_pwa_installed ? `Compra #${orderId.slice(-8)} (Bonus App x1.5)` : `Compra #${orderId.slice(-8)}`,
       order_id: orderId,
       sede_id: sedeId,
       created_at: new Date().toISOString(),
@@ -2873,6 +2916,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loyalty_lifetime_points: (u.loyalty_lifetime_points || 0) + pointsEarned,
       };
     }));
+  };
+
+  // --- PWA INSTALL DETECTION ---
+  const markUserAsPwaInstalled = async (userId: string) => {
+    localStorage.setItem('foodapp_pwa_installed', 'true');
+    await supabase.from('usuarios_clientes')
+      .update({ is_pwa_installed: true, pwa_installed_at: new Date().toISOString() })
+      .eq('id', userId);
+    setUsers(prev => prev.map(u =>
+      u.id === userId ? { ...u, is_pwa_installed: true, pwa_installed_at: new Date().toISOString() } : u
+    ));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => prev ? { ...prev, is_pwa_installed: true, pwa_installed_at: new Date().toISOString() } : prev);
+    }
+  };
+
+  const detectPwaInstalled = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    if (window.matchMedia('(display-mode: standalone)').matches) return true;
+    if ((navigator as any).standalone === true) return true;
+    if (localStorage.getItem('foodapp_pwa_installed') === 'true') return true;
+    return false;
+  };
+
+  // --- REWARD CATALOG CRUD ---
+  const addRewardItem = async (item: Omit<RewardItem, 'id'>) => {
+    const newItem: RewardItem = { ...item, id: `reward-${Date.now()}-${Math.random().toString(36).substr(2, 6)}` };
+    setRewardCatalog(prev => [...prev, newItem]);
+  };
+
+  const updateRewardItem = async (id: string, updated: Partial<RewardItem>) => {
+    setRewardCatalog(prev => prev.map(r => r.id === id ? { ...r, ...updated } : r));
+  };
+
+  const deleteRewardItem = async (id: string) => {
+    setRewardCatalog(prev => prev.filter(r => r.id !== id));
+  };
+
+  const redeemRewardItem = async (userId: string, rewardId: string): Promise<boolean> => {
+    const reward = rewardCatalog.find(r => r.id === rewardId);
+    if (!reward || !reward.active) return false;
+    const user = users.find(u => u.id === userId);
+    if (!user || (user.loyalty_points || 0) < reward.points_cost) return false;
+    
+    const tx: LoyaltyTransaction = {
+      id: `loy-tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      user_id: userId,
+      type: 'redeem',
+      points: -reward.points_cost,
+      description: `Canje: ${reward.name}`,
+      created_at: new Date().toISOString(),
+    };
+    setLoyaltyTransactions(prev => [...prev, tx]);
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u;
+      return { ...u, loyalty_points: (u.loyalty_points || 0) - reward.points_cost };
+    }));
+    return true;
   };
 
   const redeemLoyaltyPoints = async (userId: string, pointsToRedeem: number, orderId?: string): Promise<boolean> => {
@@ -3027,7 +3128,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       getUserLoyaltyPoints,
       getUserLoyaltyTier,
       adjustUserPoints,
-      getLoyaltyTransactions
+      getLoyaltyTransactions,
+      markUserAsPwaInstalled,
+      rewardCatalog,
+      addRewardItem,
+      updateRewardItem,
+      deleteRewardItem,
+      redeemRewardItem
     }}>
       {children}
     </AppContext.Provider>

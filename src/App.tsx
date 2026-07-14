@@ -17,7 +17,7 @@ import { FreeDeliveryBar } from './components/FreeDeliveryBar';
 import { ProductModal } from './components/ProductModal';
 
 function AppContent() {
-  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated } = useApp();
+  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated, currentUser, markUserAsPwaInstalled } = useApp();
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -27,9 +27,19 @@ function AppContent() {
       e.preventDefault();
       setDeferredPrompt(e);
     };
+    const handleAppInstalled = () => {
+      localStorage.setItem('foodapp_pwa_installed', 'true');
+      if (currentUser) {
+        markUserAsPwaInstalled(currentUser.id);
+      }
+    };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [currentUser, markUserAsPwaInstalled]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
