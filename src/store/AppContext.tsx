@@ -2048,7 +2048,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Orders Management
-  const createOrder = async (orderData: Omit<Order, 'id' | 'subtotal_usd' | 'total_usd' | 'total_bs' | 'fecha' | 'status'> & { descuento_cupon_usd?: number; cupon_codigo?: string }, preGeneratedId?: string) => {
+  const createOrder = async (orderData: Omit<Order, 'id' | 'subtotal_usd' | 'total_usd' | 'total_bs' | 'fecha' | 'status'> & { descuento_cupon_usd?: number; cupon_codigo?: string; guest_password?: string }, preGeneratedId?: string) => {
     // Recalculate Totals securely - includes extras/options pricing
     const items = cart.map(item => ({
       food_id: item.item.id,
@@ -2136,6 +2136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tiempo_estimado_entrega: newOrder.tiempo_estimado_entrega,
       guest_phone: orderData.guest_phone || null,
       guest_email: (!currentUser && orderData.cliente_email) ? orderData.cliente_email : null,
+      crear_cuenta: orderData.crear_cuenta || false,
       notas_admin: orderData.notas_admin || '',
       fecha: new Date().toISOString()
     }]);
@@ -2149,12 +2150,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
 
-    // Guest checkout: store guest data for future account creation
-    if (orderData.crear_cuenta && orderData.guest_phone && !currentUser) {
-      localStorage.setItem('foodpop_guest_phone', orderData.guest_phone);
-      localStorage.setItem('foodpop_guest_name', orderData.cliente_nombre);
-      if (orderData.cliente_email) {
-        localStorage.setItem('foodpop_guest_email', orderData.cliente_email);
+    // Auto-register guest after successful order
+    if (orderData.crear_cuenta && orderData.guest_password && orderData.cliente_email && !currentUser) {
+      const cleanPhone = orderData.cliente_telefono.replace(/[\s\-()]/g, '');
+      const email = orderData.cliente_email.trim().toLowerCase();
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: cleanPhone,
+        options: {
+          data: {
+            nombre: orderData.cliente_nombre,
+            telefono: cleanPhone
+          }
+        }
+      });
+
+      if (!authError && authData.user) {
+        const newUser: AppUser = {
+          id: authData.user.id,
+          nombre: orderData.cliente_nombre,
+          email,
+          telefono: cleanPhone,
+          contrasena: 'auth_managed',
+          createdAt: new Date().toISOString()
+        };
+        setCurrentUser(newUser);
+        addNotification(
+          '¡Cuenta Creada! 🎉',
+          `Hola ${newUser.nombre}. Tu cuenta fue creada automáticamente. Tu contraseña es tu número de teléfono (${cleanPhone}).`,
+          'personal',
+          newUser.telefono
+        );
       }
     }
 

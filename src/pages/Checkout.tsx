@@ -48,6 +48,9 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const [shippingMethod, setShippingMethod] = useState<'mapa' | 'recogida' | 'zonas'>('mapa');
   const [selectedZoneIndex, setSelectedZoneIndex] = useState<number | null>(null);
 
+  const [createAccount, setCreateAccount] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [cashBills, setCashBills] = useState('');
   const [processedOrder, setProcessedOrder] = useState<any>(null);
 
   const activeSedes = config.sedes?.filter(s => s.activa) || [];
@@ -256,6 +259,10 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!paymentConfirmed) {
+      setValidationError('Confirma el método de pago para continuar.');
+      return;
+    }
     setIsProcessing(true);
 
     const finalUserId = currentUser?.id;
@@ -303,7 +310,7 @@ ${clientEmail ? `*Correo:* ${clientEmail}\n` : ''}*Direccion de Entrega:* ${ship
 *Detalle del Carrito:*
 ${productosDetailText}
 *Total Neto a Pagar:* $${totalUsd.toFixed(2)} / ${totalBs.toFixed(2)} Bs.
-*Metodo de Pago:* ${selectedPayment}${selectedPayment === 'Otro' && customPaymentNote ? `\n*Detalle Pago:* ${customPaymentNote}` : ''}
+*Metodo de Pago:* ${selectedPayment}${selectedPayment === 'Otro' && customPaymentNote ? `\n*Detalle Pago:* ${customPaymentNote}` : ''}${selectedPayment === 'Efectivo' && cashBills ? `\n*Billetes:* ${cashBills}` : ''}
 ----------------------------------`;
 
     let cleanPhone = getWhatsAppPhone().replace(/\D/g, '');
@@ -333,7 +340,10 @@ ${productosDetailText}
       lng: shippingLng,
       direccion_envio: `${shippingZone} (Distancia: ${shippingDistance}km)`,
       distancia_km: shippingDistance,
-      notas_admin: orderNotes
+      notas_admin: orderNotes,
+      crear_cuenta: createAccount || undefined,
+      guest_phone: !currentUser ? cleanedPhone : undefined,
+      guest_password: createAccount ? cleanedPhone : undefined,
     }, preOrderId);
 
     if (created) {
@@ -808,8 +818,70 @@ ${productosDetailText}
                 </div>
               </div>
 
+              {/* Recordatorio de Pago */}
+              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                {(selectedPayment === 'Pago Móvil' || selectedPayment === 'Zelle' || selectedPayment === 'Transferencia') && (
+                  <div className="mb-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
+                    <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: themeColor }}>Importante</p>
+                    <p className="text-xs text-zinc-700 leading-relaxed">
+                      Adjunta el <span className="font-bold">capture del pago</span> en el chat de WhatsApp al enviar el pedido para que podamos procesarlo más rápido.
+                    </p>
+                  </div>
+                )}
+                {selectedPayment === 'Efectivo' && (
+                  <div className="mb-3">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5 block">
+                      Con qué billetes vas a cancelar $${totalUsd.toFixed(2)} USD
+                    </label>
+                    <p className="text-[11px] text-zinc-400 mb-2">Ejemplo: 1x $20, 2x $10, 1x $5...</p>
+                    <textarea
+                      value={cashBills}
+                      onChange={(e) => setCashBills(e.target.value)}
+                      placeholder="Ej: 1 billete de $20, 2 billetes de $10..."
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none"
+                      rows={2}
+                    />
+                  </div>
+                )}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={paymentConfirmed}
+                    onChange={(e) => setPaymentConfirmed(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-current cursor-pointer"
+                    style={{ color: themeColor }}
+                  />
+                  <span className="text-xs text-zinc-600 leading-relaxed">
+                    {selectedPayment === 'Efectivo'
+                      ? 'Confirmo los billetes indicados para gestionar el cambio.'
+                      : 'Confirmo que enviaré el capture del pago por WhatsApp.'}
+                  </span>
+                </label>
+              </div>
+
               {/* CartUpsell */}
               <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
+
+              {/* Guest: Toggle Crear Cuenta */}
+              {!currentUser && (
+                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={createAccount}
+                      onChange={(e) => setCreateAccount(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-current cursor-pointer"
+                      style={{ color: themeColor }}
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-zinc-900">Crear cuenta gratis</p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                        Para seguir tus pedidos y recibir notificaciones. Tu contraseña será tu número de teléfono.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

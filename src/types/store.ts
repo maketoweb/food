@@ -84,6 +84,7 @@ export interface Order {
   guest_phone?: string;
   guest_email?: string;
   crear_cuenta?: boolean;
+  guest_password?: string;
   items: OrderItem[];
   subtotal_usd: number;
   costo_envio_usd: number;
