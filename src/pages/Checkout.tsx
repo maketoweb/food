@@ -14,7 +14,7 @@ interface CheckoutProps {
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
-  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon, orders } = useApp();
+  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon, orders, earnLoyaltyPoints } = useApp();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -440,6 +440,9 @@ ${productosDetailText}
       setProcessedOrder(created);
       if (appliedCoupon) {
         updateCoupon(appliedCoupon.id, { usage_count: (appliedCoupon.usage_count || 0) + 1 });
+      }
+      if (finalUserId) {
+        earnLoyaltyPoints(finalUserId, created.id, totalUsd - discountFromCoupon, selectedSedeId || undefined);
       }
       localStorage.setItem('trv_active_order_id', created.id);
       localStorage.setItem('trv_checkout_contact', JSON.stringify({ nombre: clientName, telefono: clientPhone, email: clientEmail }));

@@ -42,7 +42,7 @@ const LoyaltySection: React.FC = () => {
     updateConfig({
       loyalty: {
         ...loyalty,
-        bonus_actions: { ...loyalty.bonus_actions, [field]: value }
+        bonus_actions: { ...(loyalty.bonus_actions || {}), [field]: value }
       }
     });
   };
@@ -200,7 +200,7 @@ const LoyaltySection: React.FC = () => {
                   ].map(item => (
                     <div key={item.key} className="flex items-center justify-between">
                       <span className="text-sm" style={{ color: 'var(--ios-text)' }}>{item.label}</span>
-                      <input type="number" value={(loyalty.bonus_actions as any)[item.key]} onChange={e => handleUpdateBonus(item.key, Number(e.target.value))}
+                      <input type="number" value={(loyalty.bonus_actions as any)?.[item.key] ?? 0} onChange={e => handleUpdateBonus(item.key, Number(e.target.value))}
                         className="admin-input w-20 text-center" style={{ padding: '8px', fontSize: '14px' }} />
                     </div>
                   ))}
