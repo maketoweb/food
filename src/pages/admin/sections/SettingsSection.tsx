@@ -265,12 +265,13 @@ const ExtrasManager: React.FC<{ foodItems: any[]; updateFoodItem: (id: string, u
 const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
   const [adminSection, setAdminSection] = useState<'settings' | 'branding' | 'sedes' | 'extras' | 'notifications' | 'faq'>('settings');
   const {
-    foodItems, config, notifications, currentUser, searchItems,
+    foodItems, config, notifications, currentUser, searchItems, userRole,
     updateFoodItem, updateConfig, updateExchangeRate, syncPushSubscription,
     addNotification, deleteNotification, addCategory, deleteCategory, updateCategory,
     updateAdminCredentials, adminUser, adminPass, updateUserByAdmin,
     coupons, addCoupon, updateCoupon, deleteCoupon
   } = useApp();
+  const isAdmin = userRole === 'admin';
 
   const restoreInputRef = useRef<HTMLInputElement>(null);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
@@ -525,13 +526,15 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
     return msgs[msgs.length - 1];
   };
 
-  const SETTINGS_TABS = [
+  const SETTINGS_TABS = isAdmin ? [
     { id: 'settings' as const, label: 'General', icon: Settings },
     { id: 'branding' as const, label: 'Branding', icon: Palette },
     { id: 'sedes' as const, label: 'Sucursales', icon: MapPin },
     { id: 'extras' as const, label: 'Extras', icon: SlidersHorizontal },
     { id: 'notifications' as const, label: 'Notificaciones', icon: Bell },
     { id: 'faq' as const, label: 'FAQ', icon: HelpCircle },
+  ] : [
+    { id: 'settings' as const, label: 'Delivery', icon: MapPin },
   ];
 
   const renderSubSection = () => {
@@ -797,48 +800,51 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
   if (adminSection === 'settings') {
     return (
       <div className="flex flex-col gap-6 animate-fade-in">
-        <div className="flex flex-col gap-4 p-5 border border-amber-200 rounded-2xl bg-amber-50 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-100 text-amber-600 rounded-xl"><FileJson size={20} /></div>
-            <div>
-              <h4 className="text-sm font-bold text-amber-900">Respaldo de Seguridad Integral</h4>
-              <p className="text-[11px] text-amber-700">Descarga un archivo JSON con todos los productos, ventas y clientes. El sistema realiza esto automáticamente cada 15 días.</p>
+        {/* Admin-only sections: Backup, Notifications Test, PWA Maintenance, Categories */}
+        {isAdmin && (
+          <>
+            <div className="flex flex-col gap-4 p-5 border border-amber-200 rounded-2xl bg-amber-50 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-100 text-amber-600 rounded-xl"><FileJson size={20} /></div>
+                <div>
+                  <h4 className="text-sm font-bold text-amber-900">Respaldo de Seguridad Integral</h4>
+                  <p className="text-[11px] text-amber-700">Descarga un archivo JSON con todos los productos, ventas y clientes. El sistema realiza esto automáticamente cada 15 días.</p>
+                </div>
+              </div>
+              <button onClick={() => handleManualBackup(false)} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-amber-200">Generar Respaldo Ahora</button>
+              <input type="file" ref={restoreInputRef} onChange={handleRestoreBackup} accept=".json" className="hidden" />
+              <button onClick={() => restoreInputRef.current?.click()} className="w-full bg-white border border-amber-300 text-amber-700 font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all hover:bg-amber-100">Restaurar Copia de Seguridad</button>
             </div>
-          </div>
-          <button onClick={() => handleManualBackup(false)} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-amber-200">Generar Respaldo Ahora</button>
-          <input type="file" ref={restoreInputRef} onChange={handleRestoreBackup} accept=".json" className="hidden" />
-          <button onClick={() => restoreInputRef.current?.click()} className="w-full bg-white border border-amber-300 text-amber-700 font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all hover:bg-amber-100">Restaurar Copia de Seguridad</button>
-        </div>
 
-        <div className="flex flex-col gap-4 p-5 border border-violet-200 rounded-2xl bg-violet-50 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-violet-100 text-violet-600 rounded-xl"><Bell size={20} /></div>
-            <div>
-              <h4 className="text-sm font-bold text-violet-900">Verificador de Notificaciones Push</h4>
-              <p className="text-[11px] text-violet-700">Lanza una alerta de prueba para verificar el estilo visual nativo y los permisos del navegador.</p>
+            <div className="flex flex-col gap-4 p-5 border border-violet-200 rounded-2xl bg-violet-50 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-violet-100 text-violet-600 rounded-xl"><Bell size={20} /></div>
+                <div>
+                  <h4 className="text-sm font-bold text-violet-900">Verificador de Notificaciones Push</h4>
+                  <p className="text-[11px] text-violet-700">Lanza una alerta de prueba para verificar el estilo visual nativo y los permisos del navegador.</p>
+                </div>
+              </div>
+              <button onClick={async () => { const target = config.telefono_soporte || currentUser?.telefono; if (!target) { alert('⚠️ No hay un número de teléfono configurado.'); return; } const success = await addNotification(`Prueba de Sistema ${config.site_nombre || ''} 🔔`, "Si recibes esta alerta, el sistema de Web Push real está funcionando correctamente.", "admin", target); if (success) { setToastTitle('🧪 Prueba de Notificación'); setToastMessage(`Se ha enviado una alerta a ${target}.`); } else { alert('Error al enviar prueba.'); } }} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-violet-200 cursor-pointer">Ejecutar Test de Notificación Push</button>
             </div>
-          </div>
-          <button onClick={async () => { const target = config.telefono_soporte || currentUser?.telefono; if (!target) { alert('⚠️ No hay un número de teléfono configurado.'); return; } const success = await addNotification(`Prueba de Sistema ${config.site_nombre || ''} 🔔`, "Si recibes esta alerta, el sistema de Web Push real está funcionando correctamente.", "admin", target); if (success) { setToastTitle('🧪 Prueba de Notificación'); setToastMessage(`Se ha enviado una alerta a ${target}.`); } else { alert('Error al enviar prueba.'); } }} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-violet-200 cursor-pointer">Ejecutar Test de Notificación Push</button>
-        </div>
 
-        <div className="flex flex-col gap-4 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-slate-100 text-slate-600 rounded-xl"><RefreshCcw size={20} /></div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">Mantenimiento de Aplicación (PWA)</h4>
-              <p className="text-[11px] text-slate-500">Si los clientes no ven los últimos cambios visuales, pídales que ejecuten esta acción.</p>
+            <div className="flex flex-col gap-4 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-slate-100 text-slate-600 rounded-xl"><RefreshCcw size={20} /></div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Mantenimiento de Aplicación (PWA)</h4>
+                  <p className="text-[11px] text-slate-500">Si los clientes no ven los últimos cambios visuales, pídales que ejecuten esta acción.</p>
+                </div>
+              </div>
+              <button onClick={forceUpdateApp} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer">Forzar Actualización Global</button>
             </div>
-          </div>
-          <button onClick={forceUpdateApp} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer">Forzar Actualización Global</button>
-        </div>
 
-        <div className="flex flex-col gap-4 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-            <div className="flex items-center gap-2">
-              <Settings size={14} className="text-violet-600" />
-              <span className="text-xs uppercase font-mono font-bold text-slate-900">Administración de Categorías (Departamentos)</span>
-            </div>
-          </div>
+            <div className="flex flex-col gap-4 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                <div className="flex items-center gap-2">
+                  <Settings size={14} className="text-violet-600" />
+                  <span className="text-xs uppercase font-mono font-bold text-slate-900">Administración de Categorías (Departamentos)</span>
+                </div>
+              </div>
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
               <input type="text" id="new-category-input" placeholder="Ej. Congelados y Pescadería..." className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 flex-1 text-xs text-slate-900 font-sans" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const val = (e.target as HTMLInputElement).value.trim(); if (val) { addCategory(val); (e.target as HTMLInputElement).value = ''; alert(`Categoría "${val}" agregada.`); } } }} />
@@ -891,7 +897,10 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
             </div>
           </div>
         </div>
+        </>
+        )}
 
+        {isAdmin && (
         <form onSubmit={(e) => { e.preventDefault(); alert(`¡Ajustes de sucursal física de ${config.site_nombre || 'la tienda'} guardados!`); }} className="flex flex-col gap-4 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
             <Settings size={14} className="text-violet-600" />
@@ -1135,6 +1144,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
 
           <button type="submit" className="w-full bg-violet-600 hover:bg-violet-750 border border-violet-600 py-3.5 rounded-lg text-xs font-bold uppercase transition-all mt-4 cursor-pointer text-white">Guardar Cambios de Sucursal</button>
         </form>
+        )}
       </div>
     );
   }

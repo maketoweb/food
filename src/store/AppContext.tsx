@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier, Promotion, RewardItem } from '../types/store';
+import { FoodItem, Order, StoreConfig, InAppNotification, OrderItem, AppUser, Coupon, CartItem, SelectedOption, ProductReview, FlashSale, LoyaltyTransaction, LoyaltyTier, Promotion, RewardItem, UserRole } from '../types/store';
 import { supabase } from './supabaseClient';
 
 interface AppContextProps {
@@ -11,6 +11,7 @@ interface AppContextProps {
   notifications: InAppNotification[];
   cart: CartItem[];
   isAdminAuthenticated: boolean;
+  userRole: UserRole | null;
   favorites: string[];
   toggleFavorite: (itemId: string) => void;
   isFavorite: (itemId: string) => boolean;
@@ -1202,6 +1203,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem('trv_admin_auth') === 'true';
   });
 
+  const [userRole, setUserRole] = useState<UserRole | null>(() => {
+    const saved = localStorage.getItem('trv_user_role');
+    return (saved === 'admin' || saved === 'operator') ? saved : null;
+  });
+
   const [adminUser] = useState<string>(import.meta.env.VITE_ADMIN_USER || '');
   const [adminPass] = useState<string>(import.meta.env.VITE_ADMIN_PASS || '');
 
@@ -1686,14 +1692,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const initData = async () => {
       setIsGlobalLoading(true);
 
-      // BUG FIX: Si es admin, cargar TODO. Obtener sesión primero.
+      // BUG FIX: Si es admin/operador, cargar TODO. Obtener sesión primero.
       const { data: { session } } = await supabase.auth.getSession();
-      const isAdmin = session?.user?.email === 'kecho8a@gmail.com' || session?.user?.app_metadata?.role === 'admin';
+      const sessionEmail = session?.user?.email || '';
+      const sessionRole = session?.user?.app_metadata?.role;
+      const isAdmin = sessionEmail === 'kecho8a@gmail.com' || sessionRole === 'admin';
+      const isOperator = sessionRole === 'operator';
 
       // Si localStorage dice admin y hay sesión válida, mantener el flag
-      if (isAdmin && localStorage.getItem('trv_admin_auth') !== 'true') {
+      if ((isAdmin || isOperator) && localStorage.getItem('trv_admin_auth') !== 'true') {
         localStorage.setItem('trv_admin_auth', 'true');
         setIsAdminAuthenticated(true);
+      }
+
+      // Sincronizar rol desde la sesión
+      if (isAdmin || isOperator) {
+        if (isAdmin) {
+          setUserRole('admin');
+          localStorage.setItem('trv_user_role', 'admin');
+        } else if (isOperator) {
+          // Verificar que el operador esté activo
+          const { data: opRecord } = await supabase
+            .from('admin_users')
+            .select('active')
+            .eq('id', session!.user.id)
+            .single();
+
+          if (opRecord && opRecord.active !== false) {
+            setUserRole('operator');
+            localStorage.setItem('trv_user_role', 'operator');
+          } else {
+            // Operador desactivado, cerrar sesión
+            setIsAdminAuthenticated(false);
+            setUserRole(null);
+            localStorage.removeItem('trv_admin_auth');
+            localStorage.removeItem('trv_user_role');
+            await supabase.auth.signOut();
+          }
+        }
       }
 
       // Cargar productos de Supabase (si es admin, incluir inactivos)
@@ -1832,28 +1868,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session) {
-          const isAdmin = session.user?.email === 'kecho8a@gmail.com' || session.user?.app_metadata?.role === 'admin';
-          if (isAdmin) {
+          const sessionEmail = session.user?.email || '';
+          const sessionRole = session.user?.app_metadata?.role;
+          const isAdmin = sessionEmail === 'kecho8a@gmail.com' || sessionRole === 'admin';
+          const isOperator = sessionRole === 'operator';
+          if (isAdmin || isOperator) {
             setIsAdminAuthenticated(true);
             localStorage.setItem('trv_admin_auth', 'true');
+            setUserRole(isAdmin ? 'admin' : 'operator');
+            localStorage.setItem('trv_user_role', isAdmin ? 'admin' : 'operator');
           }
         }
       } else if (event === 'SIGNED_OUT') {
-        // En SIGNED_OUT, session es null - no podemos verificar si era admin desde la sesión.
-        // Intentar restaurar la sesión antes de limpiar el estado del admin.
+        // En SIGNED_OUT, session es null - intentar restaurar la sesión antes de limpiar el estado.
         if (localStorage.getItem('trv_admin_auth') === 'true') {
           supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
             if (restoredSession) {
-              const isAdmin = restoredSession.user?.email === 'kecho8a@gmail.com' || restoredSession.user?.app_metadata?.role === 'admin';
-              if (isAdmin) {
+              const sessionEmail = restoredSession.user?.email || '';
+              const sessionRole = restoredSession.user?.app_metadata?.role;
+              const isAdmin = sessionEmail === 'kecho8a@gmail.com' || sessionRole === 'admin';
+              const isOperator = sessionRole === 'operator';
+              if (isAdmin || isOperator) {
                 setIsAdminAuthenticated(true);
                 localStorage.setItem('trv_admin_auth', 'true');
+                setUserRole(isAdmin ? 'admin' : 'operator');
+                localStorage.setItem('trv_user_role', isAdmin ? 'admin' : 'operator');
                 return;
               }
             }
             // Sesión no restaurable, limpiar admin
             setIsAdminAuthenticated(false);
+            setUserRole(null);
             localStorage.removeItem('trv_admin_auth');
+            localStorage.removeItem('trv_user_role');
           });
         }
       }
@@ -2862,7 +2909,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotifications([]);
   };
 
-  // Admin Auth functions
+  // Admin/Operator Auth functions
   const authenticateAdmin = async (email: string, pass: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -2874,9 +2921,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return false;
       }
       if (data.session) {
-        setIsAdminAuthenticated(true);
-        localStorage.setItem('trv_admin_auth', 'true');
-        return true;
+        const sessionEmail = data.session.user?.email || '';
+        const appRole = data.session.user?.app_metadata?.role;
+        const isAdminEmail = sessionEmail === 'kecho8a@gmail.com';
+        const isAdminRole = appRole === 'admin';
+        const isOperatorRole = appRole === 'operator';
+
+        if (isAdminEmail || isAdminRole) {
+          setIsAdminAuthenticated(true);
+          localStorage.setItem('trv_admin_auth', 'true');
+          setUserRole('admin');
+          localStorage.setItem('trv_user_role', 'admin');
+          return true;
+        }
+
+        if (isOperatorRole) {
+          // Verificar que el operador esté activo en la tabla admin_users
+          const { data: opRecord } = await supabase
+            .from('admin_users')
+            .select('active')
+            .eq('id', data.session.user.id)
+            .single();
+
+          if (opRecord && opRecord.active !== false) {
+            setIsAdminAuthenticated(true);
+            localStorage.setItem('trv_admin_auth', 'true');
+            setUserRole('operator');
+            localStorage.setItem('trv_user_role', 'operator');
+            return true;
+          }
+        }
+
+        // No tiene rol de admin ni operador
+        console.error('User has no admin/operator role');
+        await supabase.auth.signOut();
+        return false;
       }
       return false;
     } catch (err) {
@@ -2887,7 +2966,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logoutAdmin = async () => {
     await supabase.auth.signOut();
     setIsAdminAuthenticated(false);
+    setUserRole(null);
     localStorage.removeItem('trv_admin_auth');
+    localStorage.removeItem('trv_user_role');
   };
 
   const updateAdminCredentials = async (email: string, pass: string) => {
@@ -3088,6 +3169,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notifications,
       cart,
       isAdminAuthenticated,
+      userRole,
       isGlobalLoading,
       favorites,
       toggleFavorite,

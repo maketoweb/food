@@ -6,7 +6,7 @@ import { Order, FoodItem } from '../../types/store';
 import {
   BarChart3, ShoppingBag, Utensils, Grid, User, Ticket, Settings,
   X, Bell, MessageSquare, Megaphone, Package, Award, FileText,
-  LayoutGrid, ChevronLeft, MapPin
+  LayoutGrid, ChevronLeft, MapPin, Shield
 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 import { EditProductForm } from '../../components/EditProductForm';
@@ -25,6 +25,7 @@ const CombosSection = lazy(() => import('./sections/CombosSection'));
 const LoyaltySection = lazy(() => import('./sections/LoyaltySection'));
 const ContentSection = lazy(() => import('./sections/ContentSection'));
 const TrackingSection = lazy(() => import('./sections/TrackingSection'));
+const RolesSection = lazy(() => import('./sections/RolesSection'));
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -40,7 +41,7 @@ interface AdminIndexProps {
 }
 
 const ALL_SECTIONS = [
-  { id: 'reports',      label: 'Panel',          icon: BarChart3,        group: 'principal' },
+  { id: 'reports',      label: 'Panel',          icon: BarChart3,        group: 'principal', adminOnly: true },
   { id: 'orders',       label: 'Pedidos',        icon: ShoppingBag,      group: 'principal' },
   { id: 'tracking',     label: 'Rastreo',        icon: MapPin,           group: 'principal' },
   { id: 'inventory',    label: 'Menú',           icon: Utensils,         group: 'principal' },
@@ -53,6 +54,7 @@ const ALL_SECTIONS = [
   { id: 'notifications',label: 'Avisos',         icon: Bell,             group: 'comunicacion' },
   { id: 'content',      label: 'Contenido',      icon: FileText,         group: 'contenido' },
   { id: 'coupons',      label: 'Cupones',        icon: Ticket,           group: 'contenido' },
+  { id: 'roles',        label: 'Roles',          icon: Shield,           group: 'sistema', adminOnly: true },
   { id: 'settings',     label: 'Configuración',  icon: Settings,         group: 'sistema' },
 ];
 
@@ -65,10 +67,11 @@ const BOTTOM_TABS = [
 ];
 
 export default function AdminIndex({ setTab }: AdminIndexProps) {
-  const { config, foodItems, updateFoodItem } = useApp();
+  const { config, foodItems, updateFoodItem, userRole } = useApp();
   const { activeSection, setActiveSection } = useAdminStore();
   const { advanceStatus } = useOrders();
   const themeColor = config.theme_color || '#007AFF';
+  const isAdmin = userRole === 'admin';
 
   const [showMoreSheet, setShowMoreSheet] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -91,7 +94,9 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
     advanceStatus(order);
   }, [advanceStatus]);
 
-  const visibleSections = ALL_SECTIONS.filter(s => s.id !== 'tables' || config.tiene_mesas);
+  const visibleSections = ALL_SECTIONS
+    .filter(s => s.id !== 'tables' || config.tiene_mesas)
+    .filter(s => isAdmin || !s.adminOnly);
   const sectionLabel = visibleSections.find(s => s.id === activeSection)?.label || 'Panel';
 
   const moreSections = visibleSections.filter(s =>
@@ -105,6 +110,18 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
   };
 
   const renderSection = () => {
+    // Si es operador y trata de acceder a una sección admin-only, redirigir a pedidos
+    if (!isAdmin && (activeSection === 'reports' || activeSection === 'settings' || activeSection === 'roles')) {
+      return <OrdersSection
+        openOrderDetailIds={openOrderDetailIds}
+        toggleOrderDetail={toggleOrderDetail}
+        editingOrderItems={editingOrderItems}
+        setEditingOrderItems={setEditingOrderItems}
+        setPrintingOrder={setPrintingOrder}
+        handleStatusAdvance={handleStatusAdvance}
+      />;
+    }
+
     switch (activeSection) {
       case 'reports': return <DashboardSection />;
       case 'orders': return (
@@ -140,6 +157,7 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
       case 'tracking': return <TrackingSection />;
       case 'loyalty': return <LoyaltySection />;
       case 'content': return <ContentSection />;
+      case 'roles': return <RolesSection />;
       default: return <DashboardSection />;
     }
   };

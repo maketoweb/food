@@ -18,7 +18,7 @@ import { SplashScreen } from './components/SplashScreen';
 import { SkeletonHome, SkeletonCatalog, SkeletonCheckout, SkeletonProfile } from './components/Skeletons';
 
 function AppContent() {
-  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated, currentUser, markUserAsPwaInstalled } = useApp();
+  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated, userRole, currentUser, markUserAsPwaInstalled } = useApp();
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -54,7 +54,7 @@ function AppContent() {
     }
   };
 
-  // Route/Tab controllers - si es admin autenticado, abrir directo en su panel
+  // Route/Tab controllers - si es admin/operador autenticado, abrir directo en su panel
   const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout'>(isAdminAuthenticated ? 'admin' : 'home');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -73,7 +73,16 @@ function AppContent() {
     setGlobalSearch('');
   };
 
-  // Authentication trigger helper
+  // Helper: si ya está autenticado, ir directo al admin; si no, abrir modal
+  const handleAdminAccess = () => {
+    if (isAdminAuthenticated) {
+      setTab('admin');
+    } else {
+      setIsAdminLoginOpen(true);
+    }
+  };
+
+  // Authentication trigger helper - admin o operador
   const handleAdminVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await authenticateAdmin(adminUserInput, adminPasswordInput);
@@ -83,7 +92,7 @@ function AppContent() {
       setAdminPasswordInput('');
       setAdminUserInput('');
     } else {
-      alert('Credenciales incorrectas');
+      alert('Credenciales incorrectas o sin permisos de administración');
     }
   };
 
@@ -125,7 +134,7 @@ function AppContent() {
             <Navigation
               currentTab={tab}
               setTab={setTab}
-              onTriggerAdminLogin={() => setIsAdminLoginOpen(true)}
+              onTriggerAdminLogin={handleAdminAccess}
               drawerOpen={drawerOpen}
               setDrawerOpen={setDrawerOpen}
               navigateToCatalog={navigateToCatalog}
@@ -147,7 +156,7 @@ function AppContent() {
               navigateToCatalog={navigateToCatalog}
               deferredPrompt={deferredPrompt}
               onInstallClick={handleInstallClick}
-              onAdminClick={() => setIsAdminLoginOpen(true)}
+              onAdminClick={handleAdminAccess}
               isAdminAuthenticated={isAdminAuthenticated}
             />
           )}
@@ -226,8 +235,8 @@ function AppContent() {
 
               <div className="text-center flex flex-col items-center">
                 <span className="text-2xl p-2 bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 rounded-2xl mb-2">🔑</span>
-                <h4 className="text-sm font-bold font-display text-zinc-800 uppercase tracking-wider">Acceso Administrativo</h4>
-                <p className="text-[10px] text-zinc-500 mt-1 leading-normal max-w-[240px]">Ingresa las credenciales para acceder al panel de administración.</p>
+                <h4 className="text-sm font-bold font-display text-zinc-800 uppercase tracking-wider">Acceso al Panel</h4>
+                <p className="text-[10px] text-zinc-500 mt-1 leading-normal max-w-[240px]">Ingresa las credenciales de administrador u operador para acceder al panel.</p>
               </div>
 
               <form onSubmit={handleAdminVerifySubmit} className="flex flex-col gap-3.5 text-xs text-zinc-900">

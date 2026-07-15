@@ -1,3 +1,13 @@
+export type UserRole = 'admin' | 'operator';
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  nombre: string;
+  role: UserRole;
+  created_at?: string;
+}
+
 export interface AppUser {
   id: string;
   nombre: string;

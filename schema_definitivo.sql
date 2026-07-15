@@ -551,6 +551,21 @@
   CREATE INDEX IF NOT EXISTS idx_loyalty_created ON loyalty_transactions(created_at DESC);
 
   -- ----------------------------------------------------------------------------
+  -- 11. admin_users (Gestión de roles admin/operador)
+  -- ----------------------------------------------------------------------------
+  CREATE TABLE IF NOT EXISTS admin_users (
+      id UUID PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      nombre TEXT NOT NULL DEFAULT '',
+      role TEXT NOT NULL DEFAULT 'operator' CHECK (role IN ('admin', 'operator')),
+      active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(email);
+  CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role);
+
+  -- ----------------------------------------------------------------------------
   -- 11. FUNCIONES Y TRIGGERS
   -- ----------------------------------------------------------------------------
 
@@ -758,6 +773,7 @@
   ALTER TABLE promotions ENABLE ROW LEVEL SECURITY;
   ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
   ALTER TABLE loyalty_transactions ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 
   -- Permisos base
   GRANT USAGE ON SCHEMA public TO anon, authenticated;
@@ -782,7 +798,7 @@
     DROP POLICY IF EXISTS "Allow all updates only to admin" ON store_config;
     CREATE POLICY "Allow all updates only to admin" ON store_config
       FOR ALL TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     -- products
     DROP POLICY IF EXISTS "Lectura productos activos" ON products;
@@ -791,14 +807,15 @@
         activo = true
         OR (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
         OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+        OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
       );
 
     DROP POLICY IF EXISTS "Gestion productos admin" ON products;
     DROP POLICY IF EXISTS "Allow admin changes to catalog" ON products;
     CREATE POLICY "Allow admin changes to catalog" ON products
       FOR ALL TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
-      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     -- orders
     DROP POLICY IF EXISTS "orders_insert_allow_anon" ON orders;
@@ -810,20 +827,21 @@
         auth.uid()::text = cliente_uid
         OR (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
         OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+        OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
       );
 
     DROP POLICY IF EXISTS "orders_update_admin" ON orders;
     CREATE POLICY "orders_update_admin" ON orders
       FOR ALL TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
-      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     -- usuarios_clientes
     DROP POLICY IF EXISTS "Lectura propia" ON usuarios_clientes;
     DROP POLICY IF EXISTS "Admin lee todos los clientes" ON usuarios_clientes;
     CREATE POLICY "Admin lee todos los clientes" ON usuarios_clientes
       FOR SELECT TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     DROP POLICY IF EXISTS "Cliente lee su propio perfil" ON usuarios_clientes;
     CREATE POLICY "Cliente lee su propio perfil" ON usuarios_clientes
@@ -836,8 +854,8 @@
     DROP POLICY IF EXISTS "Admin gestiona todos los clientes" ON usuarios_clientes;
     CREATE POLICY "Admin gestiona todos los clientes" ON usuarios_clientes
       FOR ALL TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
-      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     -- notifications
     DROP POLICY IF EXISTS "notifications_insert_allow_anon" ON notifications;
@@ -863,8 +881,8 @@
     DROP POLICY IF EXISTS "Gestion cupones admin" ON coupons;
     CREATE POLICY "Gestion cupones admin" ON coupons
       FOR ALL TO authenticated
-      USING ((auth.jwt() ->> 'email' = 'kecho8a@gmail.com') OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'))
-      WITH CHECK ((auth.jwt() ->> 'email' = 'kecho8a@gmail.com') OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'));
+      USING ((auth.jwt() ->> 'email' = 'kecho8a@gmail.com') OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin') OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator'))
+      WITH CHECK ((auth.jwt() ->> 'email' = 'kecho8a@gmail.com') OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin') OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator'));
 
     -- product_reviews
     DROP POLICY IF EXISTS "reviews_select_public" ON product_reviews;
@@ -882,8 +900,8 @@
 
     DROP POLICY IF EXISTS "flash_sales_admin_all" ON flash_sales;
     CREATE POLICY "flash_sales_admin_all" ON flash_sales FOR ALL TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
-      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     -- user_carts
     DROP POLICY IF EXISTS "user_carts_select_own" ON user_carts;
@@ -904,8 +922,8 @@
 
     DROP POLICY IF EXISTS "promotions_admin_all" ON promotions;
     CREATE POLICY "promotions_admin_all" ON promotions FOR ALL TO authenticated
-      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
-      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
 
     -- push_subscriptions
     DROP POLICY IF EXISTS "manage_own_push_subscriptions" ON public.push_subscriptions;
@@ -930,8 +948,20 @@
     DROP POLICY IF EXISTS "loyalty_admin_all" ON loyalty_transactions;
     CREATE POLICY "loyalty_admin_all" ON loyalty_transactions
       FOR ALL TO authenticated
+      USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+      WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'operator');
+
+    -- admin_users (solo admin puede gestionar, operadores solo lectura)
+    DROP POLICY IF EXISTS "admin_users_admin_all" ON admin_users;
+    CREATE POLICY "admin_users_admin_all" ON admin_users
+      FOR ALL TO authenticated
       USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
       WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
+
+    DROP POLICY IF EXISTS "admin_users_operator_read" ON admin_users;
+    CREATE POLICY "admin_users_operator_read" ON admin_users
+      FOR SELECT TO authenticated
+      USING (auth.uid()::text = id OR auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
 
   END $$;
 
@@ -1044,3 +1074,22 @@
   UPDATE public.store_config
   SET push_webhook_url = '', push_webhook_secret = ''
   WHERE id = 1 AND push_webhook_url IS NULL;
+
+  -- ----------------------------------------------------------------------------
+  -- 17. CREAR OPERADOR: sugolo28@gmail.com
+  -- ----------------------------------------------------------------------------
+  -- Primero crear el usuario en Supabase Auth (Authentication > Users > New User)
+  -- Email: sugolo28@gmail.com, Password: (elegir), Auto Confirm: ON
+  -- Luego ejecutar estos pasos:
+
+  -- Asignar rol de operador
+  UPDATE auth.users
+  SET raw_app_meta_data = raw_app_meta_data || '{"role": "operator"}'::jsonb
+  WHERE email = 'sugolo28@gmail.com';
+
+  -- Registrar en admin_users
+  INSERT INTO admin_users (id, email, nombre, role, active)
+  SELECT id, email, 'Operador Principal', 'operator', true
+  FROM auth.users
+  WHERE email = 'sugolo28@gmail.com'
+  ON CONFLICT (email) DO NOTHING;
