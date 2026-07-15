@@ -1690,10 +1690,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { data: { session } } = await supabase.auth.getSession();
       const isAdmin = session?.user?.email === 'kecho8a@gmail.com' || session?.user?.app_metadata?.role === 'admin';
 
-      // Si localStorage dice admin pero no hay sesión real, limpiar el flag
-      if (!isAdmin && localStorage.getItem('trv_admin_auth') === 'true') {
-        localStorage.removeItem('trv_admin_auth');
-        setIsAdminAuthenticated(false);
+      // Si localStorage dice admin y hay sesión válida, mantener el flag
+      if (isAdmin && localStorage.getItem('trv_admin_auth') !== 'true') {
+        localStorage.setItem('trv_admin_auth', 'true');
+        setIsAdminAuthenticated(true);
       }
 
       // Cargar productos de Supabase (si es admin, incluir inactivos)
@@ -1830,7 +1830,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!supabase?.auth?.onAuthStateChange) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session) {
           const isAdmin = session.user?.email === 'kecho8a@gmail.com' || session.user?.app_metadata?.role === 'admin';
           if (isAdmin) {
@@ -1839,8 +1839,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
       } else if (event === 'SIGNED_OUT') {
-        setIsAdminAuthenticated(false);
-        localStorage.removeItem('trv_admin_auth');
+        if (localStorage.getItem('trv_admin_auth') === 'true') {
+          const isAdminUser = session?.user?.email === 'kecho8a@gmail.com' || session?.user?.app_metadata?.role === 'admin';
+          if (!isAdminUser) {
+            setIsAdminAuthenticated(false);
+            localStorage.removeItem('trv_admin_auth');
+          }
+        }
       }
     });
 

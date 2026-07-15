@@ -14,6 +14,7 @@ import { SEOHead } from './components/SEOHead';
 import { OfflineBanner } from './components/OfflineBanner';
 import { FreeDeliveryBar } from './components/FreeDeliveryBar';
 import { ProductModal } from './components/ProductModal';
+import { SplashScreen } from './components/SplashScreen';
 import { SkeletonHome, SkeletonCatalog, SkeletonCheckout, SkeletonProfile } from './components/Skeletons';
 
 function AppContent() {
@@ -21,6 +22,7 @@ function AppContent() {
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -110,6 +112,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 w-full flex justify-center">
+      {showSplash && <SplashScreen config={config} onComplete={() => setShowSplash(false)} />}
       <SEOHead />
       <OfflineBanner />
       <PushNotificationModal />

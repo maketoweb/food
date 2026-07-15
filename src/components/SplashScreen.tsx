@@ -6,56 +6,54 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }) => {
-  const [phase, setPhase] = useState<'name' | 'fade'>('name');
+  const [phase, setPhase] = useState<'show' | 'fade'>('show');
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('fade'), 1200);
-    const t2 = setTimeout(() => onComplete(), 1800);
+    const t1 = setTimeout(() => setPhase('fade'), 1400);
+    const t2 = setTimeout(() => onComplete(), 2000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [onComplete]);
 
-  const themeColor = config.theme_color || '#FF6B35';
+  const logoUrl = config.logo_url || '';
 
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500"
       style={{
-        backgroundColor: themeColor,
+        background: 'transparent',
         opacity: phase === 'fade' ? 0 : 1,
         pointerEvents: phase === 'fade' ? 'none' : 'auto'
       }}
     >
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
       <style>{`
-        @keyframes nameSlideUp {
-          0% { transform: translateY(20px); opacity: 0; }
+        @keyframes fadeInUp {
+          0% { transform: translateY(16px); opacity: 0; }
           100% { transform: translateY(0); opacity: 1; }
         }
-        @keyframes pulseGlow {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
-        }
       `}</style>
-      <div className="z-10 flex flex-col items-center">
-        <h1
-          className="text-white text-3xl font-extrabold tracking-tight"
-          style={{ animation: 'nameSlideUp 0.6s ease-out forwards' }}
-        >
-          {config.site_nombre || 'FoodPop'}
-        </h1>
-        <p
-          className="text-white/60 text-xs uppercase tracking-widest mt-3"
-          style={{ animation: 'nameSlideUp 0.6s ease-out 0.3s both' }}
-        >
-          Delivery Rápido
-        </p>
-        <div
-          className="mt-6 flex gap-1.5"
-          style={{ animation: 'pulseGlow 1.2s ease-in-out infinite', animationDelay: '0.6s' }}
-        >
-          <div className="w-2 h-2 rounded-full bg-white/80" />
-          <div className="w-2 h-2 rounded-full bg-white/60" />
-          <div className="w-2 h-2 rounded-full bg-white/40" />
+      <div
+        className="flex flex-col items-center gap-4"
+        style={{ animation: 'fadeInUp 0.6s ease-out forwards' }}
+      >
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={config.site_nombre || 'Logo'}
+            className="w-28 h-28 object-contain drop-shadow-lg"
+            style={{ background: 'transparent' }}
+          />
+        ) : (
+          <div className="w-28 h-28 rounded-full bg-white/20 flex items-center justify-center text-4xl font-bold text-white drop-shadow-lg">
+            {(config.site_nombre || 'F')[0]}
+          </div>
+        )}
+        <div className="flex flex-col items-center gap-1">
+          <h1 className="text-zinc-800 text-xl font-bold tracking-tight">
+            {config.site_nombre || 'FoodPop'}
+          </h1>
+          <p className="text-zinc-500 text-xs uppercase tracking-widest">
+            Bienvenido
+          </p>
         </div>
       </div>
     </div>
