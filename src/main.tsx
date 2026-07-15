@@ -4,8 +4,19 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
-// Registrar SW diferido (no immediate) para evitar recargas en dev
-registerSW();
+// Forzar limpieza de caches workbox precache viejos
+// Esto resuelve el problema donde un SW anterior cacheó respuestas HTML para assets CSS/JS
+if ('caches' in window) {
+  caches.keys().then((names) => {
+    names.forEach((name) => {
+      if (name.startsWith('workbox-precache')) {
+        caches.delete(name);
+      }
+    });
+  });
+}
+
+registerSW({ immediate: true });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -21,7 +21,6 @@ function AppContent() {
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -35,27 +34,6 @@ function AppContent() {
       }
     };
 
-    // SW Update detection
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      });
-      navigator.serviceWorker.getRegistration().then((reg) => {
-        if (reg) {
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  setSwUpdateAvailable(true);
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     return () => {
@@ -63,18 +41,6 @@ function AppContent() {
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, [currentUser, markUserAsPwaInstalled]);
-
-  const handleSwUpdate = () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then((reg) => {
-        if (reg?.waiting) {
-          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        } else {
-          window.location.reload();
-        }
-      });
-    }
-  };
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -147,19 +113,6 @@ function AppContent() {
       <SEOHead />
       <OfflineBanner />
       <PushNotificationModal />
-
-      {/* SW Update Banner */}
-      {swUpdateAvailable && (
-        <div className="fixed top-0 left-0 right-0 z-[200] bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between text-xs shadow-lg">
-          <span className="font-medium">Nueva versión disponible</span>
-          <button
-            onClick={handleSwUpdate}
-            className="bg-white text-blue-600 font-bold px-3 py-1 rounded-lg text-xs cursor-pointer hover:bg-blue-50"
-          >
-            Actualizar
-          </button>
-        </div>
-      )}
 
       <div className="w-full bg-white flex flex-col min-h-screen relative">
 
