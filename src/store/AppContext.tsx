@@ -1062,7 +1062,7 @@ const DEFAULT_PRODUCTS: FoodItem[] = [
 ];
 
 const DEFAULT_CONFIG: StoreConfig = {
-  site_nombre: 'BurgerPop',
+  site_nombre: 'FoodPop',
   telefono_soporte: '+584124976451',
   direccion_fisica: 'Av. Principal, Local #12, Valencia',
   coordenadas_tienda: { lat: 10.198300, lng: -68.004400 },
@@ -1097,6 +1097,7 @@ const DEFAULT_CONFIG: StoreConfig = {
     { id: 'z3', name: 'Lejano (8-18 km)', cost: 7.00, minKm: 8, maxKm: 18 },
   ],
   favicon_url: '',
+  pwa_icon_url: '',
   banner_texts: [
     'Hamburguesas Smash, Pizzas y Pollo',
     'Combos que Enamoran',

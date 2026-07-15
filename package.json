@@ -8,6 +8,7 @@
     "start": "npm run dev",
     "build": "vite build && node -e \"require('fs').cpSync('functions','dist/functions',{recursive:true})\"",
     "preview": "vite preview",
+    "icons": "node generate-icons.cjs",
     "clean": "rm -rf dist server.js",
     "test": "vitest run",
     "test:watch": "vitest",

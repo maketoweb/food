@@ -99,6 +99,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         const store = tx.objectStore(STORE_NAME);
         
         if (config.logo_url) store.put(config.logo_url, 'logo_url');
+        if (config.pwa_icon_url) store.put(config.pwa_icon_url, 'pwa_icon_url');
         if (config.site_nombre) store.put(config.site_nombre, 'site_name');
         if (config.theme_color) store.put(config.theme_color, 'theme_color');
         
@@ -108,6 +109,12 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
               navigator.serviceWorker.controller.postMessage({
                 type: 'UPDATE_LOGO_URL',
                 logoUrl: config.logo_url
+              });
+            }
+            if (config.pwa_icon_url) {
+              navigator.serviceWorker.controller.postMessage({
+                type: 'UPDATE_PWA_ICON',
+                pwaIconUrl: config.pwa_icon_url
               });
             }
             if (config.site_nombre) {
@@ -128,7 +135,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     }, 500);
 
     // Apple Touch Icon dinámico
-    const appleTouchUrl = config.logo_url || config.favicon_url || '/pwa-192x192.png';
+    const appleTouchUrl = config.pwa_icon_url || config.logo_url || config.favicon_url || '/pwa-192x192.png';
     let appleLink = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
     if (!appleLink) {
       appleLink = document.createElement('link');
@@ -137,14 +144,14 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     }
     appleLink.setAttribute('href', appleTouchUrl);
 
-    if (config.favicon_url || config.logo_url) {
+    if (config.favicon_url || config.pwa_icon_url || config.logo_url) {
       let iconLink = document.querySelector('link[rel="icon"]');
       if (!iconLink) {
         iconLink = document.createElement('link');
         iconLink.setAttribute('rel', 'icon');
         document.head.appendChild(iconLink);
       }
-      iconLink.setAttribute('href', config.favicon_url || config.logo_url || '/favicon.ico');
+      iconLink.setAttribute('href', config.favicon_url || config.pwa_icon_url || config.logo_url || '/favicon.ico');
     }
     
     let themeMeta = document.querySelector('meta[name="theme-color"]');
@@ -161,7 +168,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       appleTitleMeta.setAttribute('name', 'apple-mobile-web-app-title');
       document.head.appendChild(appleTitleMeta);
     }
-    appleTitleMeta.setAttribute('content', config.site_nombre || 'BurgerPop');
+    appleTitleMeta.setAttribute('content', config.site_nombre || 'FoodPop');
 
     // JSON-LD Schema — SEO Premium from schemas.js
     const existingScript = document.getElementById('foodapp-jsonld-schema');
@@ -230,7 +237,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     return () => {
       if (indexedDBTimeoutRef.current) clearTimeout(indexedDBTimeoutRef.current);
     };
-  }, [title, description, type, product, filters, config.site_nombre, config.theme_color, config.logo_url, config.favicon_url]);
+  }, [title, description, type, product, filters, config.site_nombre, config.theme_color, config.logo_url, config.favicon_url, config.pwa_icon_url]);
 
   return null;
 };

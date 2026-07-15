@@ -13,10 +13,10 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'autoUpdate',
         strategies: 'generateSW',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'sounds/notification.mp3'],
+        includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sounds/notification.mp3'],
         manifest: {
-          name: 'FoodApp - Delivery de Comida Premium',
-          short_name: 'FoodApp',
+          name: 'FoodPop - Delivery de Comida Premium',
+          short_name: 'FoodPop',
           description: 'Tu restaurante favorito con delivery express. Hamburguesas, pastas, postres y más.',
           scope: '/',
           start_url: '/',
@@ -31,33 +31,41 @@ export default defineConfig(({mode}) => {
               short_name: 'Pedir',
               description: 'Ver el catálogo y hacer un pedido',
               url: '/catalog',
-              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
             },
             {
               name: 'Mis Pedidos',
               short_name: 'Pedidos',
               description: 'Ver el historial de pedidos',
               url: '/profile',
-              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
             },
             {
               name: 'Carrito',
               short_name: 'Carrito',
               description: 'Ver el carrito de compras',
               url: '/cart',
-              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
             }
           ],
           icons: [
             {
               src: 'pwa-192x192.png',
               sizes: '192x192',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any'
             },
             {
               src: 'pwa-512x512.png',
               sizes: '512x512',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
             }
           ]
         },

@@ -41,6 +41,30 @@ function setLogoUrl(url) {
   });
 }
 
+function getPwaIconUrl() {
+  return openDB().then(function(db) {
+    return new Promise(function(resolve) {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get('pwa_icon_url');
+      req.onsuccess = function() { resolve(req.result || null); };
+      req.onerror = function() { resolve(null); };
+    });
+  });
+}
+
+function setPwaIconUrl(url) {
+  return openDB().then(function(db) {
+    return new Promise(function(resolve) {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put(url, 'pwa_icon_url');
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror = function() { resolve(); };
+    });
+  });
+}
+
 function getSiteName() {
   return openDB().then(function(db) {
     return new Promise(function(resolve) {
@@ -109,22 +133,25 @@ self.addEventListener('fetch', function(event) {
   // Solo interceptar manifest.json del mismo origen
   if (url.pathname === '/manifest.json' || url.pathname === '/manifest.webmanifest') {
     event.respondWith(
-      Promise.all([getLogoUrl(), getSiteName(), getThemeColor()]).then(function(results) {
+      Promise.all([getLogoUrl(), getPwaIconUrl(), getSiteName(), getThemeColor()]).then(function(results) {
         var logoUrl = results[0];
-        var siteName = results[1];
-        var themeColor = results[2];
+        var pwaIconUrl = results[1];
+        var siteName = results[2];
+        var themeColor = results[3];
         // Si no hay nada configurado, servir el manifest original
-        if (!logoUrl && !siteName && !themeColor) {
+        if (!logoUrl && !pwaIconUrl && !siteName && !themeColor) {
           return fetch(event.request);
         }
         // Fetch el manifest original y reemplazar campos
         return fetch(event.request).then(function(response) {
           return response.clone().json().then(function(manifest) {
-            if (logoUrl) {
+            // PWA icon takes priority for manifest icons, fallback to logo
+            var iconForManifest = pwaIconUrl || logoUrl;
+            if (iconForManifest) {
               manifest.icons = [
-                { src: logoUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
-                { src: logoUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
-                { src: logoUrl, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+                { src: iconForManifest, sizes: '192x192', type: 'image/png', purpose: 'any' },
+                { src: iconForManifest, sizes: '512x512', type: 'image/png', purpose: 'any' },
+                { src: iconForManifest, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
               ];
             }
             if (siteName) {
@@ -264,6 +291,21 @@ self.addEventListener('message', function(event) {
           return clearManifestCache();
         }).then(function() {
           return notifyClients('LOGO_URL_UPDATED');
+        });
+      })
+    );
+  }
+
+  // Guardar pwa_icon_url en IndexedDB (solo si cambió)
+  if (event.data?.type === 'UPDATE_PWA_ICON') {
+    event.waitUntil(
+      getPwaIconUrl().then(function(current) {
+        if (current === event.data.pwaIconUrl) return;
+        console.log('[SW Push] Actualizando pwa_icon_url en IndexedDB:', event.data.pwaIconUrl);
+        return setPwaIconUrl(event.data.pwaIconUrl).then(function() {
+          return clearManifestCache();
+        }).then(function() {
+          return notifyClients('PWA_ICON_UPDATED');
         });
       })
     );

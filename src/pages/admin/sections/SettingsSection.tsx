@@ -963,6 +963,13 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
                 {config.favicon_url && (<img src={config.favicon_url} alt="Favicon preview" className="mt-2 h-8 w-8 object-contain bg-slate-100 rounded border border-slate-200" />)}
               </div>
 
+              <div className="flex flex-col gap-1">
+                <span>Icono PWA (App Movil - Cuadrado 512x512):</span>
+                <input type="file" accept="image/png, image/jpeg" onChange={async (e) => { const file = e.target.files?.[0]; if (file) { try { const compressed = await compressImage(file, { maxWidth: 512, format: 'image/png' }); const url = await uploadFileToStorage(compressed, 'settings', `pwa-icons/${Date.now()}.png`); updateConfig({ pwa_icon_url: url }); } catch (err) { alert('Error al subir icono PWA: ' + (err as any).message); } } }} className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500" />
+                <span className="text-[9px] text-slate-400">Cuadro redondo/square. Es el icono que se muestra en la pantalla de inicio del celular.</span>
+                {config.pwa_icon_url && (<img src={config.pwa_icon_url} alt="PWA icon preview" className="mt-2 h-12 w-12 object-contain bg-slate-100 rounded-xl border border-slate-200" />)}
+              </div>
+
               <div className="flex flex-col gap-1 md:col-span-2">
                 <span>Color Primario (Hexadecimal, ej: #ffffff):</span>
                 <div className="flex items-center gap-2">

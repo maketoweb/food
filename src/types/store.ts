@@ -335,6 +335,7 @@ export interface StoreConfig {
   entrega_por_zonas?: boolean;
   delivery_zonas?: DeliveryZone[];
   favicon_url?: string;
+  pwa_icon_url?: string;
   banner_texts?: string[];
   categories?: string[];
   categories_images?: Record<string, string>;

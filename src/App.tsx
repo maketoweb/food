@@ -11,10 +11,10 @@ import { FoodItem } from './types/store';
 import { PushNotificationModal } from './components/PushNotificationModal';
 import { X, ShoppingBag } from 'lucide-react';
 import { SEOHead } from './components/SEOHead';
-import { SplashScreen } from './components/SplashScreen';
 import { OfflineBanner } from './components/OfflineBanner';
 import { FreeDeliveryBar } from './components/FreeDeliveryBar';
 import { ProductModal } from './components/ProductModal';
+import { SkeletonHome, SkeletonCatalog, SkeletonCheckout, SkeletonProfile } from './components/Skeletons';
 
 function AppContent() {
   const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated, currentUser, markUserAsPwaInstalled } = useApp();
@@ -64,7 +64,6 @@ function AppContent() {
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminUserInput, setAdminUserInput] = useState('');
-  const [showSplash, setShowSplash] = useState(true);
 
   const resetAllFilters = () => {
     setSelectedCategory('');
@@ -91,8 +90,21 @@ function AppContent() {
     setTab('catalog');
   };
 
-  if (isGlobalLoading || showSplash) {
-    return <SplashScreen config={config} onComplete={() => setShowSplash(false)} />;
+  if (isGlobalLoading) {
+    const skeletonMap: Record<string, React.ReactNode> = {
+      home: <SkeletonHome />,
+      catalog: <SkeletonCatalog />,
+      checkout: <SkeletonCheckout />,
+      profile: <SkeletonProfile />,
+      admin: <SkeletonHome />,
+    };
+    return (
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 w-full flex justify-center">
+        <div className="w-full">
+          {skeletonMap[tab] || <SkeletonHome />}
+        </div>
+      </div>
+    );
   }
 
   return (

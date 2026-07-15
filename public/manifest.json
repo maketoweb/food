@@ -1,6 +1,6 @@
 {
-  "name": "FoodApp - Delivery de Comida Premium",
-  "short_name": "FoodApp",
+  "name": "FoodPop - Delivery de Comida Premium",
+  "short_name": "FoodPop",
   "description": "Tu restaurante favorito con delivery express. Hamburguesas, pastas, postres y más.",
   "start_url": "/",
   "scope": "/",
