@@ -188,6 +188,10 @@ BEGIN
     PERFORM add_column_if_not_exists('store_config', 'envio_nacional', 'BOOLEAN DEFAULT FALSE');
     PERFORM add_column_if_not_exists('store_config', 'costo_envio_nacional', 'NUMERIC(10,2) DEFAULT 0');
     PERFORM add_column_if_not_exists('store_config', 'stock_alert_threshold', 'INTEGER DEFAULT 5');
+    PERFORM add_column_if_not_exists('store_config', 'pwa_icon_url', 'TEXT DEFAULT ''''');
+    PERFORM add_column_if_not_exists('store_config', 'seo_catalog_title', 'TEXT DEFAULT ''''');
+    PERFORM add_column_if_not_exists('store_config', 'seo_catalog_description', 'TEXT DEFAULT ''''');
+    PERFORM add_column_if_not_exists('store_config', 'jsonld_servesCuisine', 'TEXT[] DEFAULT ARRAY[$$Comida Rápida$$, $$Hamburguesas$$, $$Pizzas$$]::TEXT[]');
 END $block$;
 
 -- Columna con ARRAY default (manejar por separado por la sintaxis ARRAY)
@@ -761,9 +765,11 @@ ALTER TABLE loyalty_transactions ENABLE ROW LEVEL SECURITY;
 
 -- Permisos base
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT SELECT, INSERT ON store_config, products, notifications, coupons, usuarios_clientes TO anon;
+GRANT SELECT ON store_config, products, notifications, coupons, usuarios_clientes TO anon;
 GRANT SELECT, INSERT, UPDATE ON orders TO anon;
 GRANT SELECT, INSERT, UPDATE ON push_subscriptions TO anon;
+GRANT SELECT ON promotions, product_reviews, flash_sales, reward_catalog, loyalty_transactions, user_carts TO anon;
+GRANT SELECT, INSERT ON promotions, product_reviews TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated;
@@ -933,7 +939,32 @@ BEGIN
     USING (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
     WITH CHECK (auth.jwt() ->> 'email' = 'kecho8a@gmail.com' OR auth.jwt() -> 'app_metadata' ->> 'role' = 'admin');
 
+  -- user_carts (anon para guest checkout)
+  DROP POLICY IF EXISTS "user_carts_select_any" ON user_carts;
+  CREATE POLICY "user_carts_select_any" ON user_carts FOR SELECT USING (true);
+
+  DROP POLICY IF EXISTS "user_carts_upsert_any" ON user_carts;
+  CREATE POLICY "user_carts_upsert_any" ON user_carts FOR INSERT WITH CHECK (true);
+
+  DROP POLICY IF EXISTS "user_carts_update_any" ON user_carts;
+  CREATE POLICY "user_carts_update_any" ON user_carts FOR UPDATE USING (true) WITH CHECK (true);
+
 END $$;
+
+-- Trigger para auto-actualizar updated_at en store_config
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_store_config_updated_at ON store_config;
+CREATE TRIGGER update_store_config_updated_at
+    BEFORE UPDATE ON store_config
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- ----------------------------------------------------------------------------
 -- 14. PRODUCTOS DE EJEMPLO (50 productos)
