@@ -54,8 +54,8 @@ function AppContent() {
     }
   };
 
-  // Route/Tab controllers
-  const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout'>('home');
+  // Route/Tab controllers - si es admin autenticado, abrir directo en su panel
+  const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout'>(isAdminAuthenticated ? 'admin' : 'home');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -119,21 +119,21 @@ function AppContent() {
 
       <div className="w-full bg-white flex flex-col min-h-screen relative">
 
-        {/* ═══ CHIPOTLE-STYLE STICKY HEADER ═══ */}
-        <Navigation
-          currentTab={tab}
-          setTab={setTab}
-          onTriggerAdminLogin={() => setIsAdminLoginOpen(true)}
-          drawerOpen={drawerOpen}
-          setDrawerOpen={setDrawerOpen}
-          navigateToCatalog={navigateToCatalog}
-        />
-
-        {/* Offset for fixed header - hidden on catalog mobile */}
-        <div className={tab === 'catalog' ? 'lg:h-16' : 'h-14 lg:h-16'} />
-
-        {/* FREE DELIVERY PROGRESS BAR */}
-        <FreeDeliveryBar currentTotal={cart.reduce((sum, item) => sum + item.item.precio_usd * item.quantity, 0)} threshold={config.delivery_gratis_threshold || 0} themeColor={config.theme_color || '#FF2D95'} />
+        {/* ═══ HEADER DE TIENDA - oculto en panel admin ═══ */}
+        {tab !== 'admin' && (
+          <>
+            <Navigation
+              currentTab={tab}
+              setTab={setTab}
+              onTriggerAdminLogin={() => setIsAdminLoginOpen(true)}
+              drawerOpen={drawerOpen}
+              setDrawerOpen={setDrawerOpen}
+              navigateToCatalog={navigateToCatalog}
+            />
+            <div className={tab === 'catalog' ? 'lg:h-16' : 'h-14 lg:h-16'} />
+            <FreeDeliveryBar currentTotal={cart.reduce((sum, item) => sum + item.item.precio_usd * item.quantity, 0)} threshold={config.delivery_gratis_threshold || 0} themeColor={config.theme_color || '#FF2D95'} />
+          </>
+        )}
 
         {/* ═══ MAIN CONTENT AREA ═══ */}
         <main className="flex-1 overflow-y-auto w-full pb-14 lg:pb-0">
@@ -197,8 +197,8 @@ function AppContent() {
           )}
         </main>
 
-        {/* ═══ MOBILE BOTTOM NAV ═══ */}
-        <BottomNav currentTab={tab} setTab={setTab} />
+        {/* ═══ MOBILE BOTTOM NAV - oculto en panel admin ═══ */}
+        {tab !== 'admin' && <BottomNav currentTab={tab} setTab={setTab} />}
 
         {/* ═══ PRODUCT MODAL ═══ */}
         <ProductModal

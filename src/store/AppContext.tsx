@@ -1823,7 +1823,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 30 * 60 * 1000); // 30 minutos
 
     return () => clearInterval(rateInterval);
-  }, [currentUser, isAdminAuthenticated]); // Re-ejecutar al cambiar login o admin
+  }, [currentUser]); // Solo re-ejecutar al cambiar usuario, no al cambiar admin
 
   // Listener de auth state para sincronizar sesión de Supabase con estado local
   useEffect(() => {
@@ -1839,12 +1839,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
       } else if (event === 'SIGNED_OUT') {
+        // En SIGNED_OUT, session es null - no podemos verificar si era admin desde la sesión.
+        // Intentar restaurar la sesión antes de limpiar el estado del admin.
         if (localStorage.getItem('trv_admin_auth') === 'true') {
-          const isAdminUser = session?.user?.email === 'kecho8a@gmail.com' || session?.user?.app_metadata?.role === 'admin';
-          if (!isAdminUser) {
+          supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
+            if (restoredSession) {
+              const isAdmin = restoredSession.user?.email === 'kecho8a@gmail.com' || restoredSession.user?.app_metadata?.role === 'admin';
+              if (isAdmin) {
+                setIsAdminAuthenticated(true);
+                localStorage.setItem('trv_admin_auth', 'true');
+                return;
+              }
+            }
+            // Sesión no restaurable, limpiar admin
             setIsAdminAuthenticated(false);
             localStorage.removeItem('trv_admin_auth');
-          }
+          });
         }
       }
     });

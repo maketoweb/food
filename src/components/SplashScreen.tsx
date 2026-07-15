@@ -14,8 +14,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [onComplete]);
 
-  const logoUrl = config.logo_url || '';
-
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500"
@@ -32,29 +30,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
         }
       `}</style>
       <div
-        className="flex flex-col items-center gap-4"
+        className="flex flex-col items-center gap-1"
         style={{ animation: 'fadeInUp 0.6s ease-out forwards' }}
       >
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={config.site_nombre || 'Logo'}
-            className="w-28 h-28 object-contain drop-shadow-lg"
-            style={{ background: 'transparent' }}
-          />
-        ) : (
-          <div className="w-28 h-28 rounded-full bg-white/20 flex items-center justify-center text-4xl font-bold text-white drop-shadow-lg">
-            {(config.site_nombre || 'F')[0]}
-          </div>
-        )}
-        <div className="flex flex-col items-center gap-1">
-          <h1 className="text-zinc-800 text-xl font-bold tracking-tight">
-            {config.site_nombre || 'FoodPop'}
-          </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest">
-            Bienvenido
-          </p>
-        </div>
+        <h1 className="text-zinc-800 text-xl font-bold tracking-tight">
+          {config.site_nombre || 'FoodPop'}
+        </h1>
+        <p className="text-zinc-500 text-xs uppercase tracking-widest">
+          Bienvenido
+        </p>
       </div>
     </div>
   );
