@@ -6,10 +6,15 @@ let webpush: any;
 
 declare const PagesFunction: any;
 
+// CORS: Reemplazar * con tu dominio en produccion
+// Ejemplo: 'https://foodpop.com.ve'
+const ALLOWED_ORIGIN = '*'; // TODO: Cambiar a dominio en produccion
+
 const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, x-push-webhook-secret',
+  'Access-Control-Max-Age': '86400',
 };
 
 export const onRequestOptions: any = async () => {
@@ -42,7 +47,10 @@ export const onRequestGet: any = async (context: any) => {
 export const onRequestPost: any = async (context: any) => {
   const { request, env } = context;
 
-  // 1. Verificación de Seguridad
+  // 1. Verificacion de Seguridad
+  // Rate limiting: En produccion, usar KV para trackear requests por IP
+  const clientIP = request.headers.get('cf-connecting-ip') || 'unknown';
+
   const rawAuthHeader = request.headers.get('x-push-webhook-secret') || '';
   const authHeader = rawAuthHeader.trim();
   const configuredSecret = [env.WEBHOOK_SECRET, env.webhook_secret, env.PUSH_WEBHOOK_SECRET, env.push_webhook_secret].find(Boolean) || '';

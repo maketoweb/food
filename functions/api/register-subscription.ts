@@ -4,10 +4,14 @@
 
 declare const PagesFunction: any;
 
+// CORS: Reemplazar * con tu dominio en produccion
+const ALLOWED_ORIGIN = '*'; // TODO: Cambiar a dominio en produccion
+
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
 };
 
 export const onRequestOptions: any = async () => {
