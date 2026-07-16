@@ -6,7 +6,7 @@ import { Order, FoodItem } from '../../types/store';
 import {
   BarChart3, ShoppingBag, Utensils, Grid, User, Ticket, Settings,
   X, Bell, MessageSquare, Megaphone, Package, Award, FileText,
-  LayoutGrid, ChevronLeft, MapPin, Shield
+  LayoutGrid, ChevronLeft, MapPin, Shield, Store
 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 import { EditProductForm } from '../../components/EditProductForm';
@@ -23,7 +23,7 @@ const ChatSection = lazy(() => import('./sections/ChatSection'));
 const PromosSection = lazy(() => import('./sections/PromosSection'));
 const CombosSection = lazy(() => import('./sections/CombosSection'));
 const LoyaltySection = lazy(() => import('./sections/LoyaltySection'));
-const ContentSection = lazy(() => import('./sections/ContentSection'));
+const TiendaSection = lazy(() => import('./sections/TiendaSection'));
 const TrackingSection = lazy(() => import('./sections/TrackingSection'));
 const RolesSection = lazy(() => import('./sections/RolesSection'));
 
@@ -52,7 +52,7 @@ const ALL_SECTIONS = [
   { id: 'customers',    label: 'Clientes',       icon: User,             group: 'clientes' },
   { id: 'chat',         label: 'Mensajes',       icon: MessageSquare,    group: 'clientes' },
   { id: 'notifications',label: 'Avisos',         icon: Bell,             group: 'comunicacion' },
-  { id: 'content',      label: 'Contenido',      icon: FileText,         group: 'contenido' },
+  { id: 'tienda',      label: 'Tienda',        icon: Store,           group: 'contenido' },
   { id: 'coupons',      label: 'Cupones',        icon: Ticket,           group: 'contenido' },
   { id: 'roles',        label: 'Roles',          icon: Shield,           group: 'sistema', adminOnly: true },
   { id: 'settings',     label: 'Configuración',  icon: Settings,         group: 'sistema' },
@@ -156,7 +156,7 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
       case 'combos': return <CombosSection />;
       case 'tracking': return <TrackingSection />;
       case 'loyalty': return <LoyaltySection />;
-      case 'content': return <ContentSection />;
+      case 'tienda': return <TiendaSection />;
       case 'roles': return <RolesSection />;
       default: return <DashboardSection />;
     }

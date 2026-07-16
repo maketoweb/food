@@ -1022,7 +1022,7 @@ BEGIN
   CREATE POLICY "admin_users_operator_read" ON admin_users
     FOR SELECT TO authenticated
     USING (
-      auth.uid()::text = id
+      auth.uid()::text = id::text
       OR (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
       OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
     );

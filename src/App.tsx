@@ -44,6 +44,18 @@ function AppContent() {
     };
   }, [currentUser, markUserAsPwaInstalled]);
 
+  // Aplicar font_display y theme_color dinámicamente al CSS
+  useEffect(() => {
+    const fontName = config.font_display || 'Fredoka';
+    document.documentElement.style.setProperty('--font-display', `"${fontName}", sans-serif`);
+  }, [config.font_display]);
+
+  useEffect(() => {
+    if (config.theme_color) {
+      document.documentElement.style.setProperty('--pop-orange', config.theme_color);
+    }
+  }, [config.theme_color]);
+
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
