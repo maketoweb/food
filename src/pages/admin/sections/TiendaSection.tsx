@@ -1,28 +1,23 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { uploadFileToStorage, compressImage } from '../../../store/supabaseClient';
-import { FAQItem, DeliveryZone } from '../../../types/store';
+import { DeliveryZone, Sede } from '../../../types/store';
 import ImageField from '../components/ImageField';
 import {
-  Store, Image, Smartphone, Palette, Type, FileText, MapPin, CreditCard,
-  Grid, Search, Share2, HelpCircle,
+  Store, Image, Smartphone, Type, FileText, MapPin, CreditCard,
+  Grid, Search, Share2, Building2, AlertTriangle,
   Plus, Trash2, X, Check, ChevronUp, ChevronDown, Eye, EyeOff,
   MessageSquare, ExternalLink
 } from 'lucide-react';
 
 const TiendaSection: React.FC = () => {
-  const { config, updateConfig } = useApp();
+  const { config, updateConfig, currentUser, syncPushSubscription } = useApp();
   const themeColor = config.theme_color || '#007AFF';
 
   const [activeTab, setActiveTab] = useState<
-    'general' | 'logos' | 'pwa' | 'colors' | 'banners' | 'typography' | 'texts' |
-    'delivery' | 'payments' | 'categories' | 'seo' | 'social' | 'faq'
+    'general' | 'logos' | 'pwa' | 'banners' | 'typography' | 'texts' |
+    'delivery' | 'payments' | 'categories' | 'seo' | 'social' | 'sedes'
   >('general');
-
-  // FAQ state
-  const [faqQuestion, setFaqQuestion] = useState('');
-  const [faqAnswer, setFaqAnswer] = useState('');
-  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
 
   // Banner state
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -35,11 +30,14 @@ const TiendaSection: React.FC = () => {
   const [newZoneMinKm, setNewZoneMinKm] = useState(0);
   const [newZoneMaxKm, setNewZoneMaxKm] = useState(0);
 
+  // Sedes state
+  const [sedeForm, setSedeForm] = useState({ nombre: '', telefono: '', direccion: '', horario: '', lat: 0, lng: 0 });
+  const [editingSedeId, setEditingSedeId] = useState<string | null>(null);
+
   const tabs = [
     { id: 'general' as const, label: 'General', icon: Store },
     { id: 'logos' as const, label: 'Logos', icon: Image },
     { id: 'pwa' as const, label: 'PWA', icon: Smartphone },
-    { id: 'colors' as const, label: 'Colores', icon: Palette },
     { id: 'banners' as const, label: 'Banners', icon: Image },
     { id: 'typography' as const, label: 'Tipografia', icon: Type },
     { id: 'texts' as const, label: 'Textos', icon: FileText },
@@ -48,34 +46,8 @@ const TiendaSection: React.FC = () => {
     { id: 'categories' as const, label: 'Categorias', icon: Grid },
     { id: 'seo' as const, label: 'SEO', icon: Search },
     { id: 'social' as const, label: 'Redes', icon: Share2 },
-    { id: 'faq' as const, label: 'FAQ', icon: HelpCircle },
+    { id: 'sedes' as const, label: 'Sucursales', icon: Building2 },
   ];
-
-  // FAQ handlers
-  const handleAddFaq = () => {
-    if (!faqQuestion.trim() || !faqAnswer.trim()) return;
-    const newFaq: FAQItem = { id: `faq-${Date.now()}`, question: faqQuestion.trim(), answer: faqAnswer.trim() };
-    updateConfig({ faq_items: [...(config.faq_items || []), newFaq] });
-    setFaqQuestion(''); setFaqAnswer('');
-  };
-
-  const handleEditFaq = (faq: FAQItem) => {
-    setEditingFaqId(faq.id); setFaqQuestion(faq.question); setFaqAnswer(faq.answer);
-  };
-
-  const handleSaveEditFaq = () => {
-    if (!editingFaqId || !faqQuestion.trim() || !faqAnswer.trim()) return;
-    updateConfig({
-      faq_items: (config.faq_items || []).map(f =>
-        f.id === editingFaqId ? { ...f, question: faqQuestion.trim(), answer: faqAnswer.trim() } : f
-      )
-    });
-    setEditingFaqId(null); setFaqQuestion(''); setFaqAnswer('');
-  };
-
-  const handleDeleteFaq = (id: string) => {
-    updateConfig({ faq_items: (config.faq_items || []).filter(f => f.id !== id) });
-  };
 
   // Banner handlers
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -171,8 +143,29 @@ const TiendaSection: React.FC = () => {
 
           <div className="admin-card p-4">
             <SectionTitle>Telefono / WhatsApp</SectionTitle>
-            <input type="tel" value={config.telefono_soporte} onChange={e => updateConfig({ telefono_soporte: e.target.value })}
-              className="admin-input" placeholder="+584124058904" />
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold" style={{ color: 'var(--ios-text-secondary)' }}>Numero Maestro de Notificaciones</span>
+                {currentUser && config.telefono_soporte !== currentUser.telefono && (
+                  <button onClick={async () => {
+                    updateConfig({ telefono_soporte: currentUser.telefono });
+                    const result = await syncPushSubscription();
+                    if (!result.success) alert('Error al sincronizar push: ' + result.error);
+                  }} className="text-[9px] px-2 py-0.5 rounded font-bold uppercase cursor-pointer" style={{ background: '#FF950020', color: '#FF9500', border: '1px solid #FF950040' }}>
+                    Usar mi numero
+                  </button>
+                )}
+              </div>
+              <input type="tel" value={config.telefono_soporte} onChange={e => updateConfig({ telefono_soporte: e.target.value })}
+                className="admin-input" placeholder="+584124058904" style={{
+                  borderColor: currentUser && config.telefono_soporte !== currentUser.telefono ? '#FF9500' : undefined
+                }} />
+              {currentUser && config.telefono_soporte !== currentUser.telefono && (
+                <p className="text-[9px] font-bold flex items-center gap-1" style={{ color: '#FF9500' }}>
+                  <AlertTriangle size={10} /> Para recibir notificaciones Push, este numero debe coincidir con tu perfil ({currentUser.telefono}).
+                </p>
+              )}
+            </div>
             {config.telefono_soporte && (
               <a href={`https://wa.me/${config.telefono_soporte.replace(/\D/g, '').replace(/^0/, '58')}`}
                 target="_blank" rel="noopener noreferrer"
@@ -370,63 +363,7 @@ const TiendaSection: React.FC = () => {
         </div>
       )}
 
-      {/* ========== 4. COLORES ========== */}
-      {activeTab === 'colors' && (
-        <div className="flex flex-col gap-4">
-          <div className="admin-card p-4">
-            <SectionTitle>Color Primario</SectionTitle>
-            <div className="flex items-center gap-3">
-              <input type="color" value={config.theme_color || '#FF6B35'} onChange={e => updateConfig({ theme_color: e.target.value })}
-                className="w-12 h-12 rounded-xl cursor-pointer" style={{ border: 'none', padding: 0 }} />
-              <input type="text" value={config.theme_color || '#FF6B35'} onChange={e => updateConfig({ theme_color: e.target.value })}
-                className="admin-input flex-1 font-mono" />
-            </div>
-          </div>
-
-          <div className="admin-card p-4">
-            <SectionTitle>Color Secundario</SectionTitle>
-            <div className="flex items-center gap-3">
-              <input type="color" value={config.secondary_color || '#1A1A2E'} onChange={e => updateConfig({ secondary_color: e.target.value })}
-                className="w-12 h-12 rounded-xl cursor-pointer" style={{ border: 'none', padding: 0 }} />
-              <input type="text" value={config.secondary_color || '#1A1A2E'} onChange={e => updateConfig({ secondary_color: e.target.value })}
-                className="admin-input flex-1 font-mono" />
-            </div>
-          </div>
-
-          <div className="admin-card p-4">
-            <SectionTitle>Color de Acento</SectionTitle>
-            <div className="flex items-center gap-3">
-              <input type="color" value={config.accent_color || '#FF6B35'} onChange={e => updateConfig({ accent_color: e.target.value })}
-                className="w-12 h-12 rounded-xl cursor-pointer" style={{ border: 'none', padding: 0 }} />
-              <input type="text" value={config.accent_color || '#FF6B35'} onChange={e => updateConfig({ accent_color: e.target.value })}
-                className="admin-input flex-1 font-mono" />
-            </div>
-          </div>
-
-          <div className="admin-card p-4">
-            <SectionTitle>Preview en Vivo</SectionTitle>
-            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ios-border)' }}>
-              <div className="p-4" style={{ background: config.theme_color || '#FF6B35' }}>
-                <div className="flex items-center gap-2">
-                  {config.logo_url && <img src={config.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover" />}
-                  <p className="text-white font-bold text-lg">{config.site_nombre || 'Mi Tienda'}</p>
-                </div>
-                <p className="text-white/80 text-sm mt-1">{config.mensaje_bienvenida?.substring(0, 60) || 'Bienvenido...'}</p>
-              </div>
-              <div className="p-3 flex gap-2">
-                <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold" style={{ background: config.theme_color || '#FF6B35' }}>Principal</div>
-                <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold" style={{ background: config.secondary_color || '#1A1A2E' }}>Secundario</div>
-                <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold" style={{ background: config.accent_color || '#FF6B35' }}>Acento</div>
-              </div>
-              <div className="p-4" style={{ background: config.secondary_color || '#1A1A2E' }}>
-                <p className="text-white/80 text-sm">Footer de ejemplo</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========== 5. BANNERS ========== */}
+      {/* ========== 4. BANNERS ========== */}
       {activeTab === 'banners' && (
         <div className="flex flex-col gap-4">
           {(config.banners || []).map((banner, index) => (
@@ -1016,55 +953,145 @@ const TiendaSection: React.FC = () => {
         </div>
       )}
 
-      {/* ========== 13. FAQ ========== */}
-      {activeTab === 'faq' && (
+      {/* ========== 13. SEDES ========== */}
+      {activeTab === 'sedes' && (
         <div className="flex flex-col gap-4">
           <div className="admin-card p-4">
-            <SectionTitle>{editingFaqId ? 'Editar Pregunta' : 'Nueva Pregunta'}</SectionTitle>
+            <SectionTitle>Gestion de Sucursales</SectionTitle>
+            <p className="text-[10px] mb-3" style={{ color: 'var(--ios-text-tertiary)' }}>
+              Administra las ubicaciones fisicas de tu negocio. La sede principal se usa para calcular distancias y zonas de delivery.
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {(config.sedes || []).map((sede) => (
+                <div key={sede.id} className="p-3 rounded-xl" style={{
+                  background: sede.es_principal ? 'var(--ios-bg)' : 'var(--ios-card)',
+                  border: `1px solid ${sede.es_principal ? themeColor + '40' : 'var(--ios-border)'}`
+                }}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold" style={{ color: 'var(--ios-text)' }}>{sede.nombre}</span>
+                        {sede.es_principal && (
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase" style={{ background: themeColor + '20', color: themeColor }}>Principal</span>
+                        )}
+                        {!sede.activa && (
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase" style={{ background: 'var(--ios-bg)', color: 'var(--ios-text-tertiary)' }}>Inactiva</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] mt-1" style={{ color: 'var(--ios-text-secondary)' }}>{sede.direccion}</p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px]" style={{ color: 'var(--ios-text-tertiary)' }}>
+                        <span>{sede.telefono}</span>
+                        {sede.horario && <span>{sede.horario}</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0 ml-2">
+                      <button onClick={() => {
+                        const updated = (config.sedes || []).map(s => s.id === sede.id ? { ...s, activa: !s.activa } : s);
+                        updateConfig({ sedes: updated });
+                      }} className="p-1.5 rounded-lg cursor-pointer" style={{ color: sede.activa ? '#FF9500' : '#34C759' }}>
+                        {sede.activa ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                      {!sede.es_principal && (
+                        <button onClick={() => {
+                          if (confirm(`Marcar "${sede.nombre}" como sede principal?`)) {
+                            const updated = (config.sedes || []).map(s => ({ ...s, es_principal: s.id === sede.id }));
+                            updateConfig({ sedes: updated });
+                          }
+                        }} className="p-1.5 rounded-lg cursor-pointer" style={{ color: themeColor }}>
+                          <Check size={14} />
+                        </button>
+                      )}
+                      <button onClick={() => {
+                        const nuevoNombre = prompt('Editar nombre de la sede:', sede.nombre);
+                        if (nuevoNombre && nuevoNombre.trim()) {
+                          const updated = (config.sedes || []).map(s => s.id === sede.id ? { ...s, nombre: nuevoNombre.trim() } : s);
+                          updateConfig({ sedes: updated });
+                        }
+                      }} className="p-1.5 rounded-lg cursor-pointer" style={{ color: 'var(--ios-text-secondary)' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      {!sede.es_principal && (
+                        <button onClick={() => {
+                          if (confirm(`Eliminar la sede "${sede.nombre}"?`)) {
+                            const updated = (config.sedes || []).filter(s => s.id !== sede.id);
+                            updateConfig({ sedes: updated });
+                          }
+                        }} className="p-1.5 rounded-lg cursor-pointer" style={{ color: '#FF3B30' }}>
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(!config.sedes || config.sedes.length === 0) && (
+                <p className="text-[11px] italic text-center py-4" style={{ color: 'var(--ios-text-tertiary)' }}>
+                  No hay sucursales configuradas. Agrega una abajo.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="admin-card p-4">
+            <SectionTitle>{editingSedeId ? 'Editar Sede' : 'Agregar Nueva Sede'}</SectionTitle>
             <div className="flex flex-col gap-3">
-              <input type="text" value={faqQuestion} onChange={e => setFaqQuestion(e.target.value)}
-                className="admin-input" placeholder="Hacen delivery?" />
-              <textarea value={faqAnswer} onChange={e => setFaqAnswer(e.target.value)}
-                className="admin-input" rows={3} placeholder="Si, hacemos delivery..." style={{ resize: 'none' }} />
+              <input type="text" value={sedeForm.nombre} onChange={e => setSedeForm({ ...sedeForm, nombre: e.target.value })}
+                className="admin-input" placeholder="Nombre de la sede" />
+              <input type="tel" value={sedeForm.telefono} onChange={e => setSedeForm({ ...sedeForm, telefono: e.target.value })}
+                className="admin-input" placeholder="Telefono" />
+              <input type="text" value={sedeForm.direccion} onChange={e => setSedeForm({ ...sedeForm, direccion: e.target.value })}
+                className="admin-input" placeholder="Direccion" />
+              <input type="text" value={sedeForm.horario} onChange={e => setSedeForm({ ...sedeForm, horario: e.target.value })}
+                className="admin-input" placeholder="Horario (ej: 8am - 10pm)" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <FieldLabel>Latitud</FieldLabel>
+                  <input type="number" step="any" value={sedeForm.lat || ''} onChange={e => setSedeForm({ ...sedeForm, lat: parseFloat(e.target.value) || 0 })}
+                    className="admin-input mt-1" placeholder="10.198300" />
+                </div>
+                <div>
+                  <FieldLabel>Longitud</FieldLabel>
+                  <input type="number" step="any" value={sedeForm.lng || ''} onChange={e => setSedeForm({ ...sedeForm, lng: parseFloat(e.target.value) || 0 })}
+                    className="admin-input mt-1" placeholder="-68.004400" />
+                </div>
+              </div>
               <div className="flex gap-2">
-                {editingFaqId ? (
-                  <>
-                    <button onClick={handleSaveEditFaq} className="admin-btn flex-1 flex items-center justify-center gap-2 cursor-pointer">
-                      <Check size={16} /> Guardar
-                    </button>
-                    <button onClick={() => { setEditingFaqId(null); setFaqQuestion(''); setFaqAnswer(''); }}
-                      className="admin-btn-secondary admin-btn flex-1 flex items-center justify-center gap-2 cursor-pointer">
-                      <X size={16} /> Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <button onClick={handleAddFaq} disabled={!faqQuestion.trim() || !faqAnswer.trim()}
-                    className="admin-btn flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer">
-                    <Plus size={16} /> Agregar
+                <button onClick={() => {
+                  if (!sedeForm.nombre.trim()) return;
+                  const nuevaSede: Sede = {
+                    id: editingSedeId || `sede-${Date.now()}`,
+                    nombre: sedeForm.nombre.trim(),
+                    telefono: sedeForm.telefono,
+                    direccion: sedeForm.direccion,
+                    horario: sedeForm.horario,
+                    coordenadas: { lat: sedeForm.lat, lng: sedeForm.lng },
+                    es_principal: (config.sedes || []).length === 0,
+                    activa: true,
+                  };
+                  const sedes = [...(config.sedes || [])];
+                  if (editingSedeId) {
+                    const idx = sedes.findIndex(s => s.id === editingSedeId);
+                    if (idx >= 0) sedes[idx] = nuevaSede;
+                  } else {
+                    sedes.push(nuevaSede);
+                  }
+                  updateConfig({ sedes });
+                  setEditingSedeId(null);
+                  setSedeForm({ nombre: '', telefono: '', direccion: '', horario: '', lat: 0, lng: 0 });
+                }} disabled={!sedeForm.nombre.trim()}
+                  className="admin-btn flex-1 cursor-pointer disabled:opacity-40">
+                  {editingSedeId ? 'Guardar Cambios' : 'Agregar Sede'}
+                </button>
+                {editingSedeId && (
+                  <button onClick={() => { setEditingSedeId(null); setSedeForm({ nombre: '', telefono: '', direccion: '', horario: '', lat: 0, lng: 0 }); }}
+                    className="admin-btn-secondary admin-btn cursor-pointer">
+                    Cancelar
                   </button>
                 )}
               </div>
             </div>
           </div>
-
-          {(config.faq_items || []).map(faq => (
-            <div key={faq.id} className="admin-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold" style={{ color: 'var(--ios-text)' }}>{faq.question}</p>
-                  <p className="text-sm mt-1" style={{ color: 'var(--ios-text-secondary)' }}>{faq.answer}</p>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => handleEditFaq(faq)} className="p-2 rounded-xl cursor-pointer" style={{ background: 'var(--ios-bg)', color: 'var(--ios-text-secondary)' }}>
-                    <FileText size={14} />
-                  </button>
-                  <button onClick={() => handleDeleteFaq(faq.id)} className="p-2 rounded-xl cursor-pointer" style={{ background: '#FF3B3015', color: '#FF3B30' }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 

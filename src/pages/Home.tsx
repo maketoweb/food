@@ -154,38 +154,12 @@ export const Home: React.FC<HomeProps> = ({
           SECTION 1: HERO BANNER — Mobile carousel / Desktop fullscreen
           ═══════════════════════════════════════════════════════════ */}
       
-      {/* MOBILE: Full-width carousel */}
+      {/* MOBILE: Full-width carousel with overlay text */}
       <section className="md:hidden w-full bg-zinc-50">
-        {/* Text content */}
-        <div className={`px-4 pt-4 pb-3 ${heroTextClass}`}>
-          <h1 className="text-[22px] font-black text-zinc-900 leading-[1.15] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-            {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
-          </h1>
-          <p className="text-zinc-500 text-[11px] mt-1.5 leading-relaxed">
-            {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
-          </p>
-        </div>
-
-        {/* Buttons */}
-        <div className="flex gap-2 px-4 pb-3">
-          <button
-            onClick={() => setTab('catalog')}
-            className="flex-1 bg-zinc-900 text-white font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-zinc-800 transition-all cursor-pointer active:scale-[0.98]"
-          >
-            {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
-          </button>
-          <button
-            onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
-            className="flex-1 bg-white text-zinc-700 font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 border border-zinc-200 hover:bg-zinc-50 transition-all cursor-pointer active:scale-[0.98]"
-          >
-            Ver Menú
-          </button>
-        </div>
-
         {/* Carousel - full width */}
         <div 
           ref={heroRef}
-          className="relative w-full h-[240px] overflow-hidden"
+          className="relative w-full h-[320px] overflow-hidden"
           onMouseEnter={() => setHeroHovered(true)}
           onMouseLeave={() => setHeroHovered(false)}
           onTouchStart={() => setHeroHovered(true)}
@@ -211,14 +185,43 @@ export const Home: React.FC<HomeProps> = ({
             <div className="w-full h-full bg-zinc-200" />
           )}
 
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+          {/* Text content overlaid on banner */}
+          <div className={`absolute bottom-0 left-0 right-0 p-4 ${heroTextClass}`}>
+            <h1 className="text-[22px] font-black text-white leading-[1.15] tracking-tight drop-shadow-lg">
+              {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
+            </h1>
+            <p className="text-white/80 text-[11px] mt-1.5 leading-relaxed drop-shadow">
+              {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores autenticos preparados con los mejores ingredientes. Ordena ahora y recibelo en tu puerta.'}
+            </p>
+
+            {/* Buttons */}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setTab('catalog')}
+                className="flex-1 bg-white text-zinc-900 font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-zinc-100 transition-all cursor-pointer active:scale-[0.98]"
+              >
+                {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
+              </button>
+              <button
+                onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
+                className="flex-1 bg-white/20 text-white font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 border border-white/40 hover:bg-white/30 transition-all cursor-pointer active:scale-[0.98]"
+              >
+                Ver Menu
+              </button>
+            </div>
+          </div>
+
           {/* Dots indicator */}
           {heroBanners.length > 1 && (
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
               {heroBanners.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setHeroSlide(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                  className={`h-1.5 rounded-full transition-all duration-300 pointer-events-auto ${
                     idx === heroSlide 
                       ? 'w-5 bg-white shadow-sm' 
                       : 'w-1.5 bg-white/50'
