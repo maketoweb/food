@@ -58,6 +58,25 @@ export const Home: React.FC<HomeProps> = ({
   const newItems = useMemo(() => activeItems.filter(p => p.es_nuevo), [activeItems]);
   const bestsellerItems = useMemo(() => activeItems.filter(p => p.es_mas_vendido), [activeItems]);
 
+  const activeCombos = useMemo(() => {
+    return (config.combos || []).filter(c => c.active);
+  }, [config.combos]);
+
+  const [recentlyViewed, setRecentlyViewed] = useState<FoodItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('foodapp_recently_viewed');
+      if (stored) {
+        const ids: string[] = JSON.parse(stored);
+        const items = ids
+          .map(id => foodItems.find(p => p.id === id))
+          .filter(Boolean) as FoodItem[];
+        setRecentlyViewed(items.slice(0, 10));
+      }
+    } catch {}
+  }, [foodItems]);
+
   const categorySections = useMemo(() => {
     return (config.categories || []).map(catName => {
       const items = activeItems.filter(p => p.categoria.toLowerCase() === catName.toLowerCase());
@@ -83,6 +102,9 @@ export const Home: React.FC<HomeProps> = ({
 
   // Promo carousel state
   const promoCarouselRef = useRef<HTMLDivElement>(null);
+  const comboCarouselRef = useRef<HTMLDivElement>(null);
+  const offerCarouselRef = useRef<HTMLDivElement>(null);
+  const recentCarouselRef = useRef<HTMLDivElement>(null);
 
   // Cart totals
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -134,6 +156,23 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
+  const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, dir: 'left' | 'right') => {
+    if (ref.current) {
+      const scrollAmount = ref.current.offsetWidth * 0.8;
+      ref.current.scrollBy({ left: dir === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const trackRecentlyViewed = (item: FoodItem) => {
+    try {
+      const stored = localStorage.getItem('foodapp_recently_viewed');
+      const ids: string[] = stored ? JSON.parse(stored) : [];
+      const filtered = ids.filter(id => id !== item.id);
+      filtered.unshift(item.id);
+      localStorage.setItem('foodapp_recently_viewed', JSON.stringify(filtered.slice(0, 20)));
+    } catch {}
+  };
+
   // Hero height class
   const heroHeightClass = config.hero_height === 'full' ? 'h-[100dvh]'
     : config.hero_height === '70vh' ? 'h-[70dvh]'
@@ -154,12 +193,12 @@ export const Home: React.FC<HomeProps> = ({
           SECTION 1: HERO BANNER — Mobile carousel / Desktop fullscreen
           ═══════════════════════════════════════════════════════════ */}
       
-      {/* MOBILE: Full-width carousel with overlay text */}
+      {/* MOBILE: Full-width carousel with text below */}
       <section className="md:hidden w-full bg-zinc-50">
         {/* Carousel - full width */}
         <div 
           ref={heroRef}
-          className="relative w-full h-[320px] overflow-hidden"
+          className="relative w-full h-[220px] overflow-hidden"
           onMouseEnter={() => setHeroHovered(true)}
           onMouseLeave={() => setHeroHovered(false)}
           onTouchStart={() => setHeroHovered(true)}
@@ -185,38 +224,9 @@ export const Home: React.FC<HomeProps> = ({
             <div className="w-full h-full bg-zinc-200" />
           )}
 
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-          {/* Text content overlaid on banner */}
-          <div className={`absolute bottom-0 left-0 right-0 p-4 ${heroTextClass}`}>
-            <h1 className="text-[22px] font-black text-white leading-[1.15] tracking-tight drop-shadow-lg">
-              {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
-            </h1>
-            <p className="text-white/80 text-[11px] mt-1.5 leading-relaxed drop-shadow">
-              {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores autenticos preparados con los mejores ingredientes. Ordena ahora y recibelo en tu puerta.'}
-            </p>
-
-            {/* Buttons */}
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={() => setTab('catalog')}
-                className="flex-1 bg-white text-zinc-900 font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-zinc-100 transition-all cursor-pointer active:scale-[0.98]"
-              >
-                {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
-              </button>
-              <button
-                onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
-                className="flex-1 bg-white/20 text-white font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 border border-white/40 hover:bg-white/30 transition-all cursor-pointer active:scale-[0.98]"
-              >
-                Ver Menu
-              </button>
-            </div>
-          </div>
-
           {/* Dots indicator */}
           {heroBanners.length > 1 && (
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
               {heroBanners.map((_, idx) => (
                 <button
                   key={idx}
@@ -230,6 +240,23 @@ export const Home: React.FC<HomeProps> = ({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Text content below banner */}
+        <div className={`px-4 py-4 ${heroTextClass}`}>
+          <h1 className="text-[20px] font-black text-zinc-900 leading-[1.15] tracking-tight">
+            {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
+          </h1>
+          <p className="text-zinc-500 text-[12px] mt-1 leading-relaxed">
+            {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores autenticos preparados con los mejores ingredientes. Ordena ahora y recibelo en tu puerta.'}
+          </p>
+          <button
+            onClick={() => setTab('catalog')}
+            className="mt-3 w-full font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
+            style={{ backgroundColor: config.theme_color || '#FF6B35', color: 'white' }}
+          >
+            {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
+          </button>
         </div>
       </section>
 
@@ -344,7 +371,103 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 3: PROMOTIONAL BANNERS CAROUSEL
+          SECTION: COMBOS
+          ═══════════════════════════════════════════════════════════ */}
+      {activeCombos.length > 0 && (
+        <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                  Combos
+                </h2>
+                <p className="text-xs text-zinc-500 mt-1">Arma tu combo y ahorra</p>
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <button onClick={() => scrollCarousel(comboCarouselRef, 'left')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
+                  <ChevronLeft size={18} className="text-zinc-600" />
+                </button>
+                <button onClick={() => scrollCarousel(comboCarouselRef, 'right')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
+                  <ChevronRight size={18} className="text-zinc-600" />
+                </button>
+              </div>
+            </div>
+            <div ref={comboCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+              {activeCombos.map((combo) => {
+                const comboProducts = combo.product_ids
+                  .map(id => activeItems.find(p => p.id === id))
+                  .filter(Boolean) as FoodItem[];
+                const comboImage = combo.imagen_url || comboProducts[0]?.imagen_urls?.[0] || '';
+                return (
+                  <div key={combo.id} className="shrink-0 w-[80vw] sm:w-[50vw] md:w-[calc(33.333%-11px)] snap-start">
+                    <div className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                      <div className="relative h-40 overflow-hidden">
+                        {comboImage ? (
+                          <img src={comboImage} alt={combo.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-3xl" style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)` }}>🎁</div>
+                        )}
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: themeColor }}>
+                          -{combo.discount_percent}% OFF
+                        </div>
+                      </div>
+                      <div className="p-4 flex flex-col flex-1">
+                        <h3 className="text-sm font-bold text-zinc-900">{combo.nombre}</h3>
+                        <p className="text-xs text-zinc-500 mt-1 leading-relaxed flex-1">{combo.descripcion}</p>
+                        <p className="text-[11px] text-zinc-400 mt-2">{comboProducts.length} productos incluidos</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          SECTION: OFERTAS — Products on sale
+          ═══════════════════════════════════════════════════════════ */}
+      {promoItems.length > 0 && (
+        <section className="w-full py-6 sm:py-8 md:py-12" style={{ background: `linear-gradient(180deg, ${themeColor}06, ${themeColor}02)` }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                  Ofertas
+                </h2>
+                <p className="text-xs text-zinc-500 mt-1">Productos con descuento especial</p>
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <button onClick={() => scrollCarousel(offerCarouselRef, 'left')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
+                  <ChevronLeft size={18} className="text-zinc-600" />
+                </button>
+                <button onClick={() => scrollCarousel(offerCarouselRef, 'right')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
+                  <ChevronRight size={18} className="text-zinc-600" />
+                </button>
+              </div>
+            </div>
+            <div ref={offerCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+              {promoItems.slice(0, 10).map((item, idx) => (
+                <div key={item.id} className="shrink-0 w-[180px] sm:w-[220px] snap-start">
+                  <PremiumProductCard
+                    item={item}
+                    config={config}
+                    onViewProductDetails={(food) => { trackRecentlyViewed(food); onViewProductDetails(food); }}
+                    addToCart={(food) => addToCart(food)}
+                    averageRating={getProductAverageRating(item.id)}
+                    reviewCount={getProductReviews(item.id).length}
+                    index={idx}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          SECTION: PROMOTIONAL BANNERS CAROUSEL
           ═══════════════════════════════════════════════════════════ */}
       {carouselItems.length > 0 && (
         <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
@@ -517,7 +640,48 @@ export const Home: React.FC<HomeProps> = ({
                   <PremiumProductCard
                     item={item}
                     config={config}
-                    onViewProductDetails={onViewProductDetails}
+                    onViewProductDetails={(food) => { trackRecentlyViewed(food); onViewProductDetails(food); }}
+                    addToCart={(food) => addToCart(food)}
+                    averageRating={getProductAverageRating(item.id)}
+                    reviewCount={getProductReviews(item.id).length}
+                    index={idx}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          SECTION: ÚLTIMOS VISTOS
+          ═══════════════════════════════════════════════════════════ */}
+      {recentlyViewed.length > 0 && (
+        <section className="w-full py-6 sm:py-8 md:py-12 bg-zinc-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                  Últimos Vistos
+                </h2>
+                <p className="text-xs text-zinc-500 mt-1">Los productos que viste recientemente</p>
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <button onClick={() => scrollCarousel(recentCarouselRef, 'left')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
+                  <ChevronLeft size={18} className="text-zinc-600" />
+                </button>
+                <button onClick={() => scrollCarousel(recentCarouselRef, 'right')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
+                  <ChevronRight size={18} className="text-zinc-600" />
+                </button>
+              </div>
+            </div>
+            <div ref={recentCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+              {recentlyViewed.map((item, idx) => (
+                <div key={item.id} className="shrink-0 w-[180px] sm:w-[220px] snap-start">
+                  <PremiumProductCard
+                    item={item}
+                    config={config}
+                    onViewProductDetails={(food) => { trackRecentlyViewed(food); onViewProductDetails(food); }}
                     addToCart={(food) => addToCart(food)}
                     averageRating={getProductAverageRating(item.id)}
                     reviewCount={getProductReviews(item.id).length}
