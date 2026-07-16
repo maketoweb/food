@@ -5,9 +5,9 @@ import { FAQItem, DeliveryZone } from '../../../types/store';
 import ImageField from '../components/ImageField';
 import {
   Store, Image, Smartphone, Palette, Type, FileText, MapPin, CreditCard,
-  Grid, Search, Share2, HelpCircle, Bell,
-  Plus, Trash2, X, Check, ChevronUp, ChevronDown, Globe, Eye, EyeOff,
-  MessageSquare, ExternalLink, AlertTriangle
+  Grid, Search, Share2, HelpCircle,
+  Plus, Trash2, X, Check, ChevronUp, ChevronDown, Eye, EyeOff,
+  MessageSquare, ExternalLink
 } from 'lucide-react';
 
 const TiendaSection: React.FC = () => {
@@ -16,7 +16,7 @@ const TiendaSection: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<
     'general' | 'logos' | 'pwa' | 'colors' | 'banners' | 'typography' | 'texts' |
-    'delivery' | 'payments' | 'categories' | 'seo' | 'social' | 'faq' | 'push'
+    'delivery' | 'payments' | 'categories' | 'seo' | 'social' | 'faq'
   >('general');
 
   // FAQ state
@@ -49,7 +49,6 @@ const TiendaSection: React.FC = () => {
     { id: 'seo' as const, label: 'SEO', icon: Search },
     { id: 'social' as const, label: 'Redes', icon: Share2 },
     { id: 'faq' as const, label: 'FAQ', icon: HelpCircle },
-    { id: 'push' as const, label: 'Push', icon: Bell },
   ];
 
   // FAQ handlers
@@ -129,22 +128,24 @@ const TiendaSection: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all cursor-pointer touch-target"
-              style={{
-                background: isActive ? themeColor : 'var(--ios-card)',
-                color: isActive ? '#FFFFFF' : 'var(--ios-text-secondary)',
-                border: `1px solid ${isActive ? themeColor : 'var(--ios-border)'}`,
-              }}>
-              <Icon size={16} /> {tab.label}
-            </button>
-          );
-        })}
+      <div className="relative">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0"
+                style={{
+                  background: isActive ? themeColor : 'var(--ios-card)',
+                  color: isActive ? '#FFFFFF' : 'var(--ios-text-secondary)',
+                  border: `1px solid ${isActive ? themeColor : 'var(--ios-border)'}`,
+                }}>
+                <Icon size={14} /> {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ========== 1. GENERAL ========== */}
@@ -1067,29 +1068,6 @@ const TiendaSection: React.FC = () => {
         </div>
       )}
 
-      {/* ========== 14. PUSH ========== */}
-      {activeTab === 'push' && (
-        <div className="flex flex-col gap-4">
-          <div className="admin-card p-4">
-            <SectionTitle>Configuracion del Webhook Push</SectionTitle>
-            <p className="text-xs mb-3" style={{ color: 'var(--ios-text-tertiary)' }}>
-              Conecta Supabase con el Worker de Cloudflare para enviar notificaciones push reales.
-            </p>
-            <div className="flex flex-col gap-3">
-              <div>
-                <FieldLabel>URL del Webhook (Cloudflare Pages)</FieldLabel>
-                <input type="url" value={config.push_webhook_url || ''} onChange={e => updateConfig({ push_webhook_url: e.target.value })}
-                  className="admin-input mt-1 font-mono text-xs" placeholder="https://su-app.pages.dev/api/push-notify" />
-              </div>
-              <div>
-                <FieldLabel>Webhook Secret (Auth)</FieldLabel>
-                <input type="password" value={config.push_webhook_secret || ''} onChange={e => updateConfig({ push_webhook_secret: e.target.value })}
-                  className="admin-input mt-1 font-mono text-xs" placeholder="Clave de seguridad del webhook..." />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

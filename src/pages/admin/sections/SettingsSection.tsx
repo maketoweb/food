@@ -903,6 +903,32 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
         {isAdmin && (
           <div className="flex flex-col gap-3 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+              <Bell size={14} className="text-violet-600" />
+              <span className="text-xs uppercase font-mono font-bold text-slate-900">Configuracion del Webhook Push</span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              Conecta Supabase con el Worker de Cloudflare para enviar notificaciones push reales.
+            </p>
+            <div className="flex flex-col gap-3 mt-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">URL del Webhook (Cloudflare Pages)</span>
+                <input type="url" value={config.push_webhook_url || ''} onChange={(e) => updateConfig({ push_webhook_url: e.target.value })}
+                  className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 font-mono text-[11px]"
+                  placeholder="https://su-app.pages.dev/api/push-notify" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Webhook Secret (Auth)</span>
+                <input type="password" value={config.push_webhook_secret || ''} onChange={(e) => updateConfig({ push_webhook_secret: e.target.value })}
+                  className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 font-mono text-[11px]"
+                  placeholder="Clave de seguridad del webhook..." />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className="flex flex-col gap-3 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
               <Settings size={14} className="text-violet-600" />
               <span className="text-xs uppercase font-mono font-bold text-slate-900">Gestion de Categorias</span>
             </div>
