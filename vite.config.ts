@@ -13,62 +13,7 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'autoUpdate',
         strategies: 'generateSW',
-        includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sounds/notification.mp3', 'manifest-admin.json'],
-        manifest: {
-          name: 'FoodPop - Delivery de Comida Premium',
-          short_name: 'FoodPop',
-          description: 'Tu restaurante favorito con delivery express. Hamburguesas, pastas, postres y más.',
-          scope: '/',
-          start_url: '/',
-          theme_color: '#FF6B35',
-          background_color: '#FFFFFF',
-          display: 'standalone',
-          orientation: 'portrait',
-          prefer_related_applications: false,
-          shortcuts: [
-            {
-              name: 'Hacer Pedido',
-              short_name: 'Pedir',
-              description: 'Ver el catálogo y hacer un pedido',
-              url: '/catalog',
-              icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
-            },
-            {
-              name: 'Mis Pedidos',
-              short_name: 'Pedidos',
-              description: 'Ver el historial de pedidos',
-              url: '/profile',
-              icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
-            },
-            {
-              name: 'Carrito',
-              short_name: 'Carrito',
-              description: 'Ver el carrito de compras',
-              url: '/cart',
-              icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
-            }
-          ],
-          icons: [
-            {
-              src: 'pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable'
-            }
-          ]
-        },
+        includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sounds/notification.mp3', 'manifest-admin.json', 'logo-transparent.svg'],
         workbox: {
           importScripts: ['/sw-push.js'],
           navigateFallback: '/offline.html',

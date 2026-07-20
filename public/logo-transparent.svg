@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bun" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5C563"/>
+      <stop offset="100%" style="stop-color:#D4943A"/>
+    </linearGradient>
+  </defs>
+  <!-- Top bun -->
+  <path d="M130 200 Q130 155 256 155 Q382 155 382 200 Z" fill="url(#bun)" stroke="#C48530" stroke-width="2"/>
+  <!-- Sesame seeds -->
+  <ellipse cx="200" cy="178" rx="12" ry="6" fill="#FFF5D4" transform="rotate(-15 200 178)"/>
+  <ellipse cx="256" cy="172" rx="12" ry="6" fill="#FFF5D4" transform="rotate(5 256 172)"/>
+  <ellipse cx="310" cy="178" rx="12" ry="6" fill="#FFF5D4" transform="rotate(15 310 178)"/>
+  <!-- Lettuce -->
+  <path d="M125 210 Q155 225 185 208 Q215 225 245 208 Q275 225 305 208 Q335 225 365 208 Q387 218 390 215 L390 225 Q335 240 256 225 Q177 240 122 225 Z" fill="#4CAF50"/>
+  <!-- Patty -->
+  <rect x="135" y="228" width="242" height="38" rx="8" fill="#6D3A1A"/>
+  <rect x="135" y="228" width="242" height="12" rx="6" fill="#8B4D25"/>
+  <!-- Tomato -->
+  <rect x="140" y="268" width="232" height="16" rx="4" fill="#E53935"/>
+  <!-- Cheese drip -->
+  <path d="M135 286 L377 286 L377 296 Q350 296 345 310 Q340 296 310 296 Q305 315 300 296 Q270 296 265 312 Q260 296 230 296 Q225 308 220 296 Q190 296 185 305 Q180 296 155 296 Q150 310 145 296 L135 296 Z" fill="#FFC107"/>
+  <!-- Bottom bun -->
+  <path d="M130 300 L382 300 Q382 345 256 345 Q130 345 130 300 Z" fill="url(#bun)" stroke="#C48530" stroke-width="2"/>
+  <!-- Bottom bun highlight -->
+  <path d="M160 310 Q256 305 352 310" fill="none" stroke="#E8B860" stroke-width="3" stroke-linecap="round"/>
+</svg>

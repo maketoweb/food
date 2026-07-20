@@ -15,6 +15,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
   }, [onComplete]);
 
   const themeColor = config.theme_color || '#FF6B35';
+  const logoUrl = config.pwa_icon_url || config.logo_url || '/pwa-192x192.png';
 
   return (
     <div
@@ -32,15 +33,25 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
         }
       `}</style>
       <div
-        className="flex flex-col items-center gap-3 px-8 text-center"
+        className="flex flex-col items-center gap-4 px-8 text-center"
         style={{ animation: 'fadeInUp 0.7s ease-out forwards' }}
       >
-        <h1 className="text-white text-2xl font-bold tracking-tight drop-shadow-lg">
-          {config.site_nombre || 'FoodPop'}
-        </h1>
-        <p className="text-white/90 text-sm leading-relaxed max-w-xs">
-          {config.mensaje_bienvenida || 'La mejor comida con delivery express.'}
-        </p>
+        <img
+          src={logoUrl}
+          alt={config.site_nombre || 'FoodPop'}
+          className="w-24 h-24 object-contain drop-shadow-lg"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/pwa-192x192.png';
+          }}
+        />
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-white text-2xl font-bold tracking-tight drop-shadow-lg">
+            {config.site_nombre || 'FoodPop'}
+          </h1>
+          <p className="text-white/90 text-sm leading-relaxed max-w-xs">
+            {config.mensaje_bienvenida || 'La mejor comida con delivery express.'}
+          </p>
+        </div>
       </div>
     </div>
   );

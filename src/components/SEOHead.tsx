@@ -81,7 +81,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       setMeta('og:image', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200', 'property');
     }
 
-    // PWA: Guardar config en IndexedDB para manifest dinámico
+    // PWA: Guardar config en IndexedDB
     if (indexedDBTimeoutRef.current) {
       clearTimeout(indexedDBTimeoutRef.current);
     }
@@ -102,35 +102,6 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         if (config.pwa_icon_url) store.put(config.pwa_icon_url, 'pwa_icon_url');
         if (config.site_nombre) store.put(config.site_nombre, 'site_name');
         if (config.theme_color) store.put(config.theme_color, 'theme_color');
-        
-        tx.oncomplete = () => {
-          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            if (config.logo_url) {
-              navigator.serviceWorker.controller.postMessage({
-                type: 'UPDATE_LOGO_URL',
-                logoUrl: config.logo_url
-              });
-            }
-            if (config.pwa_icon_url) {
-              navigator.serviceWorker.controller.postMessage({
-                type: 'UPDATE_PWA_ICON',
-                pwaIconUrl: config.pwa_icon_url
-              });
-            }
-            if (config.site_nombre) {
-              navigator.serviceWorker.controller.postMessage({
-                type: 'UPDATE_SITE_NAME',
-                siteName: config.site_nombre
-              });
-            }
-            if (config.theme_color) {
-              navigator.serviceWorker.controller.postMessage({
-                type: 'UPDATE_THEME_COLOR',
-                themeColor: config.theme_color
-              });
-            }
-          }
-        };
       };
     }, 500);
 
