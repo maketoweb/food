@@ -13,7 +13,7 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'autoUpdate',
         strategies: 'generateSW',
-        includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sounds/notification.mp3'],
+        includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sounds/notification.mp3', 'manifest-admin.json'],
         manifest: {
           name: 'FoodPop - Delivery de Comida Premium',
           short_name: 'FoodPop',

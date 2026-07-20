@@ -68,8 +68,9 @@ function AppContent() {
     }
   };
 
-  // Route/Tab controllers - si es admin/operador autenticado, abrir directo en su panel
-  const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout'>(isAdminAuthenticated ? 'admin' : 'home');
+  // Route/Tab controllers - si es admin/operador autenticado O si la URL es /admin, abrir directo en su panel
+  const isAdminUrl = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const [tab, setTab] = useState<'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout'>((isAdminAuthenticated || isAdminUrl) ? 'admin' : 'home');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -86,6 +87,29 @@ function AppContent() {
     setSelectedCategory('');
     setGlobalSearch('');
   };
+
+  // Sync URL with tab state
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const targetPath = tab === 'admin' ? '/admin' : '/';
+    if (currentPath !== targetPath) {
+      window.history.pushState({}, '', targetPath);
+    }
+  }, [tab]);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin')) {
+        setTab('admin');
+      } else {
+        setTab('home');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Helper: si ya está autenticado, ir directo al admin; si no, abrir modal
   const handleAdminAccess = () => {

@@ -127,52 +127,117 @@ function notifyClients(type) {
   });
 }
 
-// ─── Intercept manifest.json para servir iconos, nombre y color dinámicos ───
+// ─── Manifest helpers: detectar si el cliente está en /admin ───
+function isClientAdmin(clientUrl) {
+  try {
+    var pathname = new URL(clientUrl).pathname;
+    return pathname.startsWith('/admin');
+  } catch(e) {
+    return false;
+  }
+}
+
+function getClientUrl(event) {
+  if (event.clientId) {
+    return self.clients.get(event.clientId).then(function(client) {
+      return client ? client.url : '';
+    });
+  }
+  // Fallback: buscar entre todos los clientes controlados
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
+    for (var i = 0; i < clients.length; i++) {
+      if (clients[i].visibilityState === 'visible') return clients[i].url;
+    }
+    return clients.length > 0 ? clients[0].url : '';
+  });
+}
+
+function applyDynamicCustomization(manifest, logoUrl, pwaIconUrl, siteName, themeColor, isAdmin) {
+  var iconForManifest = pwaIconUrl || logoUrl;
+  if (iconForManifest) {
+    manifest.icons = [
+      { src: iconForManifest, sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: iconForManifest, sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: iconForManifest, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+    ];
+  }
+  if (isAdmin) {
+    manifest.name = (siteName || 'FoodPop') + ' Admin Panel';
+    manifest.short_name = (siteName || 'FoodPop') + ' Admin';
+    manifest.description = 'Panel de administración de ' + (siteName || 'FoodPop') + '. Gestiona pedidos, productos y más.';
+    manifest.start_url = '/admin';
+    manifest.scope = '/admin';
+    manifest.categories = ['business', 'productivity'];
+    manifest.shortcuts = [
+      { name: 'Dashboard', short_name: 'Dashboard', url: '/admin', description: 'Panel principal con métricas' },
+      { name: 'Órdenes', short_name: 'Órdenes', url: '/admin', description: 'Gestionar pedidos activos' },
+      { name: 'Productos', short_name: 'Productos', url: '/admin', description: 'Administrar catálogo' }
+    ];
+  } else {
+    manifest.name = (siteName || 'FoodPop') + ' - Delivery de Comida Premium';
+    manifest.short_name = siteName || 'FoodPop';
+    manifest.description = 'Tu restaurante favorito con delivery express.';
+    manifest.start_url = '/';
+    manifest.scope = '/';
+    manifest.categories = ['food', 'restaurants'];
+    manifest.shortcuts = [
+      { name: 'Hacer Pedido', short_name: 'Pedir', url: '/catalog', description: 'Ver catálogo y hacer pedido', icons: [{ src: iconForManifest || 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] },
+      { name: 'Mis Pedidos', short_name: 'Pedidos', url: '/profile', description: 'Historial de pedidos', icons: [{ src: iconForManifest || 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] },
+      { name: 'Carrito', short_name: 'Carrito', url: '/cart', description: 'Ver carrito de compras', icons: [{ src: iconForManifest || 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] }
+    ];
+  }
+  if (themeColor) {
+    manifest.theme_color = themeColor;
+    manifest.background_color = themeColor;
+  }
+  return manifest;
+}
+
+// ─── Intercept manifest.json y manifest-admin.json ───
 self.addEventListener('fetch', function(event) {
-  const url = new URL(event.request.url);
-  // Solo interceptar manifest.json del mismo origen
-  if (url.pathname === '/manifest.json' || url.pathname === '/manifest.webmanifest') {
-    event.respondWith(
-      Promise.all([getLogoUrl(), getPwaIconUrl(), getSiteName(), getThemeColor()]).then(function(results) {
-        var logoUrl = results[0];
-        var pwaIconUrl = results[1];
-        var siteName = results[2];
-        var themeColor = results[3];
-        // Si no hay nada configurado, servir el manifest original
-        if (!logoUrl && !pwaIconUrl && !siteName && !themeColor) {
-          return fetch(event.request);
-        }
-        // Fetch el manifest original y reemplazar campos
-        return fetch(event.request).then(function(response) {
-          return response.clone().json().then(function(manifest) {
-            // PWA icon takes priority for manifest icons, fallback to logo
-            var iconForManifest = pwaIconUrl || logoUrl;
-            if (iconForManifest) {
-              manifest.icons = [
-                { src: iconForManifest, sizes: '192x192', type: 'image/png', purpose: 'any' },
-                { src: iconForManifest, sizes: '512x512', type: 'image/png', purpose: 'any' },
-                { src: iconForManifest, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-              ];
-            }
-            if (siteName) {
-              manifest.name = siteName + ' - Delivery Express';
-              manifest.short_name = siteName;
-              if (manifest.shortcuts && manifest.shortcuts.length > 0) {
-                manifest.shortcuts[0].name = 'Pasillos de ' + siteName;
-              }
-            }
-            if (themeColor) {
-              manifest.theme_color = themeColor;
-              manifest.background_color = themeColor;
-            }
-            return new Response(JSON.stringify(manifest), {
-              headers: { 'Content-Type': 'application/json' }
-            });
+  var url = new URL(event.request.url);
+  var isManifestRequest = url.pathname === '/manifest.json' ||
+                          url.pathname === '/manifest.webmanifest' ||
+                          url.pathname === '/manifest-admin.json';
+
+  if (!isManifestRequest) return;
+
+  event.respondWith(
+    Promise.all([
+      getLogoUrl(), getPwaIconUrl(), getSiteName(), getThemeColor(),
+      getClientUrl(event)
+    ]).then(function(results) {
+      var logoUrl = results[0];
+      var pwaIconUrl = results[1];
+      var siteName = results[2];
+      var themeColor = results[3];
+      var clientUrl = results[4];
+
+      var isAdminClient = isClientAdmin(clientUrl) || url.pathname === '/manifest-admin.json';
+      var manifestFile = isAdminClient ? '/manifest-admin.json' : '/manifest.json';
+
+      // Si no hay customización dinámica y el archivo solicitado coincide, servir tal cual
+      var noDynamic = !logoUrl && !pwaIconUrl && !siteName && !themeColor;
+      var requestingCorrect = (isAdminClient && url.pathname === '/manifest-admin.json') ||
+                              (!isAdminClient && (url.pathname === '/manifest.json' || url.pathname === '/manifest.webmanifest'));
+      if (noDynamic && requestingCorrect) {
+        return fetch(event.request);
+      }
+
+      // Fetch el manifest base correcto y aplicar customización dinámica
+      return fetch(manifestFile).then(function(response) {
+        return response.clone().json().then(function(manifest) {
+          manifest = applyDynamicCustomization(manifest, logoUrl, pwaIconUrl, siteName, themeColor, isAdminClient);
+          return new Response(JSON.stringify(manifest), {
+            headers: { 'Content-Type': 'application/json' }
           });
         });
-      })
-    );
-  }
+      }).catch(function() {
+        // Fallback: servir el manifest original solicitado
+        return fetch(event.request);
+      });
+    })
+  );
 });
 
 // ─── Push Notifications ───
