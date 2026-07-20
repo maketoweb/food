@@ -68,7 +68,7 @@ export const ProductPreviewModal: React.FC<ProductPreviewModalProps> = ({
               </span>
             )}
             {isLowStock && !isAgotado && (
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-md animate-pulse">
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-white shadow-md animate-pulse" style={{ backgroundColor: themeColor }}>
                 Solo quedan {product.stock}
               </span>
             )}

@@ -785,13 +785,13 @@ ${productosDetailText}
 
                   <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
                     <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-2 block">Notas del pedido (opcional)</label>
-                    <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#ff5c00] resize-none" rows={2} />
+                    <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[var(--theme-color,#FF6B35)] resize-none" rows={2} />
                   </div>
 
                   <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
                     <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-2 block">Cupón</label>
                     <div className="flex gap-2">
-                      <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="CÓDIGO" className="flex-1 bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#ff5c00] font-bold uppercase" />
+                      <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="CÓDIGO" className="flex-1 bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[var(--theme-color,#FF6B35)] font-bold uppercase" />
                       <button onClick={handleApplyCoupon} className="text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-colors" style={{ backgroundColor: themeColor }}>Aplicar</button>
                     </div>
                     {couponError && <span className="text-[11px] text-red-500 mt-1 block">{couponError}</span>}
@@ -904,15 +904,15 @@ ${productosDetailText}
                   <div className="space-y-3">
                     <div>
                       <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-1 block">Correo *</label>
-                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#ff5c00] transition-colors" required />
+                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[var(--theme-color,#FF6B35)] transition-colors" required />
                     </div>
                     <div>
                       <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-1 block">Nombre *</label>
-                      <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#ff5c00] transition-colors" required />
+                      <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[var(--theme-color,#FF6B35)] transition-colors" required />
                     </div>
                     <div>
                       <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-1 block">Teléfono *</label>
-                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#ff5c00] transition-colors" required />
+                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[var(--theme-color,#FF6B35)] transition-colors" required />
                     </div>
                   </div>
                   <div className="mt-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
@@ -1025,7 +1025,7 @@ ${productosDetailText}
                     </div>
                   )}
                   {selectedPayment === 'Otro' && (
-                    <textarea value={customPaymentNote} onChange={(e) => setCustomPaymentNote(e.target.value)} placeholder="Describe cómo vas a pagar..." className="w-full bg-white border border-[#e4beb1]/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#ff5c00] resize-none" rows={3} />
+                    <textarea value={customPaymentNote} onChange={(e) => setCustomPaymentNote(e.target.value)} placeholder="Describe cómo vas a pagar..." className="w-full bg-white border border-[#e4beb1]/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-[var(--theme-color,#FF6B35)] resize-none" rows={3} />
                   )}
                 </div>
               </div>
@@ -1048,7 +1048,7 @@ ${productosDetailText}
                       value={cashBills}
                       onChange={(e) => setCashBills(e.target.value)}
                       placeholder="Ej: 1 billete de $20, 2 billetes de $10..."
-                      className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#ff5c00] resize-none"
+                      className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[var(--theme-color,#FF6B35)] resize-none"
                       rows={2}
                     />
                   </div>
@@ -1241,7 +1241,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
                 value={manualAddress}
                 onChange={(e) => setManualAddress(e.target.value)}
                 placeholder="Ej: Calle 5, Edif. 3, aparto 2, Valencia"
-                className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#ff5c00] mb-2"
+                className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-[var(--theme-color,#FF6B35)] mb-2"
               />
               <p className="text-[10px] text-[#8f7065]">
                 Arrastra el mapa para ajustar la ubicación exacta. Esta referencia se enviará con tu pedido.

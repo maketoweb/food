@@ -545,7 +545,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     value={logPhone}
                     onChange={(e) => setLogPhone(e.target.value)}
                     placeholder="ejemplo@correo.com"
-                    className="bg-[#f9f9fb] px-3 py-2.5 border border-[#e4beb1]/10 rounded-xl outline-none focus:border-[#ff5c00] text-sm"
+                    className="bg-[#f9f9fb] px-3 py-2.5 border border-[#e4beb1]/10 rounded-xl outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm"
                   />
                 </div>
 
@@ -560,7 +560,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                       value={logPassword}
                       onChange={(e) => setLogPassword(e.target.value)}
                       placeholder="Tu contraseña..."
-                      className="bg-[#f9f9fb] pl-3 pr-10 py-2.5 border border-[#e4beb1]/10 rounded-xl outline-none focus:border-[#ff5c00] w-full text-sm"
+                      className="bg-[#f9f9fb] pl-3 pr-10 py-2.5 border border-[#e4beb1]/10 rounded-xl outline-none focus:border-[var(--theme-color,#FF6B35)] w-full text-sm"
                     />
                     <button
                       type="button"
@@ -603,7 +603,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="ejemplo@correo.com"
-                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[#ff5c00] text-sm"
+                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm"
                   />
                 </div>
                 <button
@@ -635,7 +635,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     placeholder="Ej. Carlos Perez"
-                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[#ff5c00] text-sm"
+                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm"
                   />
                 </div>
 
@@ -649,7 +649,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     placeholder="ejemplo@correo.com"
-                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[#ff5c00] text-sm"
+                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm"
                   />
                 </div>
 
@@ -663,7 +663,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
                     placeholder="Ej. +584124976451"
-                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[#ff5c00] text-sm"
+                    className="bg-[#f9f9fb] px-3 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm"
                   />
                   <p className="text-[10px] text-[#8f7065] italic">Es muy importante usar el mismo telefono para que tus pedidos se sincronicen automaticamente.</p>
                 </div>
@@ -679,7 +679,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder="Crea una contrasena..."
-                      className="bg-[#f9f9fb] pl-3 pr-10 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[#ff5c00] w-full text-sm"
+                      className="bg-[#f9f9fb] pl-3 pr-10 py-2 border border-[#e4beb1]/10 rounded-lg outline-none focus:border-[var(--theme-color,#FF6B35)] w-full text-sm"
                     />
                     <button
                       type="button"
@@ -796,20 +796,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
               <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <span className="font-semibold text-[#5b4137] text-[12px]">Nombre Completo</span>
-                  <input type="text" required value={editName} onChange={(e) => setEditName(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 outline-none focus:border-[#ff5c00] text-sm" />
+                  <input type="text" required value={editName} onChange={(e) => setEditName(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="font-semibold text-[#5b4137] text-[12px]">Correo Electrónico</span>
-                  <input type="email" required value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 outline-none focus:border-[#ff5c00] text-sm" />
+                  <input type="email" required value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="font-semibold text-[#5b4137] text-[12px]">Teléfono</span>
-                  <input type="tel" required value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 outline-none focus:border-[#ff5c00] text-sm" />
+                  <input type="tel" required value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 outline-none focus:border-[var(--theme-color,#FF6B35)] text-sm" />
                 </div>
                 <div className="flex flex-col gap-1.5 relative">
                   <span className="font-semibold text-[#5b4137] text-[12px]">Contraseña</span>
                   <div className="relative">
-                    <input type={showPassword ? "text" : "password"} required value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl pl-3 pr-10 py-2.5 outline-none focus:border-[#ff5c00] w-full text-sm" />
+                    <input type={showPassword ? "text" : "password"} required value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl pl-3 pr-10 py-2.5 outline-none focus:border-[var(--theme-color,#FF6B35)] w-full text-sm" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8f7065] hover:text-[#5b4137]">
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>

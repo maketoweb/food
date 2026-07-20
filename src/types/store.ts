@@ -62,6 +62,7 @@ export interface FoodItem {
   precio_anterior_usd?: number;
   combo_ids?: string[];
   sizes?: PizzaSize[];
+  disponibilidad?: 'Disponible' | 'Agotado' | 'En Reposición';
 }
 
 export interface PizzaSize {
@@ -183,6 +184,7 @@ export interface InAppNotification {
   leida: boolean;
   imagen_url?: string;
   link_url?: string;
+  click_count?: number;
 }
 
 export interface CartItem {

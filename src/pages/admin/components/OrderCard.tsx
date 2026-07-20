@@ -96,7 +96,7 @@ const detailStatusConfig: Record<string, { color: string; bg: string }> = {
   'Cancelado':      { color: 'text-red-600',    bg: 'bg-red-100' },
 };
 
-function getElapsed时间(fecha: string): string {
+function getElapsed(fecha: string): string {
   if (!fecha) return '';
   const diff = Date.now() - new Date(fecha).getTime();
   const mins = Math.floor(diff / 60000);
@@ -153,7 +153,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, isExpanded, onToggl
           </div>
           <div className="flex items-center gap-1 text-slate-400">
             <Clock size={11} />
-            <span className="text-[10px] font-mono font-bold">{getElapsed时间(order.fecha)}</span>
+            <span className="text-[10px] font-mono font-bold">{getElapsed(order.fecha)}</span>
           </div>
         </div>
 

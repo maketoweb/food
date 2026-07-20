@@ -5,7 +5,6 @@ import { supabase } from '../../../store/supabaseClient';
 import { Megaphone, Tag, Send, Search, Percent, Plus } from 'lucide-react';
 import { PromotionForm } from '../components/PromotionForm';
 import { PromotionCard } from '../components/PromotionCard';
-import { PromotionStats } from '../components/PromotionStats';
 
 const PromosSection: React.FC = () => {
   const { foodItems, updateFoodItem, addNotification, config } = useApp();
@@ -18,7 +17,6 @@ const PromosSection: React.FC = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
-  const [selectedPromoStats] = useState<Promotion | null>(null);
 
   useEffect(() => {
     const loadPromotions = async () => {
@@ -203,12 +201,6 @@ const PromosSection: React.FC = () => {
                 onSend={handleSendPromotion}
               />
             ))}
-          </div>
-        )}
-
-        {selectedPromoStats && (
-          <div className="mt-4">
-            <PromotionStats promotion={selectedPromoStats} themeColor={config.theme_color || '#0f5d34'} />
           </div>
         )}
       </div>

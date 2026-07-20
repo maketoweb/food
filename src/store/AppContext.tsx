@@ -2881,7 +2881,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('❌ Error al registrar clic:', error.message);
     } else {
       // Actualizar localmente para feedback inmediato en el Admin si está viendo
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, click_count: ((n as any).click_count || 0) + 1 } : n));
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, click_count: (n.click_count || 0) + 1 } : n));
     }
   };
 

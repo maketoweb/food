@@ -55,8 +55,16 @@ function AppContent() {
   useEffect(() => {
     if (config.theme_color) {
       document.documentElement.style.setProperty('--pop-orange', config.theme_color);
+      document.documentElement.style.setProperty('--theme-color', config.theme_color);
+      document.documentElement.style.setProperty('--primary-container', config.theme_color);
     }
-  }, [config.theme_color]);
+    if (config.secondary_color) {
+      document.documentElement.style.setProperty('--secondary-color', config.secondary_color);
+    }
+    if (config.accent_color) {
+      document.documentElement.style.setProperty('--accent-color', config.accent_color);
+    }
+  }, [config.theme_color, config.secondary_color, config.accent_color]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {

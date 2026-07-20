@@ -290,7 +290,7 @@ const RolesSection: React.FC = () => {
                     onClick={() => handleToggleActive(op)}
                     className={`p-2 rounded-lg transition-colors ${
                       op.active
-                        ? 'bg-orange-50 hover:bg-orange-100 text-orange-600'
+                        ? 'bg-red-50 hover:bg-red-100 text-red-600'
                         : 'bg-green-50 hover:bg-green-100 text-green-600'
                     }`}
                     title={op.active ? 'Desactivar' : 'Activar'}

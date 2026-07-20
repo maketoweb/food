@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../../../store/AppContext';
+import { AppUser } from '../../../types/store';
 import { Mail } from 'lucide-react';
 
 interface CustomersSectionProps {
   setSendMsgTitle: (title: string) => void;
   setSendMsgBody: (body: string) => void;
-  setSendMsgModal: (modal: { user: any } | null) => void;
+  setSendMsgModal: (modal: { user: AppUser } | null) => void;
 }
 
 const CustomersSection: React.FC<CustomersSectionProps> = ({ setSendMsgTitle, setSendMsgBody, setSendMsgModal }) => {

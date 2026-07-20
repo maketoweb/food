@@ -21,7 +21,7 @@ export const Catalog: React.FC<CatalogProps> = ({
   onViewProductDetails, passedSearchTerm, clearPassedSearchTerm, resetGlobalFilters, setTab, onOpenDrawer
 }) => {
   const { foodItems, config, addToCart } = useApp();
-  const themeColor = config.theme_color || '#ff5c00';
+  const themeColor = config.theme_color || '#FF6B35';
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {

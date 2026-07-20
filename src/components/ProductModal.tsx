@@ -52,7 +52,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [removedIngredients, setRemovedIngredients] = useState<Set<number>>(new Set());
   const [selectedSize, setSelectedSize] = useState<string>('');
 
-  const themeColor = config.theme_color || '#ff5c00';
+  const themeColor = config.theme_color || '#FF6B35';
   const flashSale = product ? getActiveFlashSale(product.id) : null;
 
   const recommendedItems = useMemo(() => {

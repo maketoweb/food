@@ -39,7 +39,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const { cart, config, currentUser, logoutUser } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const logoUrl = config.logo_url || '';
-  const themeColor = config.theme_color || '#ff5c00';
+  const themeColor = config.theme_color || '#FF6B35';
   const categories = config.categories || [];
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -96,12 +96,16 @@ export const Navigation: React.FC<NavigationProps> = ({
               onClick={() => setTab('home')}
               className="flex items-center gap-3 shrink-0 cursor-pointer group"
             >
-              <h1
-                className="text-xl font-extrabold tracking-tighter"
-                style={{ color: themeColor, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
-              >
-                {config.site_nombre || 'FOODPOP'}
-              </h1>
+              {config.logo_url ? (
+                <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-9 w-auto max-w-[140px] object-contain" />
+              ) : (
+                <h1
+                  className="text-xl font-extrabold tracking-tighter"
+                  style={{ color: themeColor, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                >
+                  {config.site_nombre || 'FOODPOP'}
+                </h1>
+              )}
             </button>
           </div>
 
@@ -196,12 +200,16 @@ export const Navigation: React.FC<NavigationProps> = ({
           {/* Sidebar Header */}
           <div className="p-5 border-b border-[#e4beb1]/20 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <h1
-                className="text-lg font-extrabold tracking-tighter"
-                style={{ color: themeColor }}
-              >
-                {config.site_nombre || 'FOODPOP'}
-              </h1>
+              {config.logo_url ? (
+                <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-8 w-auto max-w-[140px] object-contain" />
+              ) : (
+                <h1
+                  className="text-lg font-extrabold tracking-tighter"
+                  style={{ color: themeColor }}
+                >
+                  {config.site_nombre || 'FOODPOP'}
+                </h1>
+              )}
             </div>
             <button
               type="button"
@@ -332,12 +340,16 @@ export const Navigation: React.FC<NavigationProps> = ({
             onClick={() => setTab('home')}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <h1
-              className="text-lg font-extrabold tracking-tighter"
-              style={{ color: themeColor, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
-            >
-              {config.site_nombre || 'FOODPOP'}
-            </h1>
+            {config.logo_url ? (
+              <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-8 w-auto max-w-[120px] object-contain" />
+            ) : (
+              <h1
+                className="text-lg font-extrabold tracking-tighter"
+                style={{ color: themeColor, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+              >
+                {config.site_nombre || 'FOODPOP'}
+              </h1>
+            )}
           </button>
         </div>
 

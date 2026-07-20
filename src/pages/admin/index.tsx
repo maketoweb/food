@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useState, useCallback } from 'react';
 import { useApp } from '../../store/AppContext';
 import { useAdminStore } from '../../store/stores/adminStore';
 import { useOrders } from './hooks/useOrders';
-import { Order, FoodItem } from '../../types/store';
+import { Order, FoodItem, AppUser } from '../../types/store';
 import {
   BarChart3, ShoppingBag, Utensils, Grid, User, Ticket, Settings,
   X, Bell, MessageSquare, Megaphone, Package, Award, FileText,
@@ -81,7 +81,7 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
   const [openEditor, setOpenEditor] = useState<FoodItem | null>(null);
   const [sendMsgTitle, setSendMsgTitle] = useState('');
   const [sendMsgBody, setSendMsgBody] = useState('');
-  const [sendMsgModal, setSendMsgModal] = useState<{ user: unknown } | null>(null);
+  const [sendMsgModal, setSendMsgModal] = useState<{ user: AppUser } | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
   const toggleOrderDetail = useCallback((orderId: string) => {
@@ -170,13 +170,15 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
       <aside className="hidden lg:flex flex-col w-60 shrink-0" style={{ background: 'var(--ios-card)', borderRight: '1px solid var(--ios-border)' }}>
         <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--ios-border)' }}>
           {config.logo_url ? (
-            <img src={config.logo_url} alt={config.site_nombre} className="w-9 h-9 rounded-xl object-cover" />
+            <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-8 w-auto max-w-[140px] object-contain" />
           ) : (
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: themeColor }}>
-              {config.site_nombre?.[0] || 'A'}
-            </div>
+            <>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: themeColor }}>
+                {config.site_nombre?.[0] || 'A'}
+              </div>
+              <span className="font-bold text-base truncate" style={{ color: 'var(--ios-text)' }}>{config.site_nombre || 'Admin'}</span>
+            </>
           )}
-          <span className="font-bold text-base truncate" style={{ color: 'var(--ios-text)' }}>{config.site_nombre || 'Admin'}</span>
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {visibleSections.map(section => {
@@ -213,18 +215,22 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-xl cursor-pointer" style={{ color: 'var(--ios-text)' }}>
             <BarChart3 size={22} />
           </button>
-          <h1 className="admin-section-title ml-2">{sectionLabel}</h1>
+          {config.logo_url ? (
+            <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-7 w-auto max-w-[100px] object-contain ml-2" />
+          ) : (
+            <h1 className="admin-section-title ml-2">{sectionLabel}</h1>
+          )}
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto" style={{ padding: '16px' }}>
+        <main className="flex-1 overflow-y-auto" style={{ padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
           <Suspense fallback={<SectionLoader />}>
             {renderSection()}
           </Suspense>
         </main>
 
         {/* Mobile Bottom Tabs */}
-        <div className="lg:hidden admin-bottom-tabs shrink-0">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 admin-bottom-tabs">
           {BOTTOM_TABS.map(tab => {
             const Icon = tab.icon;
             const isMore = tab.id === '__more';
@@ -255,8 +261,8 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
           <EditProductForm
             part={openEditor}
-            onSubmit={async (updated) => {
-              await updateFoodItem(updated.id, updated);
+            onSubmit={(updated) => {
+              updateFoodItem(updated.id, updated);
               setOpenEditor(null);
             }}
             onClose={() => setOpenEditor(null)}
@@ -271,13 +277,15 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
           <aside className="absolute inset-y-0 left-0 w-72 flex flex-col" style={{ background: 'var(--ios-card)' }}>
             <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--ios-border)' }}>
               {config.logo_url ? (
-                <img src={config.logo_url} alt={config.site_nombre} className="w-9 h-9 rounded-xl object-cover" />
+                <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-8 w-auto max-w-[120px] object-contain" />
               ) : (
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: themeColor }}>
-                  {config.site_nombre?.[0] || 'A'}
-                </div>
+                <>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: themeColor }}>
+                    {config.site_nombre?.[0] || 'A'}
+                  </div>
+                  <span className="font-bold text-base truncate" style={{ color: 'var(--ios-text)' }}>{config.site_nombre || 'Admin'}</span>
+                </>
               )}
-              <span className="font-bold text-base truncate" style={{ color: 'var(--ios-text)' }}>{config.site_nombre || 'Admin'}</span>
               <button onClick={() => setSidebarOpen(false)} className="ml-auto p-2 rounded-xl" style={{ color: 'var(--ios-text-secondary)' }}>
                 <X size={20} />
               </button>

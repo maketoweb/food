@@ -101,7 +101,7 @@ export const PremiumProductCard: React.FC<PremiumProductCardProps> = ({
             </span>
           )}
           {isLowStock && !isAgotado && (
-            <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-orange-500/90 text-white shadow-md backdrop-blur-sm animate-pulse">
+            <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-sm animate-pulse" style={{ backgroundColor: themeColor }}>
               Solo quedan {item.stock}
             </span>
           )}

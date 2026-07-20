@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { FoodItem } from '../../../types/store';
-import { uploadFileToStorage, compressImage, getPublicUrl } from '../../../store/supabaseClient';
+import { uploadFileToStorage, compressImage } from '../../../store/supabaseClient';
+import { StoreConfig } from '../../../types/store';
 import { Plus, Edit, Trash2, Search, Upload, FileSpreadsheet, Mic, Pause, PackageX, CheckCircle, Eye } from 'lucide-react';
 import { ProductPreviewModal } from '../components/ProductPreviewModal';
 
 interface InventorySectionProps {
   openEditor: (part: FoodItem | null) => void;
-  config: any;
+  config: StoreConfig;
 }
 
 const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config }) => {
@@ -218,12 +219,12 @@ const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config 
                 <div className="flex flex-wrap gap-2 items-center">
                   <h5 className="text-sm font-bold text-slate-900 line-clamp-1">{part.nombre}</h5>
                   <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
-                    (part as any).disponibilidad === 'Agotado' ? 'bg-rose-50 text-rose-600 border-rose-200' :
-                    (part as any).disponibilidad === 'En Reposición' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                    part.disponibilidad === 'Agotado' ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                    part.disponibilidad === 'En Reposición' ? 'bg-amber-50 text-amber-600 border-amber-200' :
                     part.activo === false ? 'bg-slate-100 text-slate-500 border-slate-200' :
                     'bg-emerald-50 text-emerald-600 border-emerald-200'
                   }`}>
-                    {(part as any).disponibilidad || (part.activo ? 'Disponible' : 'Inactivo')}
+                    {part.disponibilidad || (part.activo ? 'Disponible' : 'Inactivo')}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-1.5">
@@ -254,17 +255,17 @@ const InventorySection: React.FC<InventorySectionProps> = ({ openEditor, config 
               <button 
                 type="button"
                 onClick={() => {
-                  const newDisponibilidad = (part as any).disponibilidad === 'Disponible' ? 'Agotado' : 'Disponible';
-                  updateFoodItem(part.id, { disponibilidad: newDisponibilidad } as any);
+                  const newDisponibilidad = part.disponibilidad === 'Disponible' || !part.disponibilidad ? 'Agotado' : 'Disponible';
+                  updateFoodItem(part.id, { disponibilidad: newDisponibilidad });
                 }}
                 className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 px-3 text-[11px] font-bold rounded-xl transition-all cursor-pointer border ${
-                  (part as any).disponibilidad === 'Agotado' 
+                  part.disponibilidad === 'Agotado' 
                     ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100' 
                     : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
                 }`}
               >
-                {part.activo === false ? <PackageX size={15} /> : (part as any).disponibilidad === 'Agotado' ? <Pause size={15} /> : <CheckCircle size={15} />}
-                {(part as any).disponibilidad === 'Agotado' ? 'Reponer' : 'Disponible'}
+                {part.activo === false ? <PackageX size={15} /> : part.disponibilidad === 'Agotado' ? <Pause size={15} /> : <CheckCircle size={15} />}
+                {part.disponibilidad === 'Agotado' ? 'Reponer' : 'Disponible'}
               </button>
 
               {/* Botón Editar */}

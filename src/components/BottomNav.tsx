@@ -10,7 +10,7 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
   const { cart, config } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const themeColor = config.theme_color || '#ff5c00';
+  const themeColor = config.theme_color || '#FF6B35';
 
   const tabs = [
     { id: 'home' as const, label: 'Home', icon: Home, materialIcon: 'home' },

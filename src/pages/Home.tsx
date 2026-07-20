@@ -711,7 +711,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           SECTION 5: REWARDS PROGRAM — Luminous Electric
           ═══════════════════════════════════════════════════════════ */}
-      <section className="w-full py-10 md:py-16" style={{ backgroundColor: '#ff5c00' }}>
+      <section className="w-full py-10 md:py-16" style={{ backgroundColor: themeColor }}>
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <div className="w-full md:w-1/2 flex justify-center">
@@ -726,7 +726,7 @@ export const Home: React.FC<HomeProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent" />
                 <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <Gift size={18} style={{ color: '#ff5c00' }} />
+                    <Gift size={18} style={{ color: themeColor }} />
                     <div>
                       <p className="text-[10px] text-[#8f7065] font-semibold uppercase tracking-wider">Puntos</p>
                       <p className="text-lg font-black text-[#1a1c1d]">0</p>

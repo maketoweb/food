@@ -10,11 +10,11 @@
   --text: #1a1c1d;
   --muted: #5b4137;
 
-  /* Primary: Electric Orange */
-  --primary: #a73a00;
-  --primary-container: #ff5c00;
+  /* Primary */
+  --primary: #1a1c1d;
+  --primary-container: var(--theme-color, #FF6B35);
   --on-primary: #ffffff;
-  --on-primary-container: #521800;
+  --on-primary-container: #ffffff;
 
   /* Surface */
   --surface: #f9f9fb;
@@ -50,8 +50,8 @@
   --shadow-xl: 0 20px 60px rgba(0,0,0,0.1);
   --shadow-glass: 0 8px 32px rgba(0,0,0,0.08);
 
-  /* Theme color (dynamic, default to primary-container) */
-  --theme-color: #ff5c00;
+  /* Theme color (dynamic, set by JS from config.theme_color) */
+  --theme-color: #FF6B35;
 }
 
 @theme {
@@ -60,10 +60,10 @@
   --font-mono: "Fira Code", monospace;
 
   /* Luminous Electric color tokens */
-  --color-primary: #a73a00;
-  --color-primary-container: #ff5c00;
+  --color-primary: #1a1c1d;
+  --color-primary-container: var(--theme-color, #FF6B35);
   --color-on-primary: #ffffff;
-  --color-on-primary-container: #521800;
+  --color-on-primary-container: #ffffff;
   --color-surface: #f9f9fb;
   --color-surface-dim: #d9dadc;
   --color-surface-bright: #f9f9fb;
@@ -86,9 +86,9 @@
   --color-background: #f9f9fb;
   --color-on-background: #1a1c1d;
 
-  /* Keep pop colors for backward compatibility but update to orange */
-  --color-pop-orange: #ff5c00;
-  --color-pop-pink: #ff5c00;
+  /* Keep pop colors for backward compatibility */
+  --color-pop-orange: var(--theme-color, #FF6B35);
+  --color-pop-pink: var(--theme-color, #FF6B35);
   --color-pop-yellow: #FFBE0B;
   --color-pop-mint: #00F5D4;
   --color-pop-purple: #8338EC;
@@ -230,22 +230,22 @@ svg {
 
 /* Category gradient backgrounds - Luminous Electric */
 .gradient-burger {
-  background: linear-gradient(135deg, #ff5c00, #a73a00);
+  background: linear-gradient(135deg, var(--theme-color, #FF6B35), color-mix(in srgb, var(--theme-color, #FF6B35) 70%, #000));
 }
 .gradient-pizza {
-  background: linear-gradient(135deg, #a73a00, #ff5c00);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--theme-color, #FF6B35) 70%, #000), var(--theme-color, #FF6B35));
 }
 .gradient-chicken {
-  background: linear-gradient(135deg, #FFBE0B, #ff5c00);
+  background: linear-gradient(135deg, #FFBE0B, var(--theme-color, #FF6B35));
 }
 .gradient-drinks {
   background: linear-gradient(135deg, #00F5D4, #3A86FF);
 }
 .gradient-dessert {
-  background: linear-gradient(135deg, #8338EC, #ff5c00);
+  background: linear-gradient(135deg, #8338EC, var(--theme-color, #FF6B35));
 }
 .gradient-sides {
-  background: linear-gradient(135deg, #FFBE0B, #ff5c00);
+  background: linear-gradient(135deg, #FFBE0B, var(--theme-color, #FF6B35));
 }
 
 /* Badge - Luminous Electric */
@@ -414,15 +414,15 @@ svg {
 
 /* Gradient text - Luminous Electric */
 .gradient-text {
-  background: linear-gradient(135deg, #ff5c00, #a73a00);
+  background: linear-gradient(135deg, var(--theme-color, #FF6B35), color-mix(in srgb, var(--theme-color, #FF6B35) 60%, #000));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Orange glow effect */
-.orange-glow {
-  box-shadow: 0 0 20px rgba(255, 92, 0, 0.2);
+/* Theme glow effect */
+.theme-glow {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-color, #FF6B35) 20%, transparent);
 }
 
 /* Hide scrollbar utility */
