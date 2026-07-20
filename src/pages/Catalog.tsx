@@ -21,7 +21,7 @@ export const Catalog: React.FC<CatalogProps> = ({
   onViewProductDetails, passedSearchTerm, clearPassedSearchTerm, resetGlobalFilters, setTab, onOpenDrawer
 }) => {
   const { foodItems, config, addToCart } = useApp();
-  const themeColor = config.theme_color || '#E31837';
+  const themeColor = config.theme_color || '#ff5c00';
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -48,102 +48,130 @@ export const Catalog: React.FC<CatalogProps> = ({
   }, [foodItems, searchQuery, selectedCategory]);
 
   return (
-    <div className="flex flex-col gap-4 pb-24 max-w-7xl mx-auto px-4">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#f9f9fb' }}>
       <SEOHead type="catalog" />
 
-      {/* Mobile back button */}
-      <div className="lg:hidden flex items-center gap-2 pt-1">
-        <button
-          onClick={() => setTab('home')}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
-        >
-          <ChevronLeft size={18} className="text-zinc-700" />
-        </button>
-        <h2 className="text-lg font-bold text-zinc-900 flex-1 text-center pr-8">
-          {selectedCategory || 'Menú'}
-        </h2>
-        {onOpenDrawer && (
+      {/* Top Bar */}
+      <div className="sticky top-0 z-10 px-4 py-3" style={{ backgroundColor: 'rgba(249,249,251,0.8)', backdropFilter: 'blur(20px)' }}>
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          {/* Mobile back button */}
           <button
-            onClick={onOpenDrawer}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+            onClick={() => setTab('home')}
+            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl shrink-0"
+            style={{ backgroundColor: '#eeeef0' }}
           >
-            <Menu size={18} className="text-zinc-700" />
+            <ChevronLeft size={18} className="text-[#1a1c1d]" />
+          </button>
+
+          {/* Desktop title */}
+          <h2 className="hidden lg:block text-[16px] font-bold text-[#1a1c1d] shrink-0" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            {selectedCategory || 'Menú'}
+          </h2>
+
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-md">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8f7065]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar..."
+              className="w-full rounded-xl pl-10 pr-9 py-2.5 text-[14px] outline-none transition-colors"
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #e4beb1/10',
+                color: '#1a1c1d'
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8f7065] hover:text-[#5b4137] cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Desktop count */}
+          <span className="hidden lg:block text-[12px] text-[#8f7065] shrink-0">{filtered.length} productos</span>
+
+          {/* Mobile menu */}
+          {onOpenDrawer && (
+            <button
+              onClick={onOpenDrawer}
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl shrink-0"
+              style={{ backgroundColor: '#eeeef0' }}
+            >
+              <Menu size={18} className="text-[#1a1c1d]" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 px-4 pb-24 max-w-7xl mx-auto w-full">
+        {/* Category Filters */}
+        {!selectedCategory && (
+          <div className="mb-4 overflow-x-auto no-scrollbar -mx-4 px-4">
+            <div className="flex gap-2 w-max">
+              <button
+                onClick={() => resetGlobalFilters()}
+                className="shrink-0 px-4 py-2 rounded-xl text-[13px] font-semibold text-white min-h-[40px]"
+                style={{ backgroundColor: themeColor }}
+              >
+                Todos
+              </button>
+              {(config.categories || []).slice(0, 10).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className="shrink-0 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors min-h-[40px]"
+                  style={{
+                    backgroundColor: '#eeeef0',
+                    color: '#5b4137'
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active category chip */}
+        {selectedCategory && (
+          <button
+            onClick={() => { setSelectedCategory(''); resetGlobalFilters(); }}
+            className="text-[13px] font-semibold w-fit px-3 py-2 rounded-xl cursor-pointer transition-colors mb-4 flex items-center gap-1"
+            style={{ backgroundColor: themeColor + '15', color: themeColor }}
+          >
+            ← {selectedCategory}
           </button>
         )}
-      </div>
 
-      {/* Desktop header */}
-      <div className="hidden lg:flex items-center justify-between">
-        <h2 className="text-lg font-bold text-zinc-900">
-          {selectedCategory || 'Menú'}
-        </h2>
-        <span className="text-xs text-zinc-400">{filtered.length} productos</span>
-      </div>
-
-      <div className="relative">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-        <input type="text" value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Buscar..."
-          className="w-full border border-zinc-200 rounded-lg pl-9 pr-8 py-2 text-sm outline-none focus:border-zinc-900 transition-colors"
-        />
-        {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
-            <X size={14} />
-          </button>
-        )}
-      </div>
-
-      {!selectedCategory && (
-        <div className="-mx-4 px-4 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 w-max">
-            <button onClick={() => resetGlobalFilters()}
-              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
+        {/* Products Grid */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 flex flex-col items-center gap-2">
+            <p className="text-[14px] text-[#8f7065]">No se encontraron productos</p>
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedCategory(''); resetGlobalFilters(); }}
+              className="text-[13px] font-semibold px-4 py-2 rounded-xl text-white cursor-pointer"
               style={{ backgroundColor: themeColor }}
             >
-              Todos
+              Limpiar filtros
             </button>
-            {(config.categories || []).slice(0, 10).map(cat => (
-              <button key={cat} onClick={() => setSelectedCategory(cat)}
-                className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold border bg-white transition-colors hover:shadow-sm"
-                style={{ borderColor: themeColor + '30', color: themeColor }}
-              >
-                {cat}
-              </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {filtered.map(item => (
+              <ProductCard key={item.id} item={item} config={config}
+                onViewProductDetails={onViewProductDetails}
+                addToCart={(food) => addToCart(food)}
+              />
             ))}
           </div>
-        </div>
-      )}
-
-      {selectedCategory && (
-        <button onClick={() => { setSelectedCategory(''); resetGlobalFilters(); }}
-          className="text-xs font-semibold w-fit px-3 py-1 rounded-lg border cursor-pointer hover:bg-zinc-50 transition-colors"
-          style={{ borderColor: themeColor + '30', color: themeColor }}
-        >
-          ← Todas las categorías
-        </button>
-      )}
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 flex flex-col items-center gap-2">
-          <p className="text-sm text-zinc-500">No se encontraron productos</p>
-          <button onClick={() => { setSearchQuery(''); setSelectedCategory(''); resetGlobalFilters(); }}
-            className="text-xs font-semibold px-4 py-2 rounded-lg text-white cursor-pointer"
-            style={{ backgroundColor: themeColor }}
-          >
-            Limpiar filtros
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filtered.map(item => (
-            <ProductCard key={item.id} item={item} config={config}
-              onViewProductDetails={onViewProductDetails}
-              addToCart={(food) => addToCart(food)}
-            />
-          ))}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

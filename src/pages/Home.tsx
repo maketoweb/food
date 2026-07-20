@@ -190,15 +190,14 @@ export const Home: React.FC<HomeProps> = ({
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 1: HERO BANNER — Mobile carousel / Desktop fullscreen
+          SECTION 1: HERO BANNER — Luminous Electric vertical carousel
           ═══════════════════════════════════════════════════════════ */}
       
-      {/* MOBILE: Full-width carousel with text below */}
-      <section className="md:hidden w-full bg-zinc-50">
-        {/* Carousel - full width */}
+      {/* MOBILE: Hero carousel */}
+      <section className="md:hidden w-full" style={{ backgroundColor: '#f9f9fb' }}>
         <div 
           ref={heroRef}
-          className="relative w-full h-[220px] overflow-hidden"
+          className="relative w-full h-[707px] overflow-hidden"
           onMouseEnter={() => setHeroHovered(true)}
           onMouseLeave={() => setHeroHovered(false)}
           onTouchStart={() => setHeroHovered(true)}
@@ -210,32 +209,47 @@ export const Home: React.FC<HomeProps> = ({
               style={{ transform: `translateX(-${heroSlide * 100}%)` }}
             >
               {heroBanners.map((banner, idx) => (
-                <img
-                  key={idx}
-                  src={banner}
-                  alt=""
-                  className="w-full h-full object-cover shrink-0"
-                  referrerPolicy="no-referrer"
-                  loading={idx === 0 ? 'eager' : 'lazy'}
-                />
+                <div key={idx} className="relative w-full h-full shrink-0 flex items-center justify-center">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url('${banner}')` }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-12 left-4 right-4">
+                    <span className="inline-block px-3 py-1 text-white text-[14px] font-semibold rounded-full mb-4"
+                      style={{ backgroundColor: themeColor }}
+                    >
+                      NUEVO
+                    </span>
+                    <h2 className="text-[40px] font-extrabold text-white mb-2 leading-tight"
+                      style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}
+                    >
+                      {config.hero_title || config.site_nombre || 'FoodPop'}
+                    </h2>
+                    <p className="text-[16px] text-white/80 max-w-md">
+                      {config.hero_subtitle || config.mensaje_bienvenida || 'La explosión de sabor que estabas esperando. ¡Pídela hoy!'}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="w-full h-full bg-zinc-200" />
+            <div className="w-full h-full" style={{ backgroundColor: '#eeeef0' }} />
           )}
 
-          {/* Dots indicator */}
+          {/* Scroll Indicator Dots - Right side vertical */}
           {heroBanners.length > 1 && (
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
               {heroBanners.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setHeroSlide(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 pointer-events-auto ${
-                    idx === heroSlide 
-                      ? 'w-5 bg-white shadow-sm' 
-                      : 'w-1.5 bg-white/50'
-                  }`}
+                  className="rounded-full transition-all duration-300"
+                  style={{
+                    width: idx === heroSlide ? '8px' : '8px',
+                    height: idx === heroSlide ? '24px' : '8px',
+                    backgroundColor: idx === heroSlide ? themeColor : 'rgba(255,255,255,0.4)',
+                  }}
                 />
               ))}
             </div>
@@ -244,18 +258,12 @@ export const Home: React.FC<HomeProps> = ({
 
         {/* Text content below banner */}
         <div className={`px-4 py-4 ${heroTextClass}`}>
-          <h1 className="text-[20px] font-black text-zinc-900 leading-[1.15] tracking-tight">
-            {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
-          </h1>
-          <p className="text-zinc-500 text-[12px] mt-1 leading-relaxed">
-            {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores autenticos preparados con los mejores ingredientes. Ordena ahora y recibelo en tu puerta.'}
-          </p>
           <button
             onClick={() => setTab('catalog')}
-            className="mt-3 w-full font-bold text-xs px-4 py-2.5 min-h-[40px] rounded-xl inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
-            style={{ backgroundColor: config.theme_color || '#FF6B35', color: 'white' }}
+            className="mt-2 w-full font-bold text-xs px-4 py-3 min-h-[44px] rounded-xl inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
+            style={{ backgroundColor: themeColor, color: '#ffffff' }}
           >
-            {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={14} />
+            {config.hero_cta_text || 'ORDENAR AHORA'}
           </button>
         </div>
       </section>
@@ -263,11 +271,10 @@ export const Home: React.FC<HomeProps> = ({
       {/* DESKTOP: Fullscreen carousel */}
       <section
         ref={heroRef}
-        className={`hidden md:block relative w-full ${heroHeightClass} overflow-hidden bg-zinc-900`}
+        className={`hidden md:block relative w-full ${heroHeightClass} overflow-hidden`}
         onMouseEnter={() => setHeroHovered(true)}
         onMouseLeave={() => setHeroHovered(false)}
       >
-        {/* Carousel images */}
         {heroBanners.length > 0 ? (
           <div 
             className="absolute inset-0 flex h-full transition-transform duration-700 ease-out"
@@ -285,38 +292,38 @@ export const Home: React.FC<HomeProps> = ({
             ))}
           </div>
         ) : (
-          <div className="absolute inset-0 bg-zinc-800" />
+          <div className="absolute inset-0" style={{ backgroundColor: '#e2e2e4' }} />
         )}
 
         {/* Dynamic overlay opacity */}
         <div
-          className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
           style={{ opacity: (config.hero_overlay_opacity ?? 100) / 100 }}
         />
 
         {/* Content */}
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full max-w-7xl mx-auto px-8 lg:px-12">
+        <div className="absolute inset-0 flex items-end">
+          <div className="w-full max-w-7xl mx-auto px-8 lg:px-12 pb-16">
             <div className={`max-w-lg ${heroTextClass}`}>
-              <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <span className="inline-block px-3 py-1 text-white text-[14px] font-semibold rounded-full mb-4"
+                style={{ backgroundColor: themeColor }}
+              >
+                NUEVO
+              </span>
+              <h1 className="text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
                 {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
               </h1>
-              <p className="text-white/70 text-base mt-4 max-w-md leading-relaxed">
+              <p className="text-white/80 text-base mt-4 max-w-md leading-relaxed">
                 {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
               </p>
 
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setTab('catalog')}
-                  className="bg-white text-zinc-900 font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 hover:bg-zinc-100 transition-all cursor-pointer active:scale-95"
+                  className="text-white font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-xl inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                  style={{ backgroundColor: themeColor }}
                 >
-                  {config.hero_cta_text || 'ORDENAR AHORA'} <ArrowRight size={16} />
-                </button>
-                <button
-                  onClick={() => { setSelectedCategory(''); setTab('catalog'); }}
-                  className="bg-transparent text-white font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 border-2 border-white/40 hover:border-white/80 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
-                >
-                  Ver Menú
+                  {config.hero_cta_text || 'ORDENAR AHORA'}
                 </button>
               </div>
             </div>
@@ -325,16 +332,17 @@ export const Home: React.FC<HomeProps> = ({
 
         {/* Dots indicator */}
         {heroBanners.length > 1 && (
-          <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2">
+          <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2">
             {heroBanners.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setHeroSlide(idx)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === heroSlide 
-                    ? 'w-8 bg-white shadow-sm' 
-                    : 'w-2 bg-white/50 hover:bg-white/70'
-                }`}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: idx === heroSlide ? '8px' : '8px',
+                  height: idx === heroSlide ? '24px' : '8px',
+                  backgroundColor: idx === heroSlide ? themeColor : 'rgba(255,255,255,0.4)',
+                }}
               />
             ))}
           </div>
@@ -342,18 +350,28 @@ export const Home: React.FC<HomeProps> = ({
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 2: ACTIVE PROMOTIONS CAROUSEL
+          SECTION 2: ACTIVE PROMOTIONS CAROUSEL — Luminous Electric
           ═══════════════════════════════════════════════════════════ */}
       {activePromotions.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12" style={{ background: `linear-gradient(180deg, ${themeColor}08, ${themeColor}03)` }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
-            <div className="flex items-center justify-between mb-6">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="flex justify-between items-end mb-6">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
-                  Ofertas Activas
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1">No te pierdas nuestras promociones especiales</p>
+                <div className="flex items-center gap-1 mb-1" style={{ color: themeColor }}>
+                  <span className="text-[20px]">⚡</span>
+                  <span className="text-[14px] font-semibold" style={{ color: themeColor }}>TERMINA EN</span>
+                </div>
+                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
+                  Ofertas Flash
+                </h3>
               </div>
+              <button
+                onClick={() => setTab('catalog')}
+                className="text-[14px] font-semibold flex items-center gap-1 cursor-pointer"
+                style={{ color: themeColor }}
+              >
+                Ver Todo →
+              </button>
             </div>
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
               {activePromotions.map((promo) => (
@@ -371,50 +389,45 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION: COMBOS
+          SECTION: COMBOS — Luminous Electric asymmetric grid
           ═══════════════════════════════════════════════════════════ */}
       {activeCombos.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
-                  Combos
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1">Arma tu combo y ahorra</p>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => scrollCarousel(comboCarouselRef, 'left')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                  <ChevronLeft size={18} className="text-zinc-600" />
+              <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
+                Combos Explosivos
+              </h3>
+              <div className="flex gap-2">
+                <button onClick={() => scrollCarousel(comboCarouselRef, 'left')} className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90">
+                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
                 </button>
-                <button onClick={() => scrollCarousel(comboCarouselRef, 'right')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                  <ChevronRight size={18} className="text-zinc-600" />
+                <button onClick={() => scrollCarousel(comboCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer" style={{ backgroundColor: themeColor, color: '#ffffff' }}>
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
-            <div ref={comboCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+            <div ref={comboCarouselRef} className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar md:overflow-visible pb-2 md:pb-0">
               {activeCombos.map((combo) => {
                 const comboProducts = combo.product_ids
                   .map(id => activeItems.find(p => p.id === id))
                   .filter(Boolean) as FoodItem[];
                 const comboImage = combo.imagen_url || comboProducts[0]?.imagen_urls?.[0] || '';
                 return (
-                  <div key={combo.id} className="shrink-0 w-[80vw] sm:w-[50vw] md:w-[calc(33.333%-11px)] snap-start">
-                    <div className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                      <div className="relative h-40 overflow-hidden">
-                        {comboImage ? (
-                          <img src={comboImage} alt={combo.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-3xl" style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)` }}>🎁</div>
-                        )}
-                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: themeColor }}>
-                          -{combo.discount_percent}% OFF
-                        </div>
-                      </div>
-                      <div className="p-4 flex flex-col flex-1">
-                        <h3 className="text-sm font-bold text-zinc-900">{combo.nombre}</h3>
-                        <p className="text-xs text-zinc-500 mt-1 leading-relaxed flex-1">{combo.descripcion}</p>
-                        <p className="text-[11px] text-zinc-400 mt-2">{comboProducts.length} productos incluidos</p>
+                  <div key={combo.id} className="flex rounded-xl overflow-hidden h-40 snap-start" style={{ backgroundColor: '#e8e8ea' }}>
+                    <div className="w-1/3">
+                      {comboImage ? (
+                        <img src={comboImage} alt={combo.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-3xl" style={{ backgroundColor: themeColor }}>🎁</div>
+                      )}
+                    </div>
+                    <div className="w-2/3 p-4 flex flex-col justify-center">
+                      <h5 className="text-[16px] font-bold text-[#1a1c1d]">{combo.nombre}</h5>
+                      <p className="text-[12px] text-[#5b4137] mt-1 leading-relaxed flex-1">{combo.descripcion}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[12px] text-[#5b4137]">{comboProducts.length} productos incluidos</span>
+                        <span className="font-bold text-[16px]" style={{ color: themeColor }}>-{combo.discount_percent}%</span>
                       </div>
                     </div>
                   </div>
@@ -429,21 +442,21 @@ export const Home: React.FC<HomeProps> = ({
           SECTION: OFERTAS — Products on sale
           ═══════════════════════════════════════════════════════════ */}
       {promoItems.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12" style={{ background: `linear-gradient(180deg, ${themeColor}06, ${themeColor}02)` }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
                   Ofertas
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1">Productos con descuento especial</p>
+                </h3>
+                <p className="text-[12px] text-[#8f7065] mt-1">Productos con descuento especial</p>
               </div>
               <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => scrollCarousel(offerCarouselRef, 'left')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                  <ChevronLeft size={18} className="text-zinc-600" />
+                <button onClick={() => scrollCarousel(offerCarouselRef, 'left')} className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90">
+                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
                 </button>
-                <button onClick={() => scrollCarousel(offerCarouselRef, 'right')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                  <ChevronRight size={18} className="text-zinc-600" />
+                <button onClick={() => scrollCarousel(offerCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer" style={{ backgroundColor: themeColor, color: '#ffffff' }}>
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
@@ -467,27 +480,28 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION: PROMOTIONAL BANNERS CAROUSEL
+          SECTION: PROMOTIONAL BANNERS CAROUSEL — Luminous Electric
           ═══════════════════════════════════════════════════════════ */}
       {carouselItems.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+              <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
                 {config.section_highlights_title || 'Destacados'}
-              </h2>
+              </h3>
               <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={() => scrollPromo('left')}
-                  className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90"
                 >
-                  <ChevronLeft size={18} className="text-zinc-600" />
+                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
                 </button>
                 <button
                   onClick={() => scrollPromo('right')}
-                  className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
+                  style={{ backgroundColor: themeColor, color: '#ffffff' }}
                 >
-                  <ChevronRight size={18} className="text-zinc-600" />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
@@ -501,7 +515,7 @@ export const Home: React.FC<HomeProps> = ({
                   key={idx}
                   className="shrink-0 w-[85vw] sm:w-[60vw] md:w-[calc(33.333%-11px)] snap-start group"
                 >
-                  <div className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                  <div className="rounded-xl overflow-hidden border border-[#e4beb1]/10 hover:shadow-lg transition-all duration-300 h-full flex flex-col" style={{ backgroundColor: '#ffffff' }}>
                     <div className="relative h-44 md:h-48 overflow-hidden">
                       <img
                         src={item.image}
@@ -512,14 +526,14 @@ export const Home: React.FC<HomeProps> = ({
                       />
                     </div>
                     <div className="p-4 flex flex-col flex-1">
-                      <h3 className="text-sm font-bold text-zinc-900 mb-1">{item.title}</h3>
-                      <p className="text-xs text-zinc-500 leading-relaxed flex-1">{item.description}</p>
+                      <h3 className="text-[14px] font-bold text-[#1a1c1d] mb-1">{item.title}</h3>
+                      <p className="text-[12px] text-[#5b4137] leading-relaxed flex-1">{item.description}</p>
                       <button
                         onClick={() => {
                           if (item.action === 'Registrarse') setTab('profile');
                           else setTab('catalog');
                         }}
-                        className="mt-3 text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors hover:underline"
+                        className="mt-3 text-[12px] font-bold uppercase tracking-wide cursor-pointer transition-colors hover:underline"
                         style={{ color: themeColor }}
                       >
                         {item.action} →
@@ -532,7 +546,7 @@ export const Home: React.FC<HomeProps> = ({
 
             <div className="flex md:hidden justify-center gap-1.5 mt-4">
               {carouselItems.map((_, idx) => (
-                <div key={idx} className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
+                <div key={idx} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#e4beb1' }} />
               ))}
             </div>
           </div>
@@ -540,21 +554,21 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 3: MENU HIGHLIGHTS GRID — Category Cards
+          SECTION 3: MENU HIGHLIGHTS GRID — Category Cards (Luminous Electric)
           ═══════════════════════════════════════════════════════════ */}
       {categorySections.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12 bg-zinc-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
                   {config.section_categories_title || 'LO MÁS POPULAR'}
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1">Explora nuestras categorías y ordena lo que más te guste</p>
+                </h3>
+                <p className="text-[12px] text-[#8f7065] mt-1">Explora nuestras categorías y ordena lo que más te guste</p>
               </div>
               <button
                 onClick={() => setTab('catalog')}
-                className="text-xs font-bold uppercase tracking-wide cursor-pointer hover:underline hidden sm:block"
+                className="text-[14px] font-semibold cursor-pointer hidden sm:block"
                 style={{ color: themeColor }}
               >
                 Ver todo el menú →
@@ -569,7 +583,7 @@ export const Home: React.FC<HomeProps> = ({
                     key={section.name}
                     className="shrink-0 w-[75vw] sm:w-[45vw] md:w-auto snap-start group"
                   >
-                    <div className="bg-white rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div className="rounded-xl overflow-hidden border border-[#e4beb1]/10 hover:shadow-lg transition-all duration-300 h-full flex flex-col" style={{ backgroundColor: '#ffffff' }}>
                       <div className="relative h-40 md:h-44 overflow-hidden">
                         {bgImage ? (
                           <img
@@ -582,7 +596,7 @@ export const Home: React.FC<HomeProps> = ({
                         ) : (
                           <div
                             className="w-full h-full flex items-center justify-center text-4xl"
-                            style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)` }}
+                            style={{ backgroundColor: '#eeeef0' }}
                           >
                             🍽️
                           </div>
@@ -592,12 +606,12 @@ export const Home: React.FC<HomeProps> = ({
 
                       <div className="p-4 flex items-center justify-between">
                         <div>
-                          <h3 className="text-sm font-bold text-zinc-900 capitalize">{section.name}</h3>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">{section.items.length} productos</p>
+                          <h3 className="text-[14px] font-bold text-[#1a1c1d] capitalize">{section.name}</h3>
+                          <p className="text-[11px] text-[#8f7065] mt-0.5">{section.items.length} productos</p>
                         </div>
                         <button
                           onClick={() => { setSelectedCategory(section.name); setTab('catalog'); }}
-                          className="text-white text-xs font-bold px-4 py-2 min-h-[40px] rounded-full transition-all cursor-pointer hover:opacity-90 active:scale-95"
+                          className="text-white text-[12px] font-bold px-4 py-2 min-h-[40px] rounded-xl transition-all cursor-pointer hover:opacity-90 active:scale-95"
                           style={{ backgroundColor: themeColor }}
                         >
                           ORDENAR
@@ -613,21 +627,21 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 4: POPULAR ITEMS — Top ordered products
+          SECTION 4: POPULAR ITEMS — Top ordered products (Luminous Electric)
           ═══════════════════════════════════════════════════════════ */}
       {bestsellerItems.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
                   {config.section_bestseller_title || 'LO MÁS PEDIDO'}
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1">Los favoritos de nuestros clientes</p>
+                </h3>
+                <p className="text-[12px] text-[#8f7065] mt-1">Los favoritos de nuestros clientes</p>
               </div>
               <button
                 onClick={() => setTab('catalog')}
-                className="text-xs font-bold uppercase tracking-wide cursor-pointer hover:underline hidden sm:block"
+                className="text-[14px] font-semibold cursor-pointer hidden sm:block"
                 style={{ color: themeColor }}
               >
                 Ver todo →
@@ -654,24 +668,24 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION: ÚLTIMOS VISTOS
+          SECTION: ÚLTIMOS VISTOS — Luminous Electric
           ═══════════════════════════════════════════════════════════ */}
       {recentlyViewed.length > 0 && (
-        <section className="w-full py-6 sm:py-8 md:py-12 bg-zinc-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight">
+                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
                   Últimos Vistos
-                </h2>
-                <p className="text-xs text-zinc-500 mt-1">Los productos que viste recientemente</p>
+                </h3>
+                <p className="text-[12px] text-[#8f7065] mt-1">Los productos que viste recientemente</p>
               </div>
               <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => scrollCarousel(recentCarouselRef, 'left')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                  <ChevronLeft size={18} className="text-zinc-600" />
+                <button onClick={() => scrollCarousel(recentCarouselRef, 'left')} className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90">
+                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
                 </button>
-                <button onClick={() => scrollCarousel(recentCarouselRef, 'right')} className="w-9 h-9 rounded-full border border-zinc-300 flex items-center justify-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                  <ChevronRight size={18} className="text-zinc-600" />
+                <button onClick={() => scrollCarousel(recentCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer" style={{ backgroundColor: themeColor, color: '#ffffff' }}>
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
@@ -695,10 +709,10 @@ export const Home: React.FC<HomeProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 5: REWARDS PROGRAM
+          SECTION 5: REWARDS PROGRAM — Luminous Electric
           ═══════════════════════════════════════════════════════════ */}
-      <section className="w-full py-8 sm:py-10 md:py-16" style={{ backgroundColor: themeColor }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
+      <section className="w-full py-10 md:py-16" style={{ backgroundColor: '#ff5c00' }}>
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <div className="w-full md:w-1/2 flex justify-center">
               <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-3xl overflow-hidden shadow-2xl">
@@ -709,13 +723,13 @@ export const Home: React.FC<HomeProps> = ({
                   referrerPolicy="no-referrer"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-red-900/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent" />
                 <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <Gift size={18} style={{ color: themeColor }} />
+                    <Gift size={18} style={{ color: '#ff5c00' }} />
                     <div>
-                      <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Puntos</p>
-                      <p className="text-lg font-black text-zinc-900">0</p>
+                      <p className="text-[10px] text-[#8f7065] font-semibold uppercase tracking-wider">Puntos</p>
+                      <p className="text-lg font-black text-[#1a1c1d]">0</p>
                     </div>
                   </div>
                 </div>
@@ -723,11 +737,11 @@ export const Home: React.FC<HomeProps> = ({
             </div>
 
             <div className="w-full md:w-1/2 text-white">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 {config.section_rewards_title || 'Únete a'}<br />
-                <span style={{ color: themeColor }}>RECOMPENSAS</span>
+                <span>RECOMPENSAS</span>
               </h2>
-              <p className="text-white/60 text-sm mt-3 max-w-md leading-relaxed">
+              <p className="text-white/70 text-sm mt-3 max-w-md leading-relaxed">
                 {config.section_rewards_description || 'El programa de fidelización más delicioso. Acumula puntos con cada compra y canjéalos por comida gratis.'}
               </p>
 
@@ -738,12 +752,12 @@ export const Home: React.FC<HomeProps> = ({
                   { icon: <Gift size={16} />, title: config.rewards_step3_title || 'Canjea recompensas', desc: config.rewards_step3_desc || 'Intercambia puntos por comida gratis' },
                 ].map((step, idx) => (
                   <div key={idx} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: `${themeColor}30`, color: themeColor }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-white/20 text-white">
                       {step.icon}
                     </div>
                     <div>
                       <p className="text-sm font-bold text-white">{step.title}</p>
-                      <p className="text-xs text-white/50">{step.desc}</p>
+                      <p className="text-xs text-white/60">{step.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -752,14 +766,14 @@ export const Home: React.FC<HomeProps> = ({
               <div className="flex flex-col sm:flex-row gap-3 mt-8">
                 <button
                   onClick={() => setTab('profile')}
-                  className="text-white font-bold text-sm px-8 py-3 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 transition-all cursor-pointer hover:opacity-90 active:scale-95"
-                  style={{ backgroundColor: themeColor }}
+                  className="text-white font-bold text-sm px-8 py-3 min-h-[48px] rounded-xl inline-flex items-center justify-center gap-2 transition-all cursor-pointer hover:opacity-90 active:scale-95"
+                  style={{ backgroundColor: '#1a1c1d' }}
                 >
                   ÚNETE AHORA
                 </button>
                 <button
                   onClick={() => setTab('profile')}
-                  className="bg-transparent text-white font-bold text-sm px-8 py-3 min-h-[48px] rounded-full inline-flex items-center justify-center gap-2 border-2 border-white/30 hover:border-white/60 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                  className="bg-transparent text-white font-bold text-sm px-8 py-3 min-h-[48px] rounded-xl inline-flex items-center justify-center gap-2 border-2 border-white/30 hover:border-white/60 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
                 >
                   INICIAR SESIÓN
                 </button>

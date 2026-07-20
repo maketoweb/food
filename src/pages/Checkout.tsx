@@ -207,12 +207,12 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); handleCopy(text, fieldId); }}
-      className="shrink-0 p-1 rounded hover:bg-zinc-200 transition-colors cursor-pointer"
+      className="shrink-0 p-1 rounded hover:bg-[#e2e2e4] transition-colors cursor-pointer"
       title="Copiar"
     >
       {copiedField === fieldId
         ? <Check size={14} className="text-emerald-500" />
-        : <Copy size={14} className="text-zinc-400 hover:text-zinc-600" />
+        : <Copy size={14} className="text-[#8f7065] hover:text-[#5b4137]" />
       }
     </button>
   );
@@ -481,7 +481,7 @@ ${productosDetailText}
   const isLocationSet = !(shippingLat === config.coordenadas_tienda.lat && shippingLng === config.coordenadas_tienda.lng);
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-zinc-50 text-zinc-900">
+    <div className="flex flex-col min-h-[100dvh]" style={{ backgroundColor: '#f9f9fb', color: '#1a1c1d' }}>
       <SEOHead title="Checkout" />
 
       <AnimatePresence>
@@ -510,17 +510,17 @@ ${productosDetailText}
         </div>
       )}
 
-      <div className="bg-white border-b border-zinc-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-20">
-        <button onClick={() => currentStep === 1 ? setTab('home') : handlePrevStep()} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
-          <ArrowLeft size={18} className="text-zinc-600" />
+      <div className="border-b px-4 py-3 flex items-center gap-3 sticky top-0 z-20" style={{ backgroundColor: 'rgba(249,249,251,0.8)', backdropFilter: 'blur(20px)', borderColor: '#e4beb1/10' }}>
+        <button onClick={() => currentStep === 1 ? setTab('home') : handlePrevStep()} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#eeeef0] transition-colors cursor-pointer" style={{ backgroundColor: '#eeeef0' }}>
+          <ArrowLeft size={18} className="text-[#1a1c1d]" />
         </button>
         <div className="flex-1">
-          <h1 className="text-base font-bold text-zinc-900">Checkout</h1>
-          <p className="text-[11px] text-zinc-400">Paso {currentStep} de 3</p>
+          <h1 className="text-[16px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Checkout</h1>
+          <p className="text-[11px] text-[#8f7065]">Paso {currentStep} de 3</p>
         </div>
       </div>
 
-      <div className="bg-white border-b border-zinc-200 px-4 py-3">
+      <div className="border-b px-4 py-3" style={{ backgroundColor: '#ffffff', borderColor: '#e4beb1/10' }}>
         <div className="flex items-center justify-between max-w-sm mx-auto">
           {[
             { step: 1, label: 'Delivery', icon: <MapPin size={14} /> },
@@ -530,21 +530,18 @@ ${productosDetailText}
             <React.Fragment key={step}>
               <div className="flex flex-col items-center gap-1">
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    stepCompleted(step)
-                      ? 'bg-emerald-500 text-white'
-                      : stepActive(step)
-                        ? 'text-white shadow-lg'
-                        : 'bg-zinc-200 text-zinc-400'
-                  }`}
-                  style={stepActive(step) ? { backgroundColor: themeColor } : stepCompleted(step) ? {} : {}}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
+                  style={{
+                    backgroundColor: stepCompleted(step) ? '#2e7d32' : stepActive(step) ? themeColor : '#eeeef0',
+                    color: stepCompleted(step) || stepActive(step) ? '#ffffff' : '#8f7065'
+                  }}
                 >
                   {stepCompleted(step) ? <Check size={14} /> : icon}
                 </div>
-                <span className={`text-[11px] font-bold ${stepActive(step) ? 'text-zinc-900' : 'text-zinc-400'}`}>{label}</span>
+                <span className="text-[11px] font-bold" style={{ color: stepActive(step) ? '#1a1c1d' : '#8f7065' }}>{label}</span>
               </div>
               {idx < 2 && (
-                <div className="flex-1 h-0.5 mx-2 rounded-full mt-[-12px]" style={{ backgroundColor: stepCompleted(step + 1) ? '#10b981' : stepActive(step + 1) ? themeColor : '#e4e4e7' }} />
+                <div className="flex-1 h-0.5 mx-2 rounded-full mt-[-12px]" style={{ backgroundColor: stepCompleted(step + 1) ? '#2e7d32' : stepActive(step + 1) ? themeColor : '#e2e2e4' }} />
               )}
             </React.Fragment>
           ))}
@@ -557,18 +554,18 @@ ${productosDetailText}
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {cart.length === 0 ? (
                 <div className="text-center py-16">
-                  <ListOrdered size={36} className="text-zinc-400 mb-2 mx-auto" />
-                  <p className="text-sm font-bold text-zinc-800">Tu carrito está vacío</p>
-                  <p className="text-xs text-zinc-500 mt-1">Agrega productos para continuar.</p>
+                  <ListOrdered size={36} className="text-[#8f7065] mb-2 mx-auto" />
+                  <p className="text-sm font-bold text-[#1a1c1d]">Tu carrito está vacío</p>
+                  <p className="text-xs text-[#8f7065] mt-1">Agrega productos para continuar.</p>
                   <button onClick={() => setTab('catalog')} className="mt-4 text-white text-xs font-bold px-5 py-2.5 rounded-xl" style={{ backgroundColor: themeColor }}>
                     Explorar Menú
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-white rounded-2xl border border-zinc-200 p-4">
+                  <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800">Tu Carrito ({cart.reduce((s, ci) => s + ci.quantity, 0)} items)</h3>
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d]">Tu Carrito ({cart.reduce((s, ci) => s + ci.quantity, 0)} items)</h3>
                       <button onClick={() => setTab('catalog')} className="text-[11px] font-bold underline" style={{ color: themeColor }}>Editar</button>
                     </div>
                     <div className="flex flex-col gap-2.5 max-h-48 overflow-y-auto pr-1">
@@ -576,11 +573,11 @@ ${productosDetailText}
                         const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
                         return (
                           <div key={item.item.id} className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#eeeef0] border border-[#e4beb1]/10 shrink-0">
                               <img src={item.item.imagen_urls[0]} alt={item.item.nombre} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-xs font-bold text-zinc-800 truncate">{item.item.nombre}</h4>
+                              <h4 className="text-xs font-bold text-[#1a1c1d] truncate">{item.item.nombre}</h4>
                               {item.selected_options && item.selected_options.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-0.5">
                                   {item.selected_options.map((opt, idx) => (
@@ -592,12 +589,12 @@ ${productosDetailText}
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <div className="flex items-center border border-zinc-200 rounded-lg bg-white h-8">
-                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity - 1)} className="w-7 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-800 text-xs transition-all cursor-pointer">-</button>
-                                <span className="text-xs px-1.5 text-zinc-900 font-bold">{item.quantity}</span>
-                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity + 1)} className="w-7 h-full flex items-center justify-center text-zinc-500 hover:text-zinc-800 text-xs transition-all cursor-pointer">+</button>
+                              <div className="flex items-center border border-[#e4beb1]/10 rounded-lg bg-white h-8">
+                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity - 1)} className="w-7 h-full flex items-center justify-center text-[#8f7065] hover:text-[#1a1c1d] text-xs transition-all cursor-pointer">-</button>
+                                <span className="text-xs px-1.5 text-[#1a1c1d] font-bold">{item.quantity}</span>
+                                <button onClick={() => updateCartQuantity(item.item.id, item.quantity + 1)} className="w-7 h-full flex items-center justify-center text-[#8f7065] hover:text-[#1a1c1d] text-xs transition-all cursor-pointer">+</button>
                               </div>
-                              <button onClick={() => removeFromCart(item.item.id)} className="text-zinc-400 hover:text-red-500 p-1 rounded transition-all cursor-pointer">
+                              <button onClick={() => removeFromCart(item.item.id)} className="text-[#8f7065] hover:text-red-500 p-1 rounded transition-all cursor-pointer">
                                 <Trash2 size={12} />
                               </button>
                             </div>
@@ -607,8 +604,8 @@ ${productosDetailText}
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Entrega</h3>
+                  <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-3">Método de Entrega</h3>
                     <div className="flex gap-2 mb-4">
                       {(() => {
                         const sede = activeSedes.find(s => s.id === selectedSedeId) || activeSedes[0];
@@ -620,7 +617,7 @@ ${productosDetailText}
                           <>
                             {allowsPickup && (
                               <button onClick={() => handleShippingMethodChange('recogida')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
-                                shippingMethod === 'recogida' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                                shippingMethod === 'recogida' ? 'text-white shadow-md' : 'bg-[#f9f9fb] border-[#e4beb1]/10 text-[#5b4137] hover:bg-[#eeeef0]'
                               }`} style={shippingMethod === 'recogida' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                                 <Store size={16} className="mx-auto mb-1" />
                                 Recoger en Tienda
@@ -628,7 +625,7 @@ ${productosDetailText}
                             )}
                             {showZonas && (
                               <button onClick={() => handleShippingMethodChange('zonas')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
-                                shippingMethod === 'zonas' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                                shippingMethod === 'zonas' ? 'text-white shadow-md' : 'bg-[#f9f9fb] border-[#e4beb1]/10 text-[#5b4137] hover:bg-[#eeeef0]'
                               }`} style={shippingMethod === 'zonas' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                                 <Truck size={16} className="mx-auto mb-1" />
                                 Delivery por Zonas
@@ -636,7 +633,7 @@ ${productosDetailText}
                             )}
                             {showMapa && (
                               <button onClick={() => handleShippingMethodChange('mapa')} className={`flex-1 p-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border-2 ${
-                                shippingMethod === 'mapa' ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                                shippingMethod === 'mapa' ? 'text-white shadow-md' : 'bg-[#f9f9fb] border-[#e4beb1]/10 text-[#5b4137] hover:bg-[#eeeef0]'
                               }`} style={shippingMethod === 'mapa' ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                                 <MapPin size={16} className="mx-auto mb-1" />
                                 Delivery por Mapa
@@ -687,21 +684,21 @@ ${productosDetailText}
                           style={{ borderColor: isLocationSet ? themeColor : '#d4d4d8', backgroundColor: isLocationSet ? `${themeColor}08` : 'white' }}
                         >
                           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: isLocationSet ? themeColor : '#f4f4f5' }}>
-                            <LocateFixed size={18} className={isLocationSet ? 'text-white' : 'text-zinc-400'} />
+                            <LocateFixed size={18} className={isLocationSet ? 'text-white' : 'text-[#8f7065]'} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold" style={{ color: isLocationSet ? themeColor : '#52525b' }}>
                               {isLocationSet ? 'Ubicación seleccionada' : 'Seleccionar dirección de entrega'}
                             </p>
                             {isLocationSet ? (
-                              <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+                              <p className="text-[10px] text-[#8f7065] truncate mt-0.5">
                                 {shippingZone} · {shippingDistance.toFixed(1)} km · ${effectiveShippingCost.toFixed(2)}
                               </p>
                             ) : (
-                              <p className="text-[10px] text-zinc-400 mt-0.5">Toca para abrir el mapa y elegir tu dirección</p>
+                              <p className="text-[10px] text-[#8f7065] mt-0.5">Toca para abrir el mapa y elegir tu dirección</p>
                             )}
                           </div>
-                          <ChevronDown size={16} className="text-zinc-400 shrink-0" />
+                          <ChevronDown size={16} className="text-[#8f7065] shrink-0" />
                         </button>
                         {isLocationSet && (
                           <button
@@ -719,7 +716,7 @@ ${productosDetailText}
                       <div className="space-y-2">
                         {(selectedSede?.delivery_zonas || config.delivery_zonas || []).map((z, i) => (
                           <button key={z.id} onClick={() => handleZoneSelect(i)} className={`w-full p-3 rounded-xl text-left flex items-center justify-between text-xs font-bold transition-all cursor-pointer border-2 ${
-                            selectedZoneIndex === i ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                            selectedZoneIndex === i ? 'text-white shadow-md' : 'bg-[#f9f9fb] border-[#e4beb1]/10 text-[#5b4137] hover:bg-[#eeeef0]'
                           }`} style={selectedZoneIndex === i ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                             <span>{z.name}</span>
                             <span className="font-mono">{(selectedSede?.delivery_gratis ?? config.delivery_gratis) ? 'Gratis' : `$${z.cost.toFixed(2)}`}</span>
@@ -730,11 +727,11 @@ ${productosDetailText}
 
                     {hasMultipleSedes && (
                       <div className="mt-4">
-                        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
+                        <span className="text-[11px] font-bold text-[#8f7065] uppercase tracking-wider mb-2 block">Enviar pedido a:</span>
                         <div className="flex flex-wrap gap-2">
                           {activeSedes.map(sede => (
                             <button key={sede.id} onClick={() => setSelectedSedeId(sede.id)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${
-                              selectedSedeId === sede.id ? 'text-white shadow-md' : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                              selectedSedeId === sede.id ? 'text-white shadow-md' : 'bg-white border-[#e4beb1]/10 text-[#5b4137] hover:bg-[#f9f9fb]'
                             }`} style={selectedSedeId === sede.id ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                               {sede.nombre}
                             </button>
@@ -743,8 +740,8 @@ ${productosDetailText}
                       </div>
                     )}
 
-                    <div className="mt-4 flex justify-between items-center pt-3 border-t border-zinc-100">
-                      <span className="text-xs text-zinc-500">Envío:</span>
+                    <div className="mt-4 flex justify-between items-center pt-3 border-t border-[#e4beb1]/10">
+                      <span className="text-xs text-[#8f7065]">Envío:</span>
                       <span className="text-xs font-bold" style={{ color: themeColor }}>
                         {hasFreeDeliveryItem ? 'GRATIS' : effectiveShippingCost === 0 ? 'Retiro / Gratis' : `$${effectiveShippingCost.toFixed(2)}`}
                       </span>
@@ -758,7 +755,7 @@ ${productosDetailText}
                     );
                     if (!lastDelivery) return null;
                     return (
-                      <div className="bg-white rounded-2xl border border-zinc-200 p-4">
+                      <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
                         <button
                           onClick={() => {
                             setShippingLat(lastDelivery.lat);
@@ -777,7 +774,7 @@ ${productosDetailText}
                           <MapPin size={14} />
                           Usar mi última dirección
                         </button>
-                        <p className="text-[10px] text-zinc-400 mt-1.5 text-center">
+                        <p className="text-[10px] text-[#8f7065] mt-1.5 text-center">
                           {lastDelivery.direccion_envio?.split(' (Distancia:')[0] || 'Última dirección guardada'}
                         </p>
                       </div>
@@ -786,15 +783,15 @@ ${productosDetailText}
 
                   <CartUpsell onAddToCart={(item: FoodItem) => addToCart(item)} />
 
-                  <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                    <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Notas del pedido (opcional)</label>
-                    <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none" rows={2} />
+                  <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
+                    <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-2 block">Notas del pedido (opcional)</label>
+                    <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Ej: Sin cebolla, extra salsa..." className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#ff5c00] resize-none" rows={2} />
                   </div>
 
-                  <div className="bg-white rounded-2xl border border-zinc-200 p-4">
-                    <label className="text-[11px] font-bold uppercase text-zinc-500 mb-2 block">Cupón</label>
+                  <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4">
+                    <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-2 block">Cupón</label>
                     <div className="flex gap-2">
-                      <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="CÓDIGO" className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 font-bold uppercase" />
+                      <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="CÓDIGO" className="flex-1 bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#ff5c00] font-bold uppercase" />
                       <button onClick={handleApplyCoupon} className="text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-colors" style={{ backgroundColor: themeColor }}>Aplicar</button>
                     </div>
                     {couponError && <span className="text-[11px] text-red-500 mt-1 block">{couponError}</span>}
@@ -811,27 +808,27 @@ ${productosDetailText}
 
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
-              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tu Pedido</h3>
+              <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-3">Tu Pedido</h3>
                 <div className="space-y-2">
                   {cart.map(item => {
                     const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
                     const subTotalItem = (item.item.precio_usd + extrasTotal) * item.quantity;
                     return (
                       <div key={item.item.id} className="flex justify-between items-center text-xs">
-                        <span className="text-zinc-600">{item.quantity}x {item.item.nombre}</span>
-                        <span className="font-bold text-zinc-800">${subTotalItem.toFixed(2)}</span>
+                        <span className="text-[#5b4137]">{item.quantity}x {item.item.nombre}</span>
+                        <span className="font-bold text-[#1a1c1d]">${subTotalItem.toFixed(2)}</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Detalle de Costos</h3>
+              <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-3">Detalle de Costos</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-zinc-500">Subtotal:</span>
+                    <span className="text-[#8f7065]">Subtotal:</span>
                     <span className="font-bold">${subtotalUsd.toFixed(2)}</span>
                   </div>
                   {appliedCoupon && (
@@ -841,27 +838,27 @@ ${productosDetailText}
                     </div>
                   )}
                   <div className="flex justify-between text-xs">
-                    <span className="text-zinc-500">Envío ({shippingMethod === 'recogida' ? 'Recogida' : shippingZone}):</span>
+                    <span className="text-[#8f7065]">Envío ({shippingMethod === 'recogida' ? 'Recogida' : shippingZone}):</span>
                     <span className="font-bold">{effectiveShippingCost === 0 ? 'Gratis' : `$${effectiveShippingCost.toFixed(2)}`}</span>
                   </div>
-                  <div className="flex justify-between text-sm pt-2 border-t border-zinc-100">
-                    <span className="font-bold text-zinc-900">Total:</span>
+                  <div className="flex justify-between text-sm pt-2 border-t border-[#e4beb1]/10">
+                    <span className="font-bold text-[#1a1c1d]">Total:</span>
                     <div className="text-right">
                       <span className="font-black text-lg" style={{ color: themeColor }}>${totalUsd.toFixed(2)}</span>
-                      <span className="text-[10px] text-zinc-400 ml-2">{totalBs.toFixed(2)} Bs.</span>
+                      <span className="text-[10px] text-[#8f7065] ml-2">{totalBs.toFixed(2)} Bs.</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {shippingMethod !== 'recogida' && (
-                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-2">Dirección de Entrega</h3>
+                <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-2">Dirección de Entrega</h3>
                   <div className="flex items-start gap-2">
-                    <MapPin size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <MapPin size={14} className="text-[#8f7065] mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-zinc-800">{shippingZone}</p>
-                      <p className="text-[11px] text-zinc-500">{shippingDistance > 0 ? `${shippingDistance.toFixed(1)} km de distancia` : ''}</p>
+                      <p className="text-xs font-bold text-[#1a1c1d]">{shippingZone}</p>
+                      <p className="text-[11px] text-[#8f7065]">{shippingDistance > 0 ? `${shippingDistance.toFixed(1)} km de distancia` : ''}</p>
                       <a
                         href={`https://www.google.com/maps?q=${shippingLat},${shippingLng}`}
                         target="_blank"
@@ -875,14 +872,14 @@ ${productosDetailText}
               )}
 
               {shippingMethod === 'recogida' && selectedSede && (
-                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-2">Retiro en Tienda</h3>
+                <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-2">Retiro en Tienda</h3>
                   <div className="flex items-start gap-2">
-                    <Store size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <Store size={14} className="text-[#8f7065] mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-zinc-800">{selectedSede.nombre}</p>
-                      <p className="text-[11px] text-zinc-500">{selectedSede.direccion || config.direccion_fisica}</p>
-                      <p className="text-[10px] text-zinc-400 font-mono mt-1">
+                      <p className="text-xs font-bold text-[#1a1c1d]">{selectedSede.nombre}</p>
+                      <p className="text-[11px] text-[#8f7065]">{selectedSede.direccion || config.direccion_fisica}</p>
+                      <p className="text-[10px] text-[#8f7065] font-mono mt-1">
                         Coordenadas: {selectedSede.coordenadas.lat}, {selectedSede.coordenadas.lng}
                       </p>
                       <a
@@ -902,24 +899,24 @@ ${productosDetailText}
           {currentStep === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4">
               {!currentUser && (
-                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Tus Datos</h3>
+                <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-3">Tus Datos</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Correo *</label>
-                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                      <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-1 block">Correo *</label>
+                      <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#ff5c00] transition-colors" required />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Nombre *</label>
-                      <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                      <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-1 block">Nombre *</label>
+                      <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Tu nombre" className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#ff5c00] transition-colors" required />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold uppercase text-zinc-500 mb-1 block">Teléfono *</label>
-                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-zinc-950 transition-colors" required />
+                      <label className="text-[11px] font-bold uppercase text-[#8f7065] mb-1 block">Teléfono *</label>
+                      <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+58412..." className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#ff5c00] transition-colors" required />
                     </div>
                   </div>
                   <div className="mt-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
-                    <p className="text-[11px] text-zinc-600 leading-relaxed">
+                    <p className="text-[11px] text-[#5b4137] leading-relaxed">
                       <span className="font-bold" style={{ color: themeColor }}>Se crea tu cuenta automáticamente.</span>{' '}
                       Tu contraseña es tu número de teléfono. Podrás cambiarla desde tu panel de cliente.
                     </p>
@@ -928,19 +925,19 @@ ${productosDetailText}
               )}
 
               {currentUser && (
-                <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+                <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 text-white rounded-full flex items-center justify-center font-bold text-xs" style={{ backgroundColor: themeColor }}>{currentUser.nombre[0]}</div>
                     <div>
-                      <p className="text-xs font-bold text-zinc-900">{currentUser.nombre}</p>
-                      <p className="text-[11px] text-zinc-500">{currentUser.email || currentUser.telefono}</p>
+                      <p className="text-xs font-bold text-[#1a1c1d]">{currentUser.nombre}</p>
+                      <p className="text-[11px] text-[#8f7065]">{currentUser.email || currentUser.telefono}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-800 mb-3">Método de Pago</h3>
+              <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#1a1c1d] mb-3">Método de Pago</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { key: 'Pago Móvil', label: 'Pago Móvil Bs', icon: 'Bs', enabled: config.pagomovil_enabled },
@@ -950,7 +947,7 @@ ${productosDetailText}
                     { key: 'Otro', label: 'Otro', icon: '?', enabled: true }
                   ].filter(pm => pm.enabled).map(pm => (
                     <button key={pm.key} onClick={() => setSelectedPayment(pm.key as any)} className={`p-3 rounded-xl text-left flex items-center gap-2 transition-all cursor-pointer border-2 text-xs ${
-                      selectedPayment === pm.key ? 'text-white shadow-md' : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                      selectedPayment === pm.key ? 'text-white shadow-md' : 'bg-[#f9f9fb] border-[#e4beb1]/10 text-[#5b4137] hover:bg-[#eeeef0]'
                     }`} style={selectedPayment === pm.key ? { backgroundColor: themeColor, borderColor: themeColor } : {}}>
                       <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-white/20 shrink-0">{pm.icon}</span>
                       <span className="font-bold">{pm.label}</span>
@@ -958,27 +955,27 @@ ${productosDetailText}
                   ))}
                 </div>
 
-                <div className="mt-3 p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-[11px] text-zinc-700 leading-relaxed font-mono">
+                <div className="mt-3 p-3 bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl text-[11px] text-[#5b4137] leading-relaxed font-mono">
                   {selectedPayment === 'Pago Móvil' && (
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Banco / Titular</span>
-                          <span className="text-zinc-800 font-bold">{(config.pagomovil_data || 'Banesco (0134)').split('-')[0]?.trim()}</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Banco / Titular</span>
+                          <span className="text-[#1a1c1d] font-bold">{(config.pagomovil_data || 'Banesco (0134)').split('-')[0]?.trim()}</span>
                         </div>
                         <CopyButton text={config.pagomovil_data || 'Banesco (0134)'} fieldId="pm-data" />
                       </div>
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Teléfono</span>
-                          <span className="text-zinc-800 font-bold">{(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'}</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Teléfono</span>
+                          <span className="text-[#1a1c1d] font-bold">{(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'}</span>
                         </div>
                         <CopyButton text={(config.pagomovil_data || '').match(/\d{4,}/)?.[0] || '04121234567'} fieldId="pm-phone" />
                       </div>
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Cédula / RIF</span>
-                          <span className="text-zinc-800 font-bold">{(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'}</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Cédula / RIF</span>
+                          <span className="text-[#1a1c1d] font-bold">{(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'}</span>
                         </div>
                         <CopyButton text={(config.pagomovil_data || '').match(/V-\d+[.-]?\d+[.-]?\d+|J-\d+[.-]?\d+[.-]?\d+/)?.[0] || 'V-12345678'} fieldId="pm-ci" />
                       </div>
@@ -987,16 +984,16 @@ ${productosDetailText}
                   )}
                   {selectedPayment === 'Zelle' && (
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Correo Zelle</span>
-                          <span className="text-zinc-800 font-bold">{config.zelle_data || 'pagos@email.com'}</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Correo Zelle</span>
+                          <span className="text-[#1a1c1d] font-bold">{config.zelle_data || 'pagos@email.com'}</span>
                         </div>
                         <CopyButton text={config.zelle_data || 'pagos@email.com'} fieldId="zelle-email" />
                       </div>
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Monto a enviar</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Monto a enviar</span>
                           <span className="font-black" style={{ color: themeColor }}>${totalUsd.toFixed(2)} USD</span>
                         </div>
                         <CopyButton text={`$${totalUsd.toFixed(2)}`} fieldId="zelle-amount" />
@@ -1005,22 +1002,22 @@ ${productosDetailText}
                   )}
                   {selectedPayment === 'Efectivo' && (
                     <div className="flex flex-col gap-2">
-                      <p className="text-zinc-800 font-bold text-center">{config.efectivo_data || 'Paga al motorizado en efectivo al recibir'}</p>
+                      <p className="text-[#1a1c1d] font-bold text-center">{config.efectivo_data || 'Paga al motorizado en efectivo al recibir'}</p>
                       <p className="text-center font-black py-1 rounded" style={{ color: themeColor }}>Total: ${totalUsd.toFixed(2)}</p>
                     </div>
                   )}
                   {selectedPayment === 'Transferencia' && (
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Datos Bancarios</span>
-                          <span className="text-zinc-800 font-bold">{config.transferencia_data || `Banesco - ${config.site_nombre}`}</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Datos Bancarios</span>
+                          <span className="text-[#1a1c1d] font-bold">{config.transferencia_data || `Banesco - ${config.site_nombre}`}</span>
                         </div>
                         <CopyButton text={config.transferencia_data || `Banesco - ${config.site_nombre}`} fieldId="transfer-data" />
                       </div>
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-zinc-200">
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-[#e4beb1]/10">
                         <div>
-                          <span className="text-[9px] text-zinc-400 uppercase block">Monto</span>
+                          <span className="text-[9px] text-[#8f7065] uppercase block">Monto</span>
                           <span className="font-black" style={{ color: themeColor }}>${totalUsd.toFixed(2)} USD</span>
                         </div>
                         <CopyButton text={`$${totalUsd.toFixed(2)}`} fieldId="transfer-amount" />
@@ -1028,30 +1025,30 @@ ${productosDetailText}
                     </div>
                   )}
                   {selectedPayment === 'Otro' && (
-                    <textarea value={customPaymentNote} onChange={(e) => setCustomPaymentNote(e.target.value)} placeholder="Describe cómo vas a pagar..." className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-zinc-950 resize-none" rows={3} />
+                    <textarea value={customPaymentNote} onChange={(e) => setCustomPaymentNote(e.target.value)} placeholder="Describe cómo vas a pagar..." className="w-full bg-white border border-[#e4beb1]/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#ff5c00] resize-none" rows={3} />
                   )}
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-4">
+              <div className="bg-white rounded-2xl border border-[#e4beb1]/10 p-4 mb-4">
                 {(selectedPayment === 'Pago Móvil' || selectedPayment === 'Zelle' || selectedPayment === 'Transferencia') && (
                   <div className="mb-3 p-3 rounded-xl border" style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20` }}>
                     <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: themeColor }}>Importante</p>
-                    <p className="text-xs text-zinc-700 leading-relaxed">
+                    <p className="text-xs text-[#5b4137] leading-relaxed">
                       Adjunta el <span className="font-bold">capture del pago</span> en el chat de WhatsApp al enviar el pedido para que podamos procesarlo más rápido.
                     </p>
                   </div>
                 )}
                 {selectedPayment === 'Efectivo' && (
                   <div className="mb-3">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5 block">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#8f7065] mb-1.5 block">
                       Con qué billetes vas a cancelar ${totalUsd.toFixed(2)} USD
                     </label>
                     <textarea
                       value={cashBills}
                       onChange={(e) => setCashBills(e.target.value)}
                       placeholder="Ej: 1 billete de $20, 2 billetes de $10..."
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-zinc-950 resize-none"
+                      className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#ff5c00] resize-none"
                       rows={2}
                     />
                   </div>
@@ -1064,7 +1061,7 @@ ${productosDetailText}
                     className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-current cursor-pointer"
                     style={{ color: themeColor }}
                   />
-                  <span className="text-xs text-zinc-600 leading-relaxed">
+                  <span className="text-xs text-[#5b4137] leading-relaxed">
                     {selectedPayment === 'Efectivo'
                       ? 'Confirmo los billetes indicados para gestionar el cambio.'
                       : 'Confirmo que enviaré el capture del pago por WhatsApp.'}
@@ -1077,7 +1074,7 @@ ${productosDetailText}
       </div>
 
       {cart.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 p-4 z-20">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4beb1]/10 p-4 z-20">
           {validationError && (
             <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-600 text-center">
               {validationError}
@@ -1210,10 +1207,10 @@ const LocationModal: React.FC<LocationModalProps> = ({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[150] flex flex-col bg-white"
     >
-      <div className="flex items-center justify-between p-4 border-b border-zinc-200 shrink-0">
-        <h3 className="text-sm font-bold text-zinc-900">Ubicación de entrega</h3>
-        <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-zinc-100 cursor-pointer">
-          <X size={18} className="text-zinc-500" />
+      <div className="flex items-center justify-between p-4 border-b border-[#e4beb1]/10 shrink-0">
+        <h3 className="text-sm font-bold text-[#1a1c1d]">Ubicación de entrega</h3>
+        <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#eeeef0] cursor-pointer">
+          <X size={18} className="text-[#8f7065]" />
         </button>
       </div>
 
@@ -1230,23 +1227,23 @@ const LocationModal: React.FC<LocationModalProps> = ({
         <div className="absolute top-3 left-3 right-3 z-[1000]">
           <button
             onClick={() => setShowManualInput(!showManualInput)}
-            className="w-full flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 shadow-lg border border-zinc-200 text-xs"
+            className="w-full flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 shadow-lg border border-[#e4beb1]/10 text-xs"
           >
-            <Search size={14} className="text-zinc-400 shrink-0" />
-            <span className="text-zinc-400 truncate">
+            <Search size={14} className="text-[#8f7065] shrink-0" />
+            <span className="text-[#8f7065] truncate">
               {showManualInput ? 'Escribe tu dirección...' : 'Buscar dirección o escribir referencia'}
             </span>
           </button>
           {showManualInput && (
-            <div className="mt-2 bg-white rounded-xl shadow-lg border border-zinc-200 p-3">
+            <div className="mt-2 bg-white rounded-xl shadow-lg border border-[#e4beb1]/10 p-3">
               <input
                 type="text"
                 value={manualAddress}
                 onChange={(e) => setManualAddress(e.target.value)}
                 placeholder="Ej: Calle 5, Edif. 3, aparto 2, Valencia"
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-zinc-950 mb-2"
+                className="w-full bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#ff5c00] mb-2"
               />
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-[10px] text-[#8f7065]">
                 Arrastra el mapa para ajustar la ubicación exacta. Esta referencia se enviará con tu pedido.
               </p>
             </div>
@@ -1254,7 +1251,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-zinc-200 bg-white p-4 space-y-3">
+      <div className="shrink-0 border-t border-[#e4beb1]/10 bg-white p-4 space-y-3">
         <button
           onClick={handleUseCurrentLocation}
           disabled={isDetecting}
@@ -1267,13 +1264,13 @@ const LocationModal: React.FC<LocationModalProps> = ({
         {locationError && <p className="text-[11px] text-amber-600 text-center">{locationError}</p>}
 
         {pickedLat && pickedLng && (
-          <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl">
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
+          <div className="p-3 bg-[#f9f9fb] border border-[#e4beb1]/10 rounded-xl">
+            <div className="flex items-center gap-2 text-[10px] text-[#8f7065] font-mono">
               <MapPin size={10} />
               <span>{pickedLat.toFixed(6)}, {pickedLng.toFixed(6)} · {pickedDistance} km · ${pickedCost.toFixed(2)}</span>
             </div>
-            {pickedZone && <p className="text-[10px] text-zinc-400 mt-1">Zona: {pickedZone}</p>}
-            {manualAddress && <p className="text-[10px] text-zinc-600 mt-1 font-medium">Ref: {manualAddress}</p>}
+            {pickedZone && <p className="text-[10px] text-[#8f7065] mt-1">Zona: {pickedZone}</p>}
+            {manualAddress && <p className="text-[10px] text-[#5b4137] mt-1 font-medium">Ref: {manualAddress}</p>}
           </div>
         )}
 

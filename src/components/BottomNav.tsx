@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, UtensilsCrossed, ShoppingCart, User } from 'lucide-react';
+import { Home, UtensilsCrossed, Search, ShoppingCart, User } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
 interface BottomNavProps {
@@ -10,35 +10,59 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
   const { cart, config } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const themeColor = config.theme_color || '#E31837';
+  const themeColor = config.theme_color || '#ff5c00';
 
   const tabs = [
-    { id: 'home' as const, label: 'Inicio', icon: Home },
-    { id: 'catalog' as const, label: 'Menú', icon: UtensilsCrossed },
-    { id: 'checkout' as const, label: 'Carrito', icon: ShoppingCart, badge: cartCount },
-    { id: 'profile' as const, label: 'Cuenta', icon: User },
+    { id: 'home' as const, label: 'Home', icon: Home, materialIcon: 'home' },
+    { id: 'catalog' as const, label: 'Menu', icon: UtensilsCrossed, materialIcon: 'restaurant_menu' },
+    { id: 'catalog' as const, label: 'Search', icon: Search, materialIcon: 'search', isSearch: true },
+    { id: 'profile' as const, label: 'Profile', icon: User, materialIcon: 'person' },
+    { id: 'checkout' as const, label: 'Cart', icon: ShoppingCart, materialIcon: 'shopping_bag', badge: cartCount },
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-200 safe-area-bottom">
-      <div className="flex items-center justify-around h-14 px-2">
-        {tabs.map((tabItem) => {
-          const isActive = tabItem.id === 'checkout' 
-            ? currentTab === 'cart' || currentTab === 'checkout'
-            : currentTab === tabItem.id;
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-bottom" style={{
+      background: 'rgba(249, 249, 251, 0.8)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderTop: '1px solid rgba(228, 190, 177, 0.1)',
+      borderRadius: '1rem 1rem 0 0',
+    }}>
+      <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
+        {tabs.map((tabItem, idx) => {
+          const isActive = tabItem.isSearch
+            ? false
+            : tabItem.id === 'checkout'
+              ? currentTab === 'cart' || currentTab === 'checkout'
+              : currentTab === tabItem.id;
+
+          const handleTabClick = () => {
+            if (tabItem.isSearch) {
+              setTab('catalog');
+            } else {
+              setTab(tabItem.id);
+            }
+          };
+
           return (
             <button
-              key={tabItem.id}
+              key={`${tabItem.id}-${idx}`}
               type="button"
-              onClick={() => setTab(tabItem.id)}
-              className="flex flex-col items-center justify-center gap-0.5 w-16 h-full cursor-pointer relative"
+              onClick={handleTabClick}
+              className="flex flex-col items-center justify-center gap-0.5 w-14 h-full cursor-pointer relative transition-transform duration-200 active:scale-90"
+              style={{
+                color: isActive ? themeColor : 'rgba(91, 65, 55, 0.6)',
+              }}
             >
               <div className="relative">
                 <tabItem.icon
-                  size={20}
-                  strokeWidth={isActive ? 2.2 : 1.6}
-                  className="transition-colors duration-200"
-                  style={{ color: isActive ? themeColor : '#71717a' }}
+                  size={22}
+                  strokeWidth={isActive ? 2.2 : 1.5}
+                  className="transition-all duration-200"
+                  style={{
+                    color: isActive ? themeColor : 'rgba(91, 65, 55, 0.6)',
+                  }}
+                  fill={isActive ? themeColor : 'none'}
                 />
                 {tabItem.badge !== undefined && tabItem.badge > 0 && (
                   <span
@@ -50,17 +74,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
                 )}
               </div>
               <span
-                className="text-[10px] font-semibold transition-colors duration-200"
-                style={{ color: isActive ? themeColor : '#71717a' }}
+                className="text-[10px] mt-0.5 transition-colors duration-200"
+                style={{
+                  color: isActive ? themeColor : 'rgba(91, 65, 55, 0.6)',
+                  fontWeight: isActive ? 600 : 400,
+                }}
               >
                 {tabItem.label}
               </span>
-              {isActive && (
-                <div
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
-                  style={{ backgroundColor: themeColor }}
-                />
-              )}
             </button>
           );
         })}

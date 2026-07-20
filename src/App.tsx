@@ -125,7 +125,7 @@ function AppContent() {
       admin: <SkeletonHome />,
     };
     return (
-      <div className="min-h-screen bg-zinc-50 text-zinc-900 w-full flex justify-center">
+      <div className="min-h-screen bg-[#f9f9fb] text-[#1a1c1d] w-full flex justify-center">
         <div className="w-full">
           {skeletonMap[tab] || <SkeletonHome />}
         </div>
@@ -134,13 +134,13 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 w-full flex justify-center">
+    <div className="min-h-screen bg-[#f9f9fb] text-[#1a1c1d] w-full flex justify-center">
       {showSplash && <SplashScreen config={config} onComplete={() => setShowSplash(false)} />}
       <SEOHead />
       <OfflineBanner />
       <PushNotificationModal />
 
-      <div className="w-full bg-white flex flex-col min-h-screen relative">
+      <div className="w-full bg-[#f9f9fb] flex flex-col min-h-screen relative">
 
         {/* ═══ HEADER DE TIENDA - oculto en panel admin ═══ */}
         {tab !== 'admin' && (

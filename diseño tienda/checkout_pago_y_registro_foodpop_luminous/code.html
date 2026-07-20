@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FOODPOP - Complete Your Order</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f9f9fb;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-active {
+            color: #a73a00;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #EEEEEE;
+        }
+        input:focus {
+            outline: none;
+            border-color: #ff5c00;
+            box-shadow: 0 0 0 4px rgba(255, 92, 0, 0.1);
+        }
+        /* Custom scrollbar for better native feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e2e4;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2f3132",
+                      "secondary-container": "#e2dfde",
+                      "on-tertiary-fixed": "#1b1c1c",
+                      "tertiary-fixed": "#e4e2e2",
+                      "on-secondary-container": "#636262",
+                      "surface-dim": "#d9dadc",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed-variant": "#802a00",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#e2e2e4",
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#e8e8ea",
+                      "primary": "#a73a00",
+                      "surface": "#f9f9fb",
+                      "inverse-primary": "#ffb59a",
+                      "surface-container-highest": "#e2e2e4",
+                      "secondary-fixed": "#e5e2e1",
+                      "on-background": "#1a1c1d",
+                      "surface-container-lowest": "#ffffff",
+                      "background": "#f9f9fb",
+                      "on-tertiary-fixed-variant": "#464747",
+                      "surface-bright": "#f9f9fb",
+                      "on-tertiary-container": "#2b2b2b",
+                      "on-primary-container": "#521800",
+                      "primary-fixed-dim": "#ffb59a",
+                      "on-surface-variant": "#5b4137",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "on-secondary": "#ffffff",
+                      "surface-tint": "#a73a00",
+                      "surface-container": "#eeeef0",
+                      "outline-variant": "#e4beb1",
+                      "on-secondary-fixed-variant": "#474746",
+                      "tertiary-container": "#939292",
+                      "surface-container-low": "#f3f3f5",
+                      "tertiary-fixed-dim": "#c7c6c6",
+                      "inverse-on-surface": "#f0f0f2",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "error": "#ba1a1a",
+                      "primary-fixed": "#ffdbce",
+                      "outline": "#8f7065",
+                      "primary-container": "#ff5c00",
+                      "on-surface": "#1a1c1d",
+                      "secondary": "#5f5e5e",
+                      "on-primary-fixed": "#370e00",
+                      "tertiary": "#5e5e5e",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "sm": "8px",
+                      "xl": "40px",
+                      "margin-mobile": "16px",
+                      "lg": "24px",
+                      "margin-desktop": "64px",
+                      "xs": "4px",
+                      "gutter": "20px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Plus Jakarta Sans"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "headline-lg-mobile": ["Plus Jakarta Sans"],
+                      "body-md": ["Plus Jakarta Sans"],
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "label-md": ["Plus Jakarta Sans"],
+                      "headline-xl": ["Plus Jakarta Sans"],
+                      "body-lg": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl border-b border-outline-variant/20 h-16">
+<div class="flex justify-between items-center px-margin-mobile h-full w-full max-w-7xl mx-auto">
+<button class="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-display-lg text-headline-lg-mobile tracking-tighter text-primary">FOODPOP</h1>
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist profile avatar of a modern professional, soft studio lighting, high-key photography, bright orange accents in the background to match the brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRFAt1LvLdpAT9F5bpHA7TVEnN4OM_d8hlRe8LrYkZ5_OYWEdF7oNx0JqE1ceaaj0fgdkAlXvV9hrRIwNEFtJixvWndg3bgTIO7v9_N_pqXb-ivYXmOMGx9UWx1X3A9-z6BtyZ6Dcv0k1WSIdJ8ZRMzuyNhyUjFB6CQbrRtn_c7vRKaAXuIKrzZWKeHfVVO04mg1JTwsVnqUKveKz_eoZcgJ3uArSv4nDDOtYlHSEXy2Z98Xmk4-PBtg"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-margin-mobile max-w-2xl mx-auto">
+<!-- Progress Indicator -->
+<div class="flex items-center justify-between mb-lg px-xs">
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-sm font-bold">1</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cart</span>
+</div>
+<div class="h-px flex-1 bg-primary mx-sm mb-5"></div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-sm font-bold border-4 border-primary-fixed">2</div>
+<span class="font-label-sm text-label-sm text-primary">Details</span>
+</div>
+<div class="h-px flex-1 bg-outline-variant/30 mx-sm mb-5"></div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant/40 flex items-center justify-center text-label-sm font-bold">3</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant/40">Review</span>
+</div>
+</div>
+<section class="space-y-lg">
+<!-- Order Summary Section -->
+<div class="glass-card rounded-xl p-md">
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Order Summary</h2>
+<span class="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed px-sm py-xs rounded-full">3 Items</span>
+</div>
+<ul class="space-y-md mb-lg">
+<li class="flex gap-md items-start">
+<div class="w-16 h-16 rounded-lg bg-surface-container-highest overflow-hidden flex-shrink-0 border border-outline-variant/10">
+<img class="w-full h-full object-cover" data-alt="High-resolution close-up of a gourmet smash burger with melting cheese, crisp lettuce, and fresh tomatoes, shot in a high-clarity light-mode aesthetic with bright, surgical lighting and minimalist styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKD9MEflkZjFzanycHrCmkKREnokQYjGWgatXs6o5RlWYxIbhbSamS8gpU-PPZFPr1wOGyCua4o3eFpYWcZxdZupW78sRL95I2tkMv72VSZvDyLpY88-gYd1eQOcwzxyseGcVf6c-6BQZIkhc4aFqQAahURYR0dv9FmrexhKHSZlYDJHJeZsJh_6dI_ySHAp2d7HeI75M-4Jf6pWv8meIdo1cD9AcPOeFFA2y6Ly4oq_fOm61OUaqHoA"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h3 class="font-label-md text-label-md text-on-surface">Truffle Smash Burger</h3>
+<p class="font-label-md text-label-md text-primary">$18.50</p>
+</div>
+<p class="font-body-md text-label-sm text-on-surface-variant mt-xs">Medium rare • No onions</p>
+</div>
+</li>
+<div class="h-px bg-surface-container-highest w-full"></div>
+<li class="flex gap-md items-start">
+<div class="w-16 h-16 rounded-lg bg-surface-container-highest overflow-hidden flex-shrink-0 border border-outline-variant/10">
+<img class="w-full h-full object-cover" data-alt="Artisanal sweet potato fries served in a minimalist white ceramic bowl, crisp golden texture, bright morning light, clean aesthetic photography with orange color accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYwklbJV-lpKMJp-clwHpcNHwPArcWrbwTqjc_WVshkBDqNvWeXHNNQohgViFBC9V_4Oe80kbhK-Ig5OLablOPnQougOVDBjH_ZYwE44G2FlBgpPXS1axXlzCddHe7h3uvWLJfI85IVCyTRGbLLRehEDgTkEgsRbPZsAR6Op_kzYcMKDbvOFAvza_bp5Na3vIjb4hkSh0TtguG-UFA6n9HCMUXMe_N-v0D7h6AkAnJQKF-0MqZcX0qng"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h3 class="font-label-md text-label-md text-on-surface">Sweet Potato Fries</h3>
+<p class="font-label-md text-label-md text-primary">$6.50</p>
+</div>
+<p class="font-body-md text-label-sm text-on-surface-variant mt-xs">Side of spicy mayo</p>
+</div>
+</li>
+</ul>
+<!-- Order Notes -->
+<div class="mt-md">
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-xs">Order Notes (Optional)</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-md font-body-md text-body-md resize-none h-24 transition-all focus:ring-0" placeholder="Any special instructions for the chef?"></textarea>
+</div>
+</div>
+<!-- Registration / Personal Info Section -->
+<div class="glass-card rounded-xl p-md">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Your Details</h2>
+<div class="space-y-md">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-xs">Full Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-lg h-12 px-md font-body-md text-body-md transition-all" placeholder="Enter your name" type="text" value="Alex Chen"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-xs">Email Address</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-lg h-12 px-md font-body-md text-body-md transition-all" placeholder="email@example.com" type="email" value="alex.chen@design.com"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-xs">Phone Number</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-lg h-12 px-md font-body-md text-body-md transition-all" placeholder="+1..." type="tel" value="+1 234 567 890"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment Methods Section -->
+<div class="glass-card rounded-xl p-md">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Payment Method</h2>
+<div class="grid grid-cols-2 gap-md">
+<label class="relative cursor-pointer group">
+<input checked="" class="sr-only peer" name="payment" type="radio"/>
+<div class="flex flex-col items-center justify-center gap-xs p-md border border-outline-variant/40 rounded-xl transition-all bg-surface-container-lowest peer-checked:border-primary-container peer-checked:bg-primary/5">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">credit_card</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant peer-checked:text-primary">Card</span>
+</div>
+<div class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+</div>
+</label>
+<label class="relative cursor-pointer group">
+<input class="sr-only peer" name="payment" type="radio"/>
+<div class="flex flex-col items-center justify-center gap-xs p-md border border-outline-variant/40 rounded-xl transition-all bg-surface-container-lowest peer-checked:border-primary-container peer-checked:bg-primary/5">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:scale-110 transition-transform">payments</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cash</span>
+</div>
+<div class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+</div>
+</label>
+</div>
+</div>
+</section>
+<!-- Final Pricing Breakdown Sticky Placeholder Space -->
+<div class="mt-lg glass-card rounded-xl p-md border-dashed border-2">
+<div class="flex justify-between mb-sm">
+<span class="font-body-md text-on-surface-variant">Subtotal</span>
+<span class="font-label-md text-on-surface">$25.00</span>
+</div>
+<div class="flex justify-between mb-sm">
+<span class="font-body-md text-on-surface-variant">Delivery Fee</span>
+<span class="font-label-md text-on-surface">$2.99</span>
+</div>
+<div class="h-px bg-outline-variant/20 my-md"></div>
+<div class="flex justify-between">
+<span class="font-headline-md text-headline-md text-on-surface">Total</span>
+<span class="font-headline-md text-headline-md text-primary">$27.99</span>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Component mapped from JSON (Manual Adjustment for Checkout) -->
+<!-- The user wanted a WhatsApp button, so we'll transform the BottomNav for this task-focused screen -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-t border-outline-variant/10 px-margin-mobile py-lg">
+<div class="max-w-2xl mx-auto flex flex-col gap-md">
+<button class="w-full bg-[#25D366] text-white rounded-xl h-14 flex items-center justify-center gap-md font-label-md text-label-md shadow-lg shadow-green-500/20 active:scale-[0.98] transition-transform" onclick="sendOrder()">
+<svg class="w-6 h-6 fill-current" viewbox="0 0 24 24">
+<path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793 0-.853.448-1.273.607-1.446.159-.173.346-.217.462-.217h.332c.106 0 .249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.274.072.376-.043.101-.116.433-.506.548-.68.116-.173.231-.144.39-.086.158.058 1.011.477 1.184.564.173.087.289.129.332.202.043.073.043.419-.101.824z"></path>
+</svg>
+                SEND ORDER VIA WHATSAPP
+            </button>
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant">
+                By clicking, your order summary will be pre-filled in a WhatsApp message.
+            </p>
+</div>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        function sendOrder() {
+            const btn = event.currentTarget;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> PROCESSING...';
+            
+            // Artificial delay for feedback
+            setTimeout(() => {
+                const message = encodeURIComponent("Hi FOODPOP! I'd like to place an order: \n- 1x Truffle Smash Burger\n- 1x Sweet Potato Fries\nTotal: $27.99\nName: Alex Chen");
+                window.location.href = `https://wa.me/1234567890?text=${message}`;
+                
+                // Reset button state if user comes back
+                setTimeout(() => {
+                    btn.innerHTML = `<svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793 0-.853.448-1.273.607-1.446.159-.173.346-.217.462-.217h.332c.106 0 .249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.274.072.376-.043.101-.116.433-.506.548-.68.116-.173.231-.144.39-.086.158.058 1.011.477 1.184.564.173.087.289.129.332.202.043.073.043.419-.101.824z"/>
+                    </svg>
+                    SEND ORDER VIA WHATSAPP`;
+                }, 2000);
+            }, 1000);
+        }
+
+        // Simple scroll observer for TopAppBar transparency
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-sm');
+                header.classList.remove('bg-surface/60');
+                header.classList.add('bg-surface/90');
+            } else {
+                header.classList.remove('shadow-sm');
+                header.classList.add('bg-surface/60');
+                header.classList.remove('bg-surface/90');
+            }
+        });
+    </script>
+</body></html>

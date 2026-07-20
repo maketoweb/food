@@ -1,53 +1,103 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #FFF8F0;
-  --card: #FFFFFF;
-  --border: #FEE2D6;
-  --text: #1A1A2E;
-  --muted: #A0A0B8;
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-  /* Pop vibrant palette */
-  --pop-pink: #FF2D95;
-  --pop-orange: #FF6B35;
-  --pop-yellow: #FFBE0B;
-  --pop-mint: #00F5D4;
-  --pop-purple: #8338EC;
-  --pop-red: #FF004D;
-  --pop-blue: #3A86FF;
+:root {
+  /* Luminous Electric Design System */
+  --bg: #f9f9fb;
+  --card: #ffffff;
+  --border: #e4beb1;
+  --text: #1a1c1d;
+  --muted: #5b4137;
+
+  /* Primary: Electric Orange */
+  --primary: #a73a00;
+  --primary-container: #ff5c00;
+  --on-primary: #ffffff;
+  --on-primary-container: #521800;
+
+  /* Surface */
+  --surface: #f9f9fb;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f3f3f5;
+  --surface-container: #eeeef0;
+  --surface-container-high: #e8e8ea;
+  --surface-container-highest: #e2e2e4;
+
+  /* Text */
+  --on-surface: #1a1c1d;
+  --on-surface-variant: #5b4137;
+
+  /* Outline */
+  --outline: #8f7065;
+  --outline-variant: #e4beb1;
+
+  /* Secondary */
+  --secondary: #5f5e5e;
+  --secondary-container: #e2dfde;
+
+  /* Inverse */
+  --inverse-surface: #2f3132;
+  --inverse-on-surface: #f0f0f2;
+  --inverse-primary: #ffb59a;
+
+  /* Error */
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
 
   /* Shadows */
-  --shadow-pop: 0 4px 20px rgba(255, 45, 149, 0.25);
-  --shadow-orange: 0 4px 20px rgba(255, 107, 53, 0.25);
-  --shadow-yellow: 0 4px 20px rgba(255, 190, 11, 0.25);
-  --shadow-purple: 0 4px 20px rgba(131, 56, 236, 0.25);
-  --shadow-mint: 0 4px 20px rgba(0, 245, 212, 0.25);
-  --shadow-card: 0 8px 32px rgba(0,0,0,0.08);
-  --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.1);
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.08);
+
+  /* Theme color (dynamic, default to primary-container) */
+  --theme-color: #ff5c00;
 }
 
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-display: "Fredoka", "Space Grotesk", sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "Fira Code", monospace;
 
-  --color-pop-pink: #FF2D95;
-  --color-pop-orange: #FF6B35;
+  /* Luminous Electric color tokens */
+  --color-primary: #a73a00;
+  --color-primary-container: #ff5c00;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #521800;
+  --color-surface: #f9f9fb;
+  --color-surface-dim: #d9dadc;
+  --color-surface-bright: #f9f9fb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3f5;
+  --color-surface-container: #eeeef0;
+  --color-surface-container-high: #e8e8ea;
+  --color-surface-container-highest: #e2e2e4;
+  --color-on-surface: #1a1c1d;
+  --color-on-surface-variant: #5b4137;
+  --color-outline: #8f7065;
+  --color-outline-variant: #e4beb1;
+  --color-secondary: #5f5e5e;
+  --color-secondary-container: #e2dfde;
+  --color-inverse-surface: #2f3132;
+  --color-inverse-on-surface: #f0f0f2;
+  --color-inverse-primary: #ffb59a;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-background: #f9f9fb;
+  --color-on-background: #1a1c1d;
+
+  /* Keep pop colors for backward compatibility but update to orange */
+  --color-pop-orange: #ff5c00;
+  --color-pop-pink: #ff5c00;
   --color-pop-yellow: #FFBE0B;
   --color-pop-mint: #00F5D4;
   --color-pop-purple: #8338EC;
-  --color-pop-red: #FF004D;
+  --color-pop-red: #ba1a1a;
   --color-pop-blue: #3A86FF;
-
-  --color-pop-pink-50: #FFF0F8;
-  --color-pop-orange-50: #FFF4ED;
-  --color-pop-yellow-50: #FFFDF0;
-  --color-pop-mint-50: #F0FFFC;
-  --color-pop-purple-50: #F5F0FF;
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -55,10 +105,11 @@ body {
   line-height: 1.5;
   margin: 0;
   padding: 0;
+  min-height: max(884px, 100dvh);
 }
 
 h1, h2, h3, h4, .font-display {
-  font-family: var(--font-display);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 code, pre, .font-mono {
@@ -66,7 +117,7 @@ code, pre, .font-mono {
 }
 
 button, .btn, [role="button"] {
-  border-radius: 1rem;
+  border-radius: 0.75rem;
 }
 
 svg {
@@ -145,21 +196,21 @@ svg {
   transform: scale(0.95);
 }
 
-/* Card styles */
+/* Card styles - Luminous Electric */
 .food-card {
-  background: var(--card);
-  border-radius: 1.25rem;
+  background: var(--surface-container-lowest);
+  border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: var(--shadow-card);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(228, 190, 177, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
 }
 
 .food-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
 }
 
 .food-card-image {
@@ -177,65 +228,66 @@ svg {
   flex: 1;
 }
 
-/* Category gradient backgrounds */
+/* Category gradient backgrounds - Luminous Electric */
 .gradient-burger {
-  background: linear-gradient(135deg, #FF6B35, #FF2D95);
+  background: linear-gradient(135deg, #ff5c00, #a73a00);
 }
 .gradient-pizza {
-  background: linear-gradient(135deg, #FF004D, #FF6B35);
+  background: linear-gradient(135deg, #a73a00, #ff5c00);
 }
 .gradient-chicken {
-  background: linear-gradient(135deg, #FFBE0B, #FF6B35);
+  background: linear-gradient(135deg, #FFBE0B, #ff5c00);
 }
 .gradient-drinks {
   background: linear-gradient(135deg, #00F5D4, #3A86FF);
 }
 .gradient-dessert {
-  background: linear-gradient(135deg, #8338EC, #FF2D95);
+  background: linear-gradient(135deg, #8338EC, #ff5c00);
 }
 .gradient-sides {
-  background: linear-gradient(135deg, #FFBE0B, #FF6B35);
+  background: linear-gradient(135deg, #FFBE0B, #ff5c00);
 }
 
-/* Badge pop */
+/* Badge - Luminous Electric */
 .badge-pop {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.625rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Modal overlay */
+/* Modal overlay - Luminous Electric */
 .modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .modal-content {
-  background: var(--card);
-  border-radius: 1.5rem;
+  background: var(--surface-container-lowest);
+  border-radius: 1rem;
   max-width: 900px;
   width: 95%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  border: 1px solid rgba(228, 190, 177, 0.1);
 }
 
 /* Scroll snap */
 .snap-inline { scroll-sync-type: x mandatory; }
 .snap-item { scroll-snap-align: start; }
 
-/* Glass effect */
+/* Glass effect - Luminous Electric */
 .glass {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(249, 249, 251, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Premium Animations */
@@ -336,23 +388,23 @@ svg {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Glass card effect */
+/* Glass card effect - Luminous Electric */
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
-/* Premium hover effect */
+/* Premium hover effect - Luminous Electric */
 .premium-hover {
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .premium-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 /* Floating badge animation */
@@ -360,12 +412,27 @@ svg {
   animation: float 3s ease-in-out infinite;
 }
 
-/* Gradient text */
+/* Gradient text - Luminous Electric */
 .gradient-text {
-  background: linear-gradient(135deg, var(--pop-orange), var(--pop-pink));
+  background: linear-gradient(135deg, #ff5c00, #a73a00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Orange glow effect */
+.orange-glow {
+  box-shadow: 0 0 20px rgba(255, 92, 0, 0.2);
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Material icon alignment */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
 }
 
 /* Slide up animation for modals */

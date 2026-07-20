@@ -21,7 +21,7 @@ export const FreeDeliveryBar: React.FC<FreeDeliveryBarProps> = ({
 
   return (
     <div className={`px-4 py-2.5 transition-all duration-300 ${
-      isFree ? 'bg-emerald-50 border-b border-emerald-100' : 'bg-white border-b border-zinc-100'
+      isFree ? 'bg-emerald-50 border-b border-emerald-100' : 'bg-[#f9f9fb] border-b border-[#e4beb1]/10'
     }`}>
       <div className="flex items-center gap-2">
         {isFree ? (
@@ -36,22 +36,22 @@ export const FreeDeliveryBar: React.FC<FreeDeliveryBarProps> = ({
         <div className="flex-1 min-w-0">
           {isFree ? (
             <p className="text-[11px] font-bold text-emerald-700">
-              ¡Tienes delivery gratis! 🎉
+              ¡Tienes delivery gratis!
             </p>
           ) : (
-            <p className="text-[11px] font-semibold text-zinc-600">
+            <p className="text-[11px] font-semibold text-[#5b4137]">
               Te faltan <span className="font-black" style={{ color: themeColor }}>${remaining.toFixed(2)}</span> para delivery gratis
             </p>
           )}
         </div>
         {!isFree && (
-          <span className="text-[10px] font-bold text-zinc-400">
+          <span className="text-[10px] font-bold text-[#8f7065]">
             <AnimatedCounter target={Math.round(progress)} suffix="%" duration={800} />
           </span>
         )}
       </div>
       {!isFree && (
-        <div className="mt-2 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+        <div className="mt-2 h-1.5 bg-[#e8e8ea] rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-1000 ease-out"
             style={{
