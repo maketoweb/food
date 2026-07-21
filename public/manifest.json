@@ -36,7 +36,8 @@
       "name": "Menú del Día",
       "short_name": "Menú",
       "url": "/?tab=catalog",
-      "description": "Explora nuestros platos, postres y bebidas."
+      "description": "Explora nuestros platos, postres y bebidas.",
+      "icons": [{"src": "/pwa-192x192.png", "sizes": "192x192"}]
     }
   ]
 }

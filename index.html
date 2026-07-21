@@ -93,13 +93,30 @@
               document.querySelector('meta[property="og:site_name"]').setAttribute('content', cfg.site_nombre);
             }
             if (cfg.pwa_icon_url && manifestLink) {
-              fetch(manifestLink.href).then(function(r) { return r.json(); }).then(function(baseManifest) {
-                var customIcons = baseManifest.icons.map(function(icon) {
-                  var newIcon = Object.assign({}, icon);
-                  newIcon.src = cfg.pwa_icon_url;
-                  return newIcon;
+              var manifestHref = manifestLink.getAttribute('href') || manifestLink.href;
+              fetch(manifestHref).then(function(r) { return r.json(); }).then(function(baseManifest) {
+                var origin = window.location.origin;
+                baseManifest.icons = baseManifest.icons.map(function(icon) {
+                  return Object.assign({}, icon, { src: cfg.pwa_icon_url });
                 });
-                baseManifest.icons = customIcons;
+                if (baseManifest.start_url && !baseManifest.start_url.startsWith('http')) {
+                  baseManifest.start_url = origin + baseManifest.start_url;
+                }
+                if (baseManifest.scope && !baseManifest.scope.startsWith('http')) {
+                  baseManifest.scope = origin + baseManifest.scope;
+                }
+                if (baseManifest.id && !baseManifest.id.startsWith('http')) {
+                  baseManifest.id = origin + baseManifest.id;
+                }
+                if (baseManifest.shortcuts) {
+                  baseManifest.shortcuts = baseManifest.shortcuts.map(function(s) {
+                    var fixed = Object.assign({}, s);
+                    if (fixed.url && !fixed.url.startsWith('http')) {
+                      fixed.url = origin + fixed.url;
+                    }
+                    return fixed;
+                  });
+                }
                 if (cfg.theme_color) {
                   baseManifest.theme_color = cfg.theme_color;
                   baseManifest.background_color = cfg.theme_color;

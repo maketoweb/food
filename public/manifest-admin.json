@@ -4,7 +4,7 @@
   "short_name": "FoodPop Admin",
   "description": "Panel de administración de FoodPop. Gestiona pedidos, productos, inventario y más.",
   "start_url": "/admin",
-  "scope": "/",
+  "scope": "/admin",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#FF6B35",
@@ -36,19 +36,22 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "url": "/admin",
-      "description": "Panel principal con métricas y resumen"
+      "description": "Panel principal con métricas y resumen",
+      "icons": [{"src": "/pwa-192x192.png", "sizes": "192x192"}]
     },
     {
       "name": "Órdenes",
       "short_name": "Órdenes",
-      "url": "/admin",
-      "description": "Gestionar pedidos activos y historial"
+      "url": "/admin?tab=orders",
+      "description": "Gestionar pedidos activos e historial",
+      "icons": [{"src": "/pwa-192x192.png", "sizes": "192x192"}]
     },
     {
       "name": "Productos",
       "short_name": "Productos",
-      "url": "/admin",
-      "description": "Administrar catálogo de productos"
+      "url": "/admin?tab=products",
+      "description": "Administrar catálogo de productos",
+      "icons": [{"src": "/pwa-192x192.png", "sizes": "192x192"}]
     }
   ]
 }

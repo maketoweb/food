@@ -14,10 +14,11 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         strategies: 'generateSW',
         includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png', 'sounds/notification.mp3', 'manifest-admin.json', 'logo-transparent.svg'],
+        manifest: false,
         workbox: {
           importScripts: ['/sw-push.js'],
-          navigateFallback: '/offline.html',
-          navigateFallbackDenylist: [/^\/api\//, /^\/admin\//],
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

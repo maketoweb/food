@@ -86,11 +86,27 @@ function AppContent() {
     const manifestLink = document.getElementById('pwa-manifest') as HTMLLinkElement | null;
     if (manifestLink && config.pwa_icon_url) {
       const baseManifestUrl = window.location.pathname.startsWith('/admin') ? '/manifest-admin.json' : '/manifest.json';
+      const origin = window.location.origin;
       fetch(baseManifestUrl).then(r => r.json()).then((baseManifest: any) => {
         baseManifest.icons = baseManifest.icons.map((icon: any) => ({
           ...icon,
           src: config.pwa_icon_url,
         }));
+        if (baseManifest.start_url && !baseManifest.start_url.startsWith('http')) {
+          baseManifest.start_url = origin + baseManifest.start_url;
+        }
+        if (baseManifest.scope && !baseManifest.scope.startsWith('http')) {
+          baseManifest.scope = origin + baseManifest.scope;
+        }
+        if (baseManifest.id && !baseManifest.id.startsWith('http')) {
+          baseManifest.id = origin + baseManifest.id;
+        }
+        if (baseManifest.shortcuts) {
+          baseManifest.shortcuts = baseManifest.shortcuts.map((s: any) => ({
+            ...s,
+            url: s.url && !s.url.startsWith('http') ? origin + s.url : s.url,
+          }));
+        }
         if (config.theme_color) {
           baseManifest.theme_color = config.theme_color;
           baseManifest.background_color = config.theme_color;
