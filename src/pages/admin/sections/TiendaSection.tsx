@@ -31,7 +31,7 @@ const TiendaSection: React.FC = () => {
   const [newZoneMaxKm, setNewZoneMaxKm] = useState(0);
 
   // Sedes state
-  const [sedeForm, setSedeForm] = useState({ nombre: '', telefono: '', direccion: '', horario: '', lat: 0, lng: 0 });
+  const [sedeForm, setSedeForm] = useState({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 });
   const [editingSedeId, setEditingSedeId] = useState<string | null>(null);
 
   const tabs = [
@@ -981,7 +981,8 @@ const TiendaSection: React.FC = () => {
                       </div>
                       <p className="text-[11px] mt-1" style={{ color: 'var(--ios-text-secondary)' }}>{sede.direccion}</p>
                       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px]" style={{ color: 'var(--ios-text-tertiary)' }}>
-                        <span>{sede.telefono}</span>
+                        <span>Tel: {sede.telefono}</span>
+                        {sede.whatsapp_numero && <span>WhatsApp: {sede.whatsapp_numero}</span>}
                         {sede.horario && <span>{sede.horario}</span>}
                       </div>
                     </div>
@@ -1003,11 +1004,16 @@ const TiendaSection: React.FC = () => {
                         </button>
                       )}
                       <button onClick={() => {
-                        const nuevoNombre = prompt('Editar nombre de la sede:', sede.nombre);
-                        if (nuevoNombre && nuevoNombre.trim()) {
-                          const updated = (config.sedes || []).map(s => s.id === sede.id ? { ...s, nombre: nuevoNombre.trim() } : s);
-                          updateConfig({ sedes: updated });
-                        }
+                        setEditingSedeId(sede.id);
+                        setSedeForm({
+                          nombre: sede.nombre,
+                          telefono: sede.telefono || '',
+                          whatsapp_numero: sede.whatsapp_numero || '',
+                          direccion: sede.direccion || '',
+                          horario: sede.horario || '',
+                          lat: sede.coordenadas?.lat || 0,
+                          lng: sede.coordenadas?.lng || 0,
+                        });
                       }} className="p-1.5 rounded-lg cursor-pointer" style={{ color: 'var(--ios-text-secondary)' }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
@@ -1040,6 +1046,8 @@ const TiendaSection: React.FC = () => {
                 className="admin-input" placeholder="Nombre de la sede" />
               <input type="tel" value={sedeForm.telefono} onChange={e => setSedeForm({ ...sedeForm, telefono: e.target.value })}
                 className="admin-input" placeholder="Telefono" />
+              <input type="tel" value={sedeForm.whatsapp_numero} onChange={e => setSedeForm({ ...sedeForm, whatsapp_numero: e.target.value })}
+                className="admin-input" placeholder="WhatsApp (opcional, si difiere del telefono)" />
               <input type="text" value={sedeForm.direccion} onChange={e => setSedeForm({ ...sedeForm, direccion: e.target.value })}
                 className="admin-input" placeholder="Direccion" />
               <input type="text" value={sedeForm.horario} onChange={e => setSedeForm({ ...sedeForm, horario: e.target.value })}
@@ -1059,15 +1067,20 @@ const TiendaSection: React.FC = () => {
               <div className="flex gap-2">
                 <button onClick={() => {
                   if (!sedeForm.nombre.trim()) return;
+                  const existingSede = editingSedeId ? (config.sedes || []).find(s => s.id === editingSedeId) : null;
                   const nuevaSede: Sede = {
                     id: editingSedeId || `sede-${Date.now()}`,
                     nombre: sedeForm.nombre.trim(),
                     telefono: sedeForm.telefono,
+                    whatsapp_numero: sedeForm.whatsapp_numero || undefined,
                     direccion: sedeForm.direccion,
                     horario: sedeForm.horario,
                     coordenadas: { lat: sedeForm.lat, lng: sedeForm.lng },
-                    es_principal: (config.sedes || []).length === 0,
-                    activa: true,
+                    es_principal: existingSede?.es_principal || (config.sedes || []).length === 0,
+                    activa: existingSede?.activa ?? true,
+                    delivery_mode: existingSede?.delivery_mode,
+                    permite_delivery: existingSede?.permite_delivery,
+                    permite_pickup: existingSede?.permite_pickup,
                   };
                   const sedes = [...(config.sedes || [])];
                   if (editingSedeId) {
@@ -1078,13 +1091,13 @@ const TiendaSection: React.FC = () => {
                   }
                   updateConfig({ sedes });
                   setEditingSedeId(null);
-                  setSedeForm({ nombre: '', telefono: '', direccion: '', horario: '', lat: 0, lng: 0 });
+                  setSedeForm({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 });
                 }} disabled={!sedeForm.nombre.trim()}
                   className="admin-btn flex-1 cursor-pointer disabled:opacity-40">
                   {editingSedeId ? 'Guardar Cambios' : 'Agregar Sede'}
                 </button>
                 {editingSedeId && (
-                  <button onClick={() => { setEditingSedeId(null); setSedeForm({ nombre: '', telefono: '', direccion: '', horario: '', lat: 0, lng: 0 }); }}
+                  <button onClick={() => { setEditingSedeId(null); setSedeForm({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 }); }}
                     className="admin-btn-secondary admin-btn cursor-pointer">
                     Cancelar
                   </button>

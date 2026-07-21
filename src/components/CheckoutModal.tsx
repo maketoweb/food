@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { X, ShoppingBag, MapPin, Smartphone, Landmark, DollarSign, CheckCircle, Trash2, Minus, Plus, ChevronRight } from 'lucide-react';
+import { OrderTracker } from './OrderTracker';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
   const [direccion, setDireccion] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<'Pago Móvil' | 'Zelle' | 'Efectivo' | 'Transferencia'>('Pago Móvil');
   const [orderNotes, setOrderNotes] = useState('');
+  const [processedOrder, setProcessedOrder] = useState<any>(null);
 
   const subtotalUsd = cart.reduce((acc, ci) => {
     const extrasTotal = ci.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
@@ -59,31 +61,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
     });
 
     if (order) {
-      setStep('confirm');
+      setProcessedOrder(order);
       clearCart();
+      localStorage.setItem('trv_active_order_id', order.id);
     }
   };
 
-  if (step === 'confirm') {
+  if (processedOrder) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-        <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-pop-bounce">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-emerald-500" />
-          </div>
-          <h2 className="text-xl font-display font-bold text-zinc-900 mb-2">¡Pedido Confirmado!</h2>
-          <p className="text-zinc-500 text-sm mb-6">
-            {tipoEntrega === 'mesa'
-              ? `Tu orden para la Mesa #${selectedMesa} está siendo preparada.`
-              : 'Tu delivery está siendo procesado. Te notificaremos cuando esté en camino.'}
-          </p>
-          <button onClick={onClose}
-            className="w-full bg-pop-pink hover:bg-pink-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95 cursor-pointer"
-          >
-            Volver al Menú
-          </button>
-        </div>
-      </div>
+      <OrderTracker
+        order={processedOrder}
+        onClose={() => {
+          localStorage.removeItem('trv_active_order_id');
+          onClose();
+        }}
+        onContinueShopping={() => {
+          localStorage.removeItem('trv_active_order_id');
+          onClose();
+        }}
+      />
     );
   }
 

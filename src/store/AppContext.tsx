@@ -1705,6 +1705,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const initData = async () => {
       setIsGlobalLoading(true);
 
+      try {
+
       // BUG FIX: Si es admin/operador, cargar TODO. Obtener sesión primero.
       const { data: { session } } = await supabase.auth.getSession();
       const sessionEmail = session?.user?.email || '';
@@ -1762,10 +1764,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       // Cargar promociones activas
-      const { data: dbPromotions } = await supabase.from('promotions').select('*');
-      if (dbPromotions) {
-        setPromotions(dbPromotions as Promotion[]);
-      }
+      try {
+        const { data: dbPromotions, error: promErr } = await supabase.from('promotions').select('*');
+        if (promErr) console.warn('[initData] promotions error:', promErr.message);
+        if (dbPromotions) {
+          setPromotions(dbPromotions as Promotion[]);
+        }
+      } catch (e) { console.warn('[initData] promotions failed:', e); }
       
       // Cargar configuración COMPLETA de la tienda
       const { data: dbConfig } = await supabase.from('store_config').select('*').single();
@@ -1864,23 +1869,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (dbCoupons) setCoupons(dbCoupons as Coupon[]);
 
       // Cargar reviews
-      const { data: dbReviews } = await supabase.from('product_reviews').select('*').order('created_at', { ascending: false });
-      if (dbReviews) setReviews(dbReviews as ProductReview[]);
+      try {
+        const { data: dbReviews, error: revErr } = await supabase.from('product_reviews').select('*').order('created_at', { ascending: false });
+        if (revErr) console.warn('[initData] product_reviews error:', revErr.message);
+        if (dbReviews) setReviews(dbReviews as ProductReview[]);
+      } catch (e) { console.warn('[initData] product_reviews failed:', e); }
 
       // Cargar flash sales activas
-      const { data: dbFlashSales } = await supabase.from('flash_sales').select('*').eq('active', true);
-      if (dbFlashSales) setFlashSales(dbFlashSales as FlashSale[]);
+      try {
+        const { data: dbFlashSales, error: fsErr } = await supabase.from('flash_sales').select('*').eq('active', true);
+        if (fsErr) console.warn('[initData] flash_sales error:', fsErr.message);
+        if (dbFlashSales) setFlashSales(dbFlashSales as FlashSale[]);
+      } catch (e) { console.warn('[initData] flash_sales failed:', e); }
 
       // Cargar catálogo de recompensas
-      const { data: dbRewards } = await supabase.from('reward_catalog').select('*');
-      if (dbRewards) setRewardCatalog(dbRewards as RewardItem[]);
+      try {
+        const { data: dbRewards, error: rwErr } = await supabase.from('reward_catalog').select('*');
+        if (rwErr) console.warn('[initData] reward_catalog error:', rwErr.message);
+        if (dbRewards) setRewardCatalog(dbRewards as RewardItem[]);
+      } catch (e) { console.warn('[initData] reward_catalog failed:', e); }
 
       // Cargar transacciones de lealtad desde Supabase
-      const { data: dbLoyaltyTx } = await supabase.from('loyalty_transactions')
-        .select('*').order('created_at', { ascending: false }).limit(500);
-      if (dbLoyaltyTx && dbLoyaltyTx.length > 0) {
-        setLoyaltyTransactions(dbLoyaltyTx as LoyaltyTransaction[]);
-      }
+      try {
+        const { data: dbLoyaltyTx, error: ltErr } = await supabase.from('loyalty_transactions')
+          .select('*').order('created_at', { ascending: false }).limit(500);
+        if (ltErr) console.warn('[initData] loyalty_transactions error:', ltErr.message);
+        if (dbLoyaltyTx && dbLoyaltyTx.length > 0) {
+          setLoyaltyTransactions(dbLoyaltyTx as LoyaltyTransaction[]);
+        }
+      } catch (e) { console.warn('[initData] loyalty_transactions failed:', e); }
 
       if (isAdmin) {
         setIsAdminAuthenticated(true);
@@ -1902,10 +1919,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .order('fecha', { ascending: false });
         if (dbOrders) setOrders(dbOrders as Order[]);
 
-        // Cargar Notificaciones (Solo globales o personales del usuario)
+        // Cargar Notificaciones (Solo globales, personales o request del usuario)
         const { data: dbNotifs } = await supabase.from('notifications')
           .select('*')
-          .or(`tipo.eq.todos,and(tipo.eq.personal,destinatario_telefono.eq.${currentUser.telefono})`)
+          .or(`tipo.eq.todos,and(tipo.eq.personal,destinatario_telefono.eq.${currentUser.telefono}),and(tipo.eq.request,destinatario_telefono.eq.${currentUser.telefono})`)
           .order('id', { ascending: false });
         if (dbNotifs) setNotifications(dbNotifs as InAppNotification[]);
       }
@@ -1913,7 +1930,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (needsRateUpdate()) {
         await fetchExchangeRate();
       }
-      setIsGlobalLoading(false);
+
+      } catch (err) {
+        console.error('[initData] Error general:', err);
+      } finally {
+        setIsGlobalLoading(false);
+      }
     };
     initData();
 
