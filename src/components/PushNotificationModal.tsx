@@ -16,7 +16,7 @@ const urlBase64ToUint8Array = (base64String: string) => {
 };
 
 export const PushNotificationModal: React.FC = () => {
-  const { addNotification, config } = useApp();
+  const { addNotification, config, currentUser } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [permissionType, setPermissionType] = useState<'default' | 'granted' | 'denied' | 'unsupported'>('default');
 
@@ -74,7 +74,9 @@ export const PushNotificationModal: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   subscription: pushSubscription.toJSON(),
-                  anonymous_id: anonymousId
+                  anonymous_id: anonymousId,
+                  phone: currentUser?.telefono || '',
+                  user_id: currentUser?.id || null
                 })
               });
               const result = await response.json();
@@ -101,18 +103,16 @@ export const PushNotificationModal: React.FC = () => {
           } as any);
         });
 
-        // Also add it inside the app database notifications
-        addNotification(
-          '¡Notificaciones Habilitadas! 🔔',
-          'Has activado con éxito las notificaciones push en tu navegador. Recibirás actualizaciones de tus pedidos y promociones directas a tu escritorio o móvil.',
-          'personal'
-        );
+        // Also add it inside the app database notifications (notify admin that user enabled push)
+        if (currentUser) {
+          addNotification(
+            'Notificaciones Habilitadas',
+            `${currentUser.nombre} ha activado las notificaciones push.`,
+            'admin'
+          );
+        }
       } else if (res === 'denied') {
-        addNotification(
-          'Notificaciones Bloqueadas ⚠️',
-          'Has rechazado el permiso de notificaciones push de navegador. Puedes volver a activarlo en cualquier momento desde los ajustes de seguridad de tu navegador o desde tu Perfil de usuario.',
-          'todos'
-        );
+        // No notificar a todos - cada usuario gestiona sus propios permisos
       }
     } catch (err) {
       console.error('Error requesting push permission:', err);

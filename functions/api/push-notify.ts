@@ -7,7 +7,6 @@ let webpush: any;
 declare const PagesFunction: any;
 
 // CORS: Reemplazar * con tu dominio en produccion
-// Ejemplo: 'https://foodpop.com.ve'
 const ALLOWED_ORIGIN = '*'; // TODO: Cambiar a dominio en produccion
 
 const CORS_HEADERS: Record<string, string> = {
@@ -48,7 +47,6 @@ export const onRequestPost: any = async (context: any) => {
   const { request, env } = context;
 
   // 1. Verificacion de Seguridad
-  // Rate limiting: En produccion, usar KV para trackear requests por IP
   const clientIP = request.headers.get('cf-connecting-ip') || 'unknown';
 
   const rawAuthHeader = request.headers.get('x-push-webhook-secret') || '';
@@ -96,7 +94,7 @@ export const onRequestPost: any = async (context: any) => {
       );
     }
 
-    // Import dinámico de web-push
+    // Import dinamico de web-push
     if (!webpush) {
       const wpMod = await import('web-push');
       webpush = (wpMod as any).default || wpMod;
@@ -121,24 +119,41 @@ export const onRequestPost: any = async (context: any) => {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Filtrar destinatarios según tipo
+    // Filtrar destinatarios segun tipo
     const tipo = record.tipo;
     const destinatarioTelefono = record.destinatario_telefono;
 
-    // Usar RPC get_all_push_subscriptions para eludir RLS
+    // Obtener suscripciones directamente de la tabla (evitar RPC con permisos restrictivos)
     let subscriptionsRaw: any[] = [];
     try {
-      const { data } = await supabase.rpc('get_all_push_subscriptions');
+      const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('id, user_id, endpoint, p256dh, auth_secret, destinatario_telefono, anonymous_id');
+      if (error) {
+        console.error('[push-notify] Error fetching subscriptions:', error.message);
+        return new Response(JSON.stringify({ error: 'Failed to fetch subscriptions: ' + error.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
+        });
+      }
       subscriptionsRaw = data || [];
     } catch (e: any) {
-      // RPC failed
+      console.error('[push-notify] Exception fetching subscriptions:', e?.message || e);
+      return new Response(JSON.stringify({ error: 'Exception fetching subscriptions' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
+      });
     }
 
-    // Aplicar filtro por teléfono después de obtenerlas
+    // Aplicar filtro por telefono/destinatario despues de obtenerlas
     if (tipo === 'personal' || tipo === 'admin') {
-      subscriptionsRaw = subscriptionsRaw.filter((s: any) => 
-        s.destinatario_telefono === destinatarioTelefono?.trim()
-      );
+      const phone = (destinatarioTelefono || '').trim();
+      if (phone) {
+        subscriptionsRaw = subscriptionsRaw.filter((s: any) =>
+          (s.destinatario_telefono || '').trim() === phone
+        );
+      }
+      // Si no hay telefono o no matchea, no enviar nada (evita enviar a todos por error)
     }
 
     const validSubscriptions = subscriptionsRaw
@@ -147,7 +162,8 @@ export const onRequestPost: any = async (context: any) => {
         keys: {
           p256dh: s.p256dh,
           auth: s.auth_secret
-        }
+        },
+        _meta: { id: s.id, user_id: s.user_id, anonymous_id: s.anonymous_id }
       }))
       .filter((sub: any) => sub.endpoint && sub.keys.p256dh && sub.keys.auth);
 
@@ -165,30 +181,48 @@ export const onRequestPost: any = async (context: any) => {
       });
     }
 
-    // 5. Payload Web Push
+    // 5. Payload Web Push - usar tag consistente con 'foodpop-' prefix
+    const notifId = record.id || ('notif-' + crypto.randomUUID().slice(0, 12));
     const payloadForSW = {
       title: titulo,
       body: mensaje,
       link_url: linkUrl,
-      tag: String(record.id),
-      id: String(record.id),
+      tag: 'foodpop-' + notifId,
+      id: notifId,
       requireInteraction: false,
       silent: false,
     };
 
-    // 6. Enviar a cada suscripción en paralelo
+    // 6. Enviar a cada suscripcion en paralelo
     const results = await Promise.all(
       validSubscriptions.map(async (sub) => {
         try {
           await webpush.sendNotification(sub as any, JSON.stringify(payloadForSW));
+
+          // Track successful send
+          try {
+            await supabase.from('push_events').insert({
+              notification_id: notifId,
+              user_id: sub._meta?.user_id || null,
+              anonymous_id: sub._meta?.anonymous_id || '',
+              event_type: 'sent'
+            });
+          } catch (trackErr) {
+            console.error('[push-notify] Failed to track sent event:', trackErr);
+          }
+
           return { ok: true, endpoint: sub.endpoint };
         } catch (err: any) {
-          // Remove invalid subscriptions (404 = subscription expired)
+          // Remove invalid subscriptions (404 = subscription expired, 410 = gone)
           if (err.statusCode === 404 || err.statusCode === 410) {
-            await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('endpoint', sub.endpoint);
+            try {
+              await supabase
+                .from('push_subscriptions')
+                .delete()
+                .eq('endpoint', sub.endpoint);
+            } catch (delErr) {
+              console.error('[push-notify] Failed to delete expired subscription:', delErr);
+            }
           }
           return {
             ok: false,
@@ -208,12 +242,13 @@ export const onRequestPost: any = async (context: any) => {
       failed: failed.length,
       total: validSubscriptions.length,
       invalidSubscriptions: invalidCount,
-      notif_id: record.id
+      notif_id: notifId
     }), {
       headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
     });
 
   } catch (error: any) {
+    console.error('[push-notify] Unhandled error:', error?.message || error);
     return new Response(JSON.stringify({
       error: 'Error processing push notification'
     }), {

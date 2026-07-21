@@ -139,7 +139,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, isExpanded, onToggl
           ? 'border-red-200 opacity-60'
           : `${config.border} shadow-md hover:shadow-lg`
       } ${isExpanded ? 'ring-2 ring-offset-1' : ''}`}
-      style={isExpanded ? { ringColor: themeColor } : {}}
+      style={isExpanded ? { ['--tw-ring-color' as string]: themeColor } : {}}
     >
       {/* Header de comanda */}
       <div className="p-3 cursor-pointer" onClick={onToggleExpand}>

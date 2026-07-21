@@ -17,7 +17,7 @@ function notifyClients(type) {
 
 // ─── Push Notifications ───
 const recentlyShown = new Map();
-const DEDUP_TTL_MS = 30000;
+const DEDUP_TTL_MS = 60000;
 
 function pruneDedupCache() {
   if (recentlyShown.size > 100) {
@@ -44,7 +44,7 @@ self.addEventListener('push', function(event) {
     const badge     = '/badge.png';
     const image     = payload.imagen_url || payload.image || undefined;
     const urlToOpen = payload.link_url || payload.url || '/';
-    const tag       = payload.tag || String(payload.id || Date.now());
+    const tag       = payload.tag || ('foodpop-' + String(payload.id || Date.now()));
     const soundUrl  = payload.sound_url || payload.sound || '/sounds/notification.mp3';
 
     const tagKey = tag;
@@ -97,7 +97,8 @@ self.addEventListener('notificationclick', function(event) {
     if (event.action === 'close') return;
 
     const targetUrl = event.notification.data?.url || '/';
-    const notifId = event.notification.data?.tag || '';
+    const rawTag = event.notification.data?.tag || '';
+    const notifId = rawTag.replace(/^foodpop-/, '');
 
     // Track click event via fetch
     if (notifId) {

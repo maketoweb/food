@@ -1529,23 +1529,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               if (prev.some(n => n.id === newNotif.id)) return prev;
               return [newNotif, ...prev];
             });
-            playNotificationSound('update'); // Activar sonido para nuevos mensajes
-            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-              navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification(`${config.site_nombre}: ${newNotif.titulo}`, {
-                  body: newNotif.mensaje,
-                  icon: config.logo_url || '/icon.png',
-                  image: newNotif.imagen_url,
-                  badge: '/icon.png',
-                  tag: `notif-${newNotif.id}`,
-                  renotify: true,
-                  requireInteraction: true,
-                  vibrate: [200, 100, 200],
-                  silent: false,
-                  data: { url: newNotif.link_url || '/' }
-                } as any);
-              });
-            }
+            playNotificationSound('update');
           }
         })
         // Escuchar cambios en FoodItems (CDC)
@@ -2363,7 +2347,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (error) {
       console.error('Insert order error:', error);
-      addNotification('Error al procesar pedido', 'No se pudo crear la orden. Intente de nuevo.');
+      addNotification('Error al procesar pedido', 'No se pudo crear la orden. Intente de nuevo.', 'admin');
       return null;
     }
 
@@ -2437,20 +2421,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payload: newOrder
     });
 
-    // Trigger Notification for the store and the client
-    addNotification('Nuevo Pedido Recibido', `Pedido ${newOrder.id} fue procesado correctamente para ${newOrder.cliente_nombre}.`);
-
-    // Add notification specifically for the admin
+    // Notify admin about new order
     addNotification(
       'Nuevo Pedido Recibido',
       `Se ha recibido un nuevo pedido con el ID: ${newOrder.id} del cliente "${newOrder.cliente_nombre}".`,
       'admin'
     );
 
-    // If the order has a targeted user or phone, notify them
+    // Notify the client that their order was received
     if (newOrder.cliente_telefono) {
       addNotification(
-        'Pedido Recibido con Éxito 📦',
+        'Pedido Recibido con Exito 📦',
         `Hola ${newOrder.cliente_nombre}! Tu pedido con ID ${newOrder.id} por un monto de $${newOrder.total_usd.toFixed(2)} (${newOrder.total_bs.toFixed(2)} Bs) ha sido ingresado en estado: Pendiente. Estamos listos para atenderte.`,
         'personal',
         newOrder.cliente_telefono
@@ -2488,10 +2469,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       statusMsg += ` Tiempo estimado de entrega: ${estimatedTime}.`;
     }
     
-    addNotification('Estado de Pedido Actualizado', statusMsg, 'todos');
-    
     if (targetPhone) {
       addNotification('Estado de Pedido Actualizado', statusMsg, 'personal', targetPhone);
+    } else {
+      addNotification('Estado de Pedido Actualizado', statusMsg, 'todos');
     }
     
     if (orderObj) {

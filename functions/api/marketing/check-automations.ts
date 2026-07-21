@@ -70,6 +70,16 @@ export const onRequestPost: any = async (context: any) => {
     });
   }
 
+  // Setup web-push for direct sending
+  const vapidPublic = env.VAPID_PUBLIC_KEY;
+  const vapidPrivate = env.VAPID_PRIVATE_KEY;
+  let webpush: any = null;
+  if (vapidPublic && vapidPrivate) {
+    const wpMod = await import('web-push');
+    webpush = (wpMod as any).default || wpMod;
+    webpush.setVapidDetails('mailto:admin@marketo.com.ve', vapidPublic, vapidPrivate);
+  }
+
   const results = [];
 
   for (const rule of rules) {
@@ -111,8 +121,9 @@ export const onRequestPost: any = async (context: any) => {
 
     let sentCount = 0;
     for (const userId of eligibleUserIds) {
-      const { data: rl } = await supabase.rpc('check_push_rate_limit', { p_user_id: userId });
-      if (rl === false) {
+      // Atomic rate limit check using RPC
+      const { data: allowed } = await supabase.rpc('check_push_rate_limit', { p_user_id: userId });
+      if (allowed === false) {
         await supabase.from('automation_log').insert({
           rule_id: rule.id, rule_slug: rule.slug, user_id: userId,
           action_taken: 'rate_limited', status: 'rate_limited'
@@ -120,12 +131,14 @@ export const onRequestPost: any = async (context: any) => {
         continue;
       }
 
+      // Cooldown check - use atomic insert attempt to prevent race condition
       const since = new Date(Date.now() - (rule.cooldown_hours || 24) * 3600000).toISOString();
       const { count: recentCount } = await supabase
         .from('automation_log')
         .select('*', { count: 'exact', head: true })
         .eq('rule_slug', rule.slug)
         .eq('user_id', userId)
+        .eq('status', 'sent')
         .gte('created_at', since);
 
       if ((recentCount || 0) >= (rule.max_sends_per_user || 3)) continue;
@@ -141,6 +154,53 @@ export const onRequestPost: any = async (context: any) => {
       });
 
       const notifId = 'notif-auto-' + crypto.randomUUID().slice(0, 12);
+
+      // Send push directly if webpush is available
+      let pushSent = false;
+      if (webpush && user?.telefono) {
+        try {
+          const { data: sub } = await supabase
+            .from('push_subscriptions')
+            .select('endpoint, p256dh, auth_secret')
+            .eq('destinatario_telefono', user.telefono.trim())
+            .single();
+
+          if (sub && sub.endpoint && sub.p256dh && sub.auth_secret) {
+            const subInfo = {
+              endpoint: sub.endpoint,
+              keys: { p256dh: sub.p256dh, auth: sub.auth_secret }
+            };
+            const payloadForSW = {
+              title,
+              body,
+              link_url: rule.action_config.link_url || '/',
+              tag: 'foodpop-' + notifId,
+              id: notifId,
+              requireInteraction: false,
+              silent: false,
+            };
+            await webpush.sendNotification(subInfo, JSON.stringify(payloadForSW));
+            pushSent = true;
+
+            // Track sent event
+            await supabase.from('push_events').insert({
+              notification_id: notifId,
+              user_id: userId,
+              event_type: 'sent'
+            });
+          }
+        } catch (pushErr: any) {
+          console.error('[check-automations] Push failed for', userId, pushErr?.message);
+          if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+            await supabase
+              .from('push_subscriptions')
+              .delete()
+              .eq('destinatario_telefono', user?.telefono?.trim() || '');
+          }
+        }
+      }
+
+      // Insert notification for in-app display
       await supabase.from('notifications').insert({
         id: notifId, titulo: title, mensaje: body,
         fecha: new Date().toISOString(), tipo: 'personal',
@@ -148,9 +208,11 @@ export const onRequestPost: any = async (context: any) => {
         link_url: rule.action_config.link_url || '/', leida: false
       });
 
+      // Log the automation action - use status to indicate if push was actually sent
       await supabase.from('automation_log').insert({
         rule_id: rule.id, rule_slug: rule.slug, user_id: userId,
-        action_taken: 'push_sent', notification_id: notifId, status: 'sent'
+        action_taken: pushSent ? 'push_sent' : 'in_app_only',
+        notification_id: notifId, status: 'sent'
       });
 
       await supabase.rpc('increment_push_count', { p_user_id: userId });

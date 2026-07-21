@@ -117,14 +117,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
   const requestNotificationPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-      addNotification('Error', 'Tu navegador no soporta notificaciones push.', 'todos');
+      addNotification('Error', 'Tu navegador no soporta notificaciones push.', 'admin');
       return;
     }
 
     // Validar que la VAPID key esté configurada
     const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     if (!vapidKey) {
-      addNotification('⚠️ Error de Configuración', 'VITE_VAPID_PUBLIC_KEY no está configurada. Contacta al administrador.', 'personal');
+      addNotification('⚠️ Error de Configuración', 'VITE_VAPID_PUBLIC_KEY no está configurada. Contacta al administrador.', 'admin');
       return;
     }
 
@@ -141,7 +141,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
         const syncResult = await syncPushSubscription();
         if (!syncResult.success) {
-          addNotification('⚠️ Error Sincronizando Push', syncResult.error!, 'personal');
+          addNotification('⚠️ Error Sincronizando Push', syncResult.error!, 'admin');
         }
 
         navigator.serviceWorker.ready.then(reg => {
@@ -154,18 +154,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
           } as any);
         });
       } else if (res === 'denied') {
-        addNotification('Notificaciones Bloqueadas ⚠️', 'Has bloqueado las notificaciones en tu navegador. Puedes activarlas desde la configuración del sitio.', 'personal');
+        addNotification('Notificaciones Bloqueadas', `${currentUser?.nombre || 'Usuario'} ha bloqueado las notificaciones.`, 'admin');
       }
     } catch (error: any) {
       console.error('Error requesting notification permission:', error);
-      addNotification('Error Activando Notificaciones', error?.message || String(error), 'personal');
+      addNotification('Error Activando Notificaciones', error?.message || String(error), 'admin');
     }
   };
 
   const sendTestPushNotification = async () => {
     console.log('🧪 Usuario: Solicitando notificación de prueba...');
     if (notificationPermission !== 'granted' || typeof window === 'undefined' || !('Notification' in window)) {
-      addNotification('Error', 'Permisos de notificación no concedidos. Activa las notificaciones desde tu navegador.', 'personal');
+      addNotification('Error', 'Permisos de notificación no concedidos. Activa las notificaciones desde tu navegador.', 'admin');
       return;
     }
 
@@ -339,7 +339,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
     // Forzar sincronización de la suscripción Push con el nuevo teléfono
     const syncResult = await syncPushSubscription();
     if (!syncResult.success) {
-      addNotification('⚠️ Error Sincronizando Push', syncResult.error!, 'personal');
+      addNotification('⚠️ Error Sincronizando Push', syncResult.error!, 'admin');
     }
 
     setUpdateSuccess(true);

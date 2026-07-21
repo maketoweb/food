@@ -48,11 +48,13 @@ export const onRequestPost: any = async (context: any) => {
 
     // Generate anonymous_id for device if not provided
     const anonymousId = payload.anonymous_id || crypto.randomUUID();
+    const userPhone = payload.phone || payload.telefono || '';
+    const userId = payload.user_id || null;
 
     // Upsert subscription - save with user_id: null for anonymous users
     const subJSON = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
 
-    // Primero verificar si ya existe esta suscripción
+    // Primero verificar si ya existe esta suscripcion
     let existingSub: any = null;
     try {
       const { data } = await supabase
@@ -68,25 +70,29 @@ export const onRequestPost: any = async (context: any) => {
     let dbError: any;
     if (existingSub) {
       // Actualizar si ya existe
+      const updateData: any = {
+        p256dh: subJSON.keys?.p256dh,
+        auth_secret: subJSON.keys?.auth,
+        anonymous_id: anonymousId
+      };
+      if (userId) updateData.user_id = userId;
+      if (userPhone) updateData.destinatario_telefono = userPhone;
+
       const { error: updateError } = await supabase
         .from('push_subscriptions')
-        .update({
-          p256dh: subJSON.keys?.p256dh,
-          auth_secret: subJSON.keys?.auth,
-          anonymous_id: anonymousId
-        })
+        .update(updateData)
         .eq('endpoint', subJSON.endpoint);
       dbError = updateError;
     } else {
-      // Insertar nueva suscripción
+      // Insertar nueva suscripcion
       const { error: insertError } = await supabase
         .from('push_subscriptions')
         .insert({
-          user_id: null,
+          user_id: userId,
           endpoint: subJSON.endpoint,
           p256dh: subJSON.keys?.p256dh,
           auth_secret: subJSON.keys?.auth,
-          destinatario_telefono: null,
+          destinatario_telefono: userPhone || null,
           anonymous_id: anonymousId,
           created_at: new Date().toISOString()
         });

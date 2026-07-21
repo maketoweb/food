@@ -61,52 +61,109 @@ export const onRequestPost: any = async (context: any) => {
   for (const campaign of campaigns || []) {
     await supabase.from('campaigns').update({ status: 'sending' }).eq('id', campaign.id);
 
-    let targetUserIds: string[] = [];
+    let targetSubscriptions: any[] = [];
     if (campaign.segment_filter === 'all') {
-      const { data: subs } = await supabase.rpc('get_all_push_subscriptions');
-      targetUserIds = [...new Set((subs || []).map((s: any) => s.user_id as string).filter((uid: string) => uid))] as string[];
+      const { data: subs } = await supabase
+        .from('push_subscriptions')
+        .select('id, user_id, endpoint, p256dh, auth_secret, destinatario_telefono, anonymous_id');
+      targetSubscriptions = (subs || []).filter((s: any) => s.endpoint && s.p256dh && s.auth_secret);
     } else {
       const { data: segUsers } = await supabase
         .from('customer_segments')
         .select('user_id')
         .eq('segment_key', campaign.segment_filter);
-      targetUserIds = (segUsers || []).map((s: any) => s.user_id as string);
+      const userIds = (segUsers || []).map((s: any) => s.user_id).filter(Boolean);
+      if (userIds.length > 0) {
+        const { data: subs } = await supabase
+          .from('push_subscriptions')
+          .select('id, user_id, endpoint, p256dh, auth_secret, destinatario_telefono, anonymous_id')
+          .in('user_id', userIds);
+        targetSubscriptions = (subs || []).filter((s: any) => s.endpoint && s.p256dh && s.auth_secret);
+      }
     }
+
+    if (targetSubscriptions.length === 0) {
+      await supabase.from('campaigns').update({
+        status: 'sent', sent_at: new Date().toISOString(),
+        total_recipients: 0, total_sent: 0, total_rate_limited: 0
+      }).eq('id', campaign.id);
+      processed++;
+      continue;
+    }
+
+    const vapidPublic = env.VAPID_PUBLIC_KEY;
+    const vapidPrivate = env.VAPID_PRIVATE_KEY;
+    if (!vapidPublic || !vapidPrivate) {
+      await supabase.from('campaigns').update({ status: 'cancelled' }).eq('id', campaign.id);
+      continue;
+    }
+
+    let webpush: any;
+    const wpMod = await import('web-push');
+    webpush = (wpMod as any).default || wpMod;
+    webpush.setVapidDetails('mailto:admin@marketo.com.ve', vapidPublic, vapidPrivate);
 
     let sentCount = 0;
     let rateLimitedCount = 0;
+    let failedCount = 0;
 
-    for (const userId of targetUserIds) {
+    for (const sub of targetSubscriptions) {
+      const userId = sub.user_id || sub.anonymous_id || '';
+      if (!userId) continue;
+
       const { data: allowed } = await supabase.rpc('check_push_rate_limit', { p_user_id: userId });
       if (allowed === false) {
         rateLimitedCount++;
         continue;
       }
 
-      const { data: user } = await supabase
-        .from('usuarios_clientes').select('telefono, nombre').eq('id', userId).single();
+      const subInfo = {
+        endpoint: sub.endpoint,
+        keys: { p256dh: sub.p256dh, auth: sub.auth_secret }
+      };
 
-      const notifId = 'notif-campaign-' + crypto.randomUUID().slice(0, 12);
-      await supabase.from('notifications').insert({
-        id: notifId, titulo: campaign.title, mensaje: campaign.body,
-        fecha: new Date().toISOString(), tipo: 'personal',
-        destinatario_telefono: user?.telefono || '',
-        imagen_url: campaign.image_url || '',
-        link_url: campaign.link_url || '/', leida: false
-      });
+      const payloadForSW = {
+        title: campaign.title,
+        body: campaign.body,
+        link_url: campaign.link_url || '/',
+        tag: 'campaign-' + campaign.id,
+        id: 'notif-campaign-' + crypto.randomUUID().slice(0, 12),
+        requireInteraction: false,
+        silent: false,
+      };
 
-      await supabase.from('push_events').insert({
-        notification_id: notifId, campaign_id: campaign.id,
-        user_id: userId, event_type: 'sent'
-      });
+      try {
+        await webpush.sendNotification(subInfo, JSON.stringify(payloadForSW));
 
-      await supabase.rpc('increment_push_count', { p_user_id: userId });
-      sentCount++;
+        const notifId = payloadForSW.id;
+        await supabase.from('notifications').insert({
+          id: notifId, titulo: campaign.title, mensaje: campaign.body,
+          fecha: new Date().toISOString(), tipo: 'personal',
+          destinatario_telefono: sub.destinatario_telefono || '',
+          imagen_url: campaign.image_url || '',
+          link_url: campaign.link_url || '/', leida: false
+        });
+
+        await supabase.from('push_events').insert({
+          notification_id: notifId, campaign_id: campaign.id,
+          user_id: sub.user_id || null,
+          anonymous_id: sub.anonymous_id || '',
+          event_type: 'sent'
+        });
+
+        await supabase.rpc('increment_push_count', { p_user_id: userId });
+        sentCount++;
+      } catch (err: any) {
+        failedCount++;
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+        }
+      }
     }
 
     await supabase.from('campaigns').update({
       status: 'sent', sent_at: new Date().toISOString(),
-      total_recipients: targetUserIds.length,
+      total_recipients: targetSubscriptions.length,
       total_sent: sentCount,
       total_rate_limited: rateLimitedCount
     }).eq('id', campaign.id);

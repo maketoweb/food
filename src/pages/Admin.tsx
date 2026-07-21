@@ -2620,7 +2620,7 @@ export const Admin: React.FC<AdminProps> = ({ setTab }) => {
                       updateConfig({ telefono_soporte: currentUser.telefono });
                       const syncResult = await syncPushSubscription();
                       if (!syncResult.success) {
-                        addNotification('⚠️ Error Push', syncResult.error!, 'personal');
+                        addNotification('⚠️ Error Push', syncResult.error!, 'admin');
                       }
                     }}
                     className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200 hover:bg-amber-200 transition-colors cursor-pointer font-bold uppercase tracking-tighter"
