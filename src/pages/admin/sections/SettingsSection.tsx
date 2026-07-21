@@ -981,6 +981,33 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
             </div>
           </div>
 
+          <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div>
+              <span className="text-[11px] font-bold text-slate-900 block">Modo Oscuro</span>
+              <span className="text-[10px] text-slate-500">Permite a los usuarios alternar entre tema claro y oscuro</span>
+            </div>
+            <button
+              onClick={() => updateConfig({ theme_mode: config.theme_mode === 'dark' ? 'light' : config.theme_mode === 'light' ? 'system' : 'dark' })}
+              className="relative w-14 h-8 rounded-full transition-colors duration-300 cursor-pointer"
+              style={{ backgroundColor: config.theme_mode === 'dark' ? '#6d28d9' : config.theme_mode === 'system' ? '#64748b' : '#d1d5db' }}
+            >
+              <div className="absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300"
+                style={{ transform: config.theme_mode === 'dark' ? 'translateX(24px)' : config.theme_mode === 'system' ? 'translateX(12px)' : 'translateX(0)' }} />
+            </button>
+          </div>
+          <div className="flex gap-2">
+            {(['light', 'dark', 'system'] as const).map(mode => (
+              <button key={mode} onClick={() => updateConfig({ theme_mode: mode })}
+                className="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
+                style={{
+                  backgroundColor: config.theme_mode === mode ? '#6d28d9' : '#f1f5f9',
+                  color: config.theme_mode === mode ? '#ffffff' : '#64748b',
+                }}>
+                {mode === 'light' ? '☀️ Claro' : mode === 'dark' ? '🌙 Oscuro' : '💻 Sistema'}
+              </button>
+            ))}
+          </div>
+
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3">Vista Previa del Header</span>
             <div className="rounded-xl overflow-hidden shadow-md border border-slate-200">

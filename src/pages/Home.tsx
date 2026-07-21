@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '../store/AppContext';
-import { FoodItem, Promotion } from '../types/store';
+import { FoodItem } from '../types/store';
 import {
-  ArrowRight, ShoppingCart, Search, MapPin, ChevronLeft, ChevronRight,
-  ChevronDown, Crosshair, Users, Gift
+  ArrowRight, ChevronLeft, ChevronRight, ChevronDown,
+  Users, Gift, Star, Clock, Zap, Truck, ShieldCheck,
+  Sparkles, Award, Flame, HelpCircle, MessageCircle,
+  Instagram, Twitter, Facebook, MapPin, Smartphone,
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { PremiumProductCard } from '../components/PremiumProductCard';
-import { PromotionBanner } from '../components/PromotionBanner';
-import { Footer } from '../components/Footer';
 import { FloatingCartButton } from '../components/FloatingCartButton';
 
 const CATEGORY_HERO_BG: Record<string, string> = {
@@ -21,6 +21,15 @@ const CATEGORY_HERO_BG: Record<string, string> = {
   'combos': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800',
   'entradas': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800',
 };
+
+const DEFAULT_FAQ = [
+  { id: 'faq-1', question: '¿Cuánto tarda mi pedido en llegar?', answer: 'Nuestro tiempo promedio es de 15 a 25 minutos dependiendo de tu ubicación. Contamos con una flota propia optimizada para asegurar que tu comida llegue siempre caliente y fresca.' },
+  { id: 'faq-2', question: '¿Tienen opciones vegetarianas o veganas?', answer: '¡Absolutamente! Contamos con la línea "Green Pop" que incluye burgers de NotCo, ensaladas gourmet con ingredientes orgánicos y opciones de sushi vegano.' },
+  { id: 'faq-3', question: '¿Cómo puedo aplicar un código de descuento?', answer: 'Al finalizar tu compra en el carrito, verás un campo llamado "Código Promocional". Ingresa tu código ahí y el descuento se aplicará automáticamente al total de tu pedido.' },
+  { id: 'faq-4', question: '¿Cuál es el pedido mínimo para delivery?', answer: 'El pedido mínimo para delivery es de $5.00. Para pedidos menores, puedes recoger gratis en nuestro local.' },
+  { id: 'faq-5', question: '¿Puedo cambiar o cancelar mi pedido?', answer: 'Puedes cancelar o modificar tu pedido dentro de los primeros 5 minutos después de realizarlo. Después de ese tiempo, el pedido entra en preparación y no es posible hacer cambios.' },
+  { id: 'faq-6', question: '¿Aceptan tarjetas de crédito o débito?', answer: 'Sí, aceptamos todas las tarjetas de crédito y débito Visa, Mastercard y American Express. También aceptamos pagos móviles como Zelle y Pago Móvil.' },
+];
 
 interface HomeProps {
   setTab: (tab: 'home' | 'catalog' | 'cart' | 'admin' | 'profile' | 'checkout') => void;
@@ -37,45 +46,26 @@ interface HomeProps {
 
 export const Home: React.FC<HomeProps> = ({
   setTab, setSelectedCategory,
-  onViewProductDetails, globalSearch: _globalSearch, setGlobalSearch: _setGlobalSearch,
-  navigateToCatalog: _navigateToCatalog,
-  deferredPrompt: _deferredPrompt, onInstallClick, onAdminClick, isAdminAuthenticated
+  onViewProductDetails, navigateToCatalog: _navigateToCatalog,
+  onInstallClick, onAdminClick, isAdminAuthenticated
 }) => {
-  const { foodItems, config, cart, addToCart, getProductAverageRating, getProductReviews, promotions } = useApp();
+  const { foodItems, config, cart, addToCart, getProductAverageRating, getProductReviews, promotions, isDarkMode } = useApp();
   const themeColor = config.theme_color || '#E31837';
 
   const activePromotions = useMemo(() => {
     const now = new Date().toISOString();
-    return (promotions || []).filter(p => 
-      p.status === 'active' && 
-      (!p.start_date || p.start_date <= now) && 
+    return (promotions || []).filter(p =>
+      p.status === 'active' &&
+      (!p.start_date || p.start_date <= now) &&
       (!p.end_date || p.end_date >= now)
     );
   }, [promotions]);
 
   const activeItems = useMemo(() => foodItems.filter(p => p.activo !== false), [foodItems]);
   const promoItems = useMemo(() => activeItems.filter(p => p.es_promo), [activeItems]);
-  const newItems = useMemo(() => activeItems.filter(p => p.es_nuevo), [activeItems]);
   const bestsellerItems = useMemo(() => activeItems.filter(p => p.es_mas_vendido), [activeItems]);
-
-  const activeCombos = useMemo(() => {
-    return (config.combos || []).filter(c => c.active);
-  }, [config.combos]);
-
-  const [recentlyViewed, setRecentlyViewed] = useState<FoodItem[]>([]);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('foodapp_recently_viewed');
-      if (stored) {
-        const ids: string[] = JSON.parse(stored);
-        const items = ids
-          .map(id => foodItems.find(p => p.id === id))
-          .filter(Boolean) as FoodItem[];
-        setRecentlyViewed(items.slice(0, 10));
-      }
-    } catch {}
-  }, [foodItems]);
+  const activeCombos = useMemo(() => (config.combos || []).filter(c => c.active), [config.combos]);
+  const faqItems = useMemo(() => config.faq_items && config.faq_items.length > 0 ? config.faq_items : DEFAULT_FAQ, [config.faq_items]);
 
   const categorySections = useMemo(() => {
     return (config.categories || []).map(catName => {
@@ -84,77 +74,41 @@ export const Home: React.FC<HomeProps> = ({
     }).filter(s => s.items.length > 0);
   }, [activeItems, config.categories]);
 
-  // Hero hover/touch state
-  const [heroHovered, setHeroHovered] = useState(false);
-  const heroRef = useRef<HTMLDivElement>(null);
-
-  // Hero mobile carousel state
   const [heroSlide, setHeroSlide] = useState(0);
   const heroBanners = config.banners.slice(0, 3);
+  const [heroVerticalSlide, setHeroVerticalSlide] = useState(0);
 
   useEffect(() => {
     if (heroBanners.length <= 1) return;
     const interval = setInterval(() => {
       setHeroSlide(prev => (prev + 1) % heroBanners.length);
-    }, 4000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [heroBanners.length]);
 
-  // Promo carousel state
-  const promoCarouselRef = useRef<HTMLDivElement>(null);
-  const comboCarouselRef = useRef<HTMLDivElement>(null);
+  const [activeCategory, setActiveCategory] = useState('Todas');
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
+
+  const [flashTimer, setFlashTimer] = useState({ hours: 2, minutes: 45, seconds: 12 });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFlashTimer(prev => {
+        let { hours, minutes, seconds } = prev;
+        seconds--;
+        if (seconds < 0) { seconds = 59; minutes--; }
+        if (minutes < 0) { minutes = 59; hours--; }
+        if (hours < 0) { hours = 23; minutes = 59; seconds = 59; }
+        return { hours, minutes, seconds };
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const heroCarouselRef = useRef<HTMLDivElement>(null);
   const offerCarouselRef = useRef<HTMLDivElement>(null);
-  const recentCarouselRef = useRef<HTMLDivElement>(null);
-
-  // Cart totals
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotal = cart.reduce((sum, item) => {
-    const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
-    return sum + (item.item.precio_usd + extrasTotal) * item.quantity;
-  }, 0);
-
-  // Promo items for carousel
-  const carouselItems = useMemo(() => {
-    const items: { title: string; description: string; image: string; action: string }[] = [];
-    if (promoItems.length > 0) {
-      items.push({
-        title: 'Promociones Especiales',
-        description: 'Descubre nuestros descuentos exclusivos en los favoritos de todos.',
-        image: promoItems[0]?.imagen_urls?.[0] || config.banners?.[0] || CATEGORY_HERO_BG['hamburguesas'],
-        action: 'Ver Promos',
-      });
-    }
-    if (newItems.length > 0) {
-      items.push({
-        title: 'Novedades en el Menú',
-        description: 'Prueba lo nuevo de nuestra cocina. Sabores que te sorprenderán.',
-        image: newItems[0]?.imagen_urls?.[0] || config.banners?.[1] || CATEGORY_HERO_BG['pollo'],
-        action: 'Descubrir',
-      });
-    }
-    if (bestsellerItems.length > 0) {
-      items.push({
-        title: 'Lo Que Todos Piden',
-        description: 'Los platos más populares entre nuestros clientes. ¡No te los pierdas!',
-        image: bestsellerItems[0]?.imagen_urls?.[0] || config.banners?.[2] || CATEGORY_HERO_BG['pizzas'],
-        action: 'Ordenar',
-      });
-    }
-    items.push({
-      title: 'Únete a Recompensas',
-      description: 'Acumula puntos con cada compra y canjéalos por comidas gratis.',
-      image: config.banners?.[0] || CATEGORY_HERO_BG['combos'],
-      action: 'Registrarse',
-    });
-    return items;
-  }, [promoItems, newItems, bestsellerItems, config.banners]);
-
-  const scrollPromo = (dir: 'left' | 'right') => {
-    if (promoCarouselRef.current) {
-      const scrollAmount = promoCarouselRef.current.offsetWidth * 0.8;
-      promoCarouselRef.current.scrollBy({ left: dir === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-    }
-  };
+  const comboCarouselRef = useRef<HTMLDivElement>(null);
+  const productCarouselRef = useRef<HTMLDivElement>(null);
+  const promoCarouselRef = useRef<HTMLDivElement>(null);
 
   const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, dir: 'left' | 'right') => {
     if (ref.current) {
@@ -163,640 +117,521 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
-  const trackRecentlyViewed = (item: FoodItem) => {
-    try {
-      const stored = localStorage.getItem('foodapp_recently_viewed');
-      const ids: string[] = stored ? JSON.parse(stored) : [];
-      const filtered = ids.filter(id => id !== item.id);
-      filtered.unshift(item.id);
-      localStorage.setItem('foodapp_recently_viewed', JSON.stringify(filtered.slice(0, 20)));
-    } catch {}
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = cart.reduce((sum, item) => {
+    const extrasTotal = item.selected_options?.reduce((e, opt) => e + opt.precio_usd, 0) || 0;
+    return sum + (item.item.precio_usd + extrasTotal) * item.quantity;
+  }, 0);
+
+  const getWhatsAppPhone = () => {
+    const active = config.sedes?.filter(s => s.activa);
+    if (active && active.length > 0) return active[0].whatsapp_numero || active[0].telefono || config.telefono_soporte;
+    return config.telefono_soporte;
   };
 
-  // Hero height class
-  const heroHeightClass = config.hero_height === 'full' ? 'h-[100dvh]'
-    : config.hero_height === '70vh' ? 'h-[70dvh]'
-    : config.hero_height === '60vh' ? 'h-[60dvh]'
-    : 'h-[380px] sm:h-[440px] md:h-[500px] lg:h-[560px]';
-
-  // Hero text effect
-  const heroTextClass = config.hero_effect === 'fade' ? 'animate-hero-fade'
-    : config.hero_effect === 'typewriter' ? 'animate-hero-typewriter'
-    : config.hero_effect === 'slide' ? 'animate-hero-slide'
-    : '';
-
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
 
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 1: HERO BANNER — Luminous Electric vertical carousel
-          ═══════════════════════════════════════════════════════════ */}
-      
-      {/* MOBILE: Hero carousel */}
-      <section className="md:hidden w-full" style={{ backgroundColor: '#f9f9fb' }}>
-        <div 
-          ref={heroRef}
-          className="relative w-full h-[707px] overflow-hidden"
-          onMouseEnter={() => setHeroHovered(true)}
-          onMouseLeave={() => setHeroHovered(false)}
-          onTouchStart={() => setHeroHovered(true)}
-          onTouchEnd={() => setTimeout(() => setHeroHovered(false), 2000)}
+      {/* ═══ HERO MOBILE — Vertical Carousel ═══ */}
+      <section className="md:hidden w-full relative h-[700px] overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb' }}>
+        <div
+          className="h-full overflow-y-scroll no-scrollbar snap-y snap-mandatory"
+          onScroll={(e) => {
+            const idx = Math.round(e.currentTarget.scrollTop / e.currentTarget.clientHeight);
+            setHeroVerticalSlide(idx);
+          }}
         >
-          {heroBanners.length > 0 ? (
-            <div 
-              className="flex h-full transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${heroSlide * 100}%)` }}
-            >
-              {heroBanners.map((banner, idx) => (
-                <div key={idx} className="relative w-full h-full shrink-0 flex items-center justify-center">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${banner}')` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-12 left-4 right-4">
-                    <span className="inline-block px-3 py-1 text-white text-[14px] font-semibold rounded-full mb-4"
-                      style={{ backgroundColor: themeColor }}
-                    >
-                      NUEVO
-                    </span>
-                    <h2 className="text-[40px] font-extrabold text-white mb-2 leading-tight"
-                      style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}
-                    >
-                      {config.hero_title || config.site_nombre || 'FoodPop'}
-                    </h2>
-                    <p className="text-[16px] text-white/80 max-w-md">
-                      {config.hero_subtitle || config.mensaje_bienvenida || 'La explosión de sabor que estabas esperando. ¡Pídela hoy!'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="w-full h-full" style={{ backgroundColor: '#eeeef0' }} />
-          )}
-
-          {/* Scroll Indicator Dots - Right side vertical */}
-          {heroBanners.length > 1 && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-              {heroBanners.map((_, idx) => (
+          {heroBanners.length > 0 ? heroBanners.map((banner, idx) => (
+            <div key={idx} className="relative h-[700px] w-full shrink-0 snap-start">
+              <img alt="" className="absolute inset-0 w-full h-full object-cover" src={banner} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute bottom-16 left-0 right-0 p-8">
+                <span className="inline-flex items-center px-3 py-1 bg-primary-container text-white font-semibold text-[11px] uppercase tracking-widest rounded-full mb-4">
+                  NUEVO
+                </span>
+                <h2 className="text-[44px] leading-none text-white mb-4 font-extrabold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                  {config.hero_title || config.site_nombre || 'FoodPop'}
+                </h2>
+                <p className="text-white/80 max-w-xs mb-8 text-[16px]">
+                  {config.hero_subtitle || config.mensaje_bienvenida || 'La explosión de sabor que estabas esperando.'}
+                </p>
                 <button
-                  key={idx}
-                  onClick={() => setHeroSlide(idx)}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    width: idx === heroSlide ? '8px' : '8px',
-                    height: idx === heroSlide ? '24px' : '8px',
-                    backgroundColor: idx === heroSlide ? themeColor : 'rgba(255,255,255,0.4)',
-                  }}
-                />
-              ))}
+                  onClick={() => setTab('catalog')}
+                  className="text-white font-bold px-8 py-4 rounded-xl flex items-center gap-2 shadow-xl"
+                  style={{ backgroundColor: themeColor, boxShadow: `0 8px 24px ${themeColor}40` }}
+                >
+                  {config.hero_cta_text || 'Ordenar Ahora'} <ArrowRight size={18} />
+                </button>
+              </div>
             </div>
+          )) : (
+            <div className="h-[700px] w-full" style={{ backgroundColor: isDarkMode ? '#16213e' : '#eeeef0' }} />
           )}
         </div>
-
-        {/* Text content below banner */}
-        <div className={`px-4 py-4 ${heroTextClass}`}>
-          <button
-            onClick={() => setTab('catalog')}
-            className="mt-2 w-full font-bold text-xs px-4 py-3 min-h-[44px] rounded-xl inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
-            style={{ backgroundColor: themeColor, color: '#ffffff' }}
-          >
-            {config.hero_cta_text || 'ORDENAR AHORA'}
-          </button>
-        </div>
+        {heroBanners.length > 1 && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-10">
+            {heroBanners.map((_: string, idx: number) => (
+              <div key={idx} className="rounded-full transition-all duration-300" style={{
+                width: '6px', height: idx === heroVerticalSlide ? '24px' : '6px',
+                backgroundColor: idx === heroVerticalSlide ? themeColor : 'rgba(255,255,255,0.4)',
+              }} />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* DESKTOP: Fullscreen carousel */}
-      <section
-        ref={heroRef}
-        className={`hidden md:block relative w-full ${heroHeightClass} overflow-hidden`}
-        onMouseEnter={() => setHeroHovered(true)}
-        onMouseLeave={() => setHeroHovered(false)}
-      >
+      {/* ═══ HERO DESKTOP — Full Width Image ═══ */}
+      <section className="hidden md:block relative w-full h-[600px] overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb' }}>
         {heroBanners.length > 0 ? (
-          <div 
-            className="absolute inset-0 flex h-full transition-transform duration-700 ease-out"
-            style={{ transform: `translateX(-${heroSlide * 100}%)` }}
-          >
-            {heroBanners.map((banner, idx) => (
-              <img
-                key={idx}
-                src={banner}
-                alt=""
-                className="w-full h-full object-cover shrink-0"
-                referrerPolicy="no-referrer"
-                loading={idx === 0 ? 'eager' : 'lazy'}
-              />
+          <div className="absolute inset-0 flex h-full transition-transform duration-700 ease-out" style={{ transform: `translateX(-${heroSlide * 100}%)` }}>
+            {heroBanners.map((banner: string, idx: number) => (
+              <img key={idx} src={banner} alt="" className="w-full h-full object-cover shrink-0" loading={idx === 0 ? 'eager' : 'lazy'} />
             ))}
           </div>
         ) : (
-          <div className="absolute inset-0" style={{ backgroundColor: '#e2e2e4' }} />
+          <div className="absolute inset-0" style={{ backgroundColor: isDarkMode ? '#16213e' : '#e2e2e4' }} />
         )}
-
-        {/* Dynamic overlay opacity */}
-        <div
-          className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
-          style={{ opacity: (config.hero_overlay_opacity ?? 100) / 100 }}
-        />
-
-        {/* Content */}
-        <div className="absolute inset-0 flex items-end">
-          <div className="w-full max-w-7xl mx-auto px-8 lg:px-12 pb-16">
-            <div className={`max-w-lg ${heroTextClass}`}>
-              <span className="inline-block px-3 py-1 text-white text-[14px] font-semibold rounded-full mb-4"
-                style={{ backgroundColor: themeColor }}
-              >
-                NUEVO
-              </span>
-              <h1 className="text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                {config.hero_title || config.banner_texts?.[0] || config.site_nombre || 'La Comida que Te Encanta'}
-              </h1>
-              <p className="text-white/80 text-base mt-4 max-w-md leading-relaxed">
-                {config.hero_subtitle || config.mensaje_bienvenida || 'Sabores auténticos preparados con los mejores ingredientes. Ordena ahora y recíbelo en tu puerta.'}
-              </p>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setTab('catalog')}
-                  className="text-white font-bold text-sm px-8 py-3.5 min-h-[48px] rounded-xl inline-flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-                  style={{ backgroundColor: themeColor }}
-                >
-                  {config.hero_cta_text || 'ORDENAR AHORA'}
-                </button>
-              </div>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-center px-16 lg:px-24 max-w-3xl">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/90 text-white font-semibold text-xs uppercase tracking-widest rounded-full">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse" /> Lo más nuevo
+            </span>
+            <span className="text-white/60 text-sm">Disponible solo esta semana</span>
+          </div>
+          <h1 className="text-white font-extrabold mb-6" style={{ fontSize: 'clamp(36px, 5vw, 72px)', lineHeight: 1, fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
+            {config.hero_title || 'Bacon Bomb'}<br /><span style={{ color: themeColor }}>{config.hero_subtitle || 'Max Edition'}</span>
+          </h1>
+          <p className="text-white/80 max-w-lg mb-10 text-lg leading-relaxed">
+            {config.mensaje_bienvenida || 'Experimenta la explosión definitiva de sabor con nuestra nueva creación. Ingredientes premium con un 20% de descuento por lanzamiento.'}
+          </p>
+          <div className="flex gap-4">
+            <button onClick={() => setTab('catalog')} className="text-white font-bold px-10 py-5 rounded-2xl flex items-center gap-3 hover:opacity-90 active:scale-95 transition-all" style={{ backgroundColor: themeColor }}>
+              {config.hero_cta_text || 'Ordenar Ahora'} <ArrowRight size={20} />
+            </button>
+            <button onClick={() => setTab('catalog')} className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-5 rounded-2xl font-bold hover:bg-white/20 transition-all">
+              Ver Detalles
+            </button>
           </div>
         </div>
-
-        {/* Dots indicator */}
         {heroBanners.length > 1 && (
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-            {heroBanners.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setHeroSlide(idx)}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: idx === heroSlide ? '8px' : '8px',
-                  height: idx === heroSlide ? '24px' : '8px',
-                  backgroundColor: idx === heroSlide ? themeColor : 'rgba(255,255,255,0.4)',
-                }}
-              />
+          <div className="absolute right-12 bottom-12 flex flex-col gap-3">
+            {heroBanners.map((_: string, idx: number) => (
+              <div key={idx} className="rounded-full transition-all duration-300 cursor-pointer" style={{
+                width: '8px', height: idx === heroSlide ? '40px' : '8px',
+                backgroundColor: idx === heroSlide ? themeColor : 'rgba(255,255,255,0.3)',
+              }} onClick={() => setHeroSlide(idx)} />
             ))}
           </div>
         )}
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 2: ACTIVE PROMOTIONS CAROUSEL — Luminous Electric
-          ═══════════════════════════════════════════════════════════ */}
-      {activePromotions.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <div className="flex items-center gap-1 mb-1" style={{ color: themeColor }}>
-                  <span className="text-[20px]">⚡</span>
-                  <span className="text-[14px] font-semibold" style={{ color: themeColor }}>TERMINA EN</span>
-                </div>
-                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                  Ofertas Flash
-                </h3>
-              </div>
-              <button
-                onClick={() => setTab('catalog')}
-                className="text-[14px] font-semibold flex items-center gap-1 cursor-pointer"
-                style={{ color: themeColor }}
-              >
-                Ver Todo →
+      {/* ═══ CATEGORÍAS PILLS ═══ */}
+      <section className="py-6 px-4 md:px-8 lg:px-16 max-w-[1440px] mx-auto w-full" style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb' }}>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-[24px] font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Explorar por categorías</h3>
+          <div className="hidden md:flex gap-2">
+            <button onClick={() => scrollCarousel(heroCarouselRef, 'left')} className="w-10 h-10 rounded-full border flex items-center justify-center transition-all" style={{ borderColor: isDarkMode ? '#2a2a4a' : '#e4beb1', color: isDarkMode ? '#a0a0b8' : '#1a1c1d' }}>
+              <ChevronLeft size={18} />
+            </button>
+            <button onClick={() => scrollCarousel(heroCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: themeColor }}>
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+        <div ref={heroCarouselRef} className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 lg:grid-cols-6 md:overflow-visible">
+          {['Todas', ...(config.categories || [])].map((cat) => {
+            const isActive = activeCategory === cat;
+            return (
+              <button key={cat} onClick={() => { setActiveCategory(cat); if (cat !== 'Todas') { setSelectedCategory(cat); setTab('catalog'); } }}
+                className="px-6 py-3 rounded-full font-semibold text-sm whitespace-nowrap transition-all shrink-0 md:w-auto"
+                style={{
+                  backgroundColor: isActive ? themeColor : (isDarkMode ? '#16213e' : '#eeeef0'),
+                  color: isActive ? '#ffffff' : (isDarkMode ? '#a0a0b8' : '#5b4137'),
+                  boxShadow: isActive ? `0 4px 12px ${themeColor}30` : 'none',
+                }}>
+                {cat}
               </button>
-            </div>
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
-              {activePromotions.map((promo) => (
-                <div key={promo.id} className="shrink-0 w-[85vw] sm:w-[60vw] md:w-[calc(50%-8px)] snap-start">
-                  <PromotionBanner
-                    promotion={promo}
-                    themeColor={themeColor}
-                    onClick={() => setTab('catalog')}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+            );
+          })}
+        </div>
+      </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION: COMBOS — Luminous Electric asymmetric grid
-          ═══════════════════════════════════════════════════════════ */}
-      {activeCombos.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                Combos Explosivos
-              </h3>
-              <div className="flex gap-2">
-                <button onClick={() => scrollCarousel(comboCarouselRef, 'left')} className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90">
-                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
-                </button>
-                <button onClick={() => scrollCarousel(comboCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer" style={{ backgroundColor: themeColor, color: '#ffffff' }}>
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-            <div ref={comboCarouselRef} className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar md:overflow-visible pb-2 md:pb-0">
-              {activeCombos.map((combo) => {
-                const comboProducts = combo.product_ids
-                  .map(id => activeItems.find(p => p.id === id))
-                  .filter(Boolean) as FoodItem[];
-                const comboImage = combo.imagen_url || comboProducts[0]?.imagen_urls?.[0] || '';
-                return (
-                  <div key={combo.id} className="flex rounded-xl overflow-hidden h-40 snap-start" style={{ backgroundColor: '#e8e8ea' }}>
-                    <div className="w-1/3">
-                      {comboImage ? (
-                        <img src={comboImage} alt={combo.nombre} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-3xl" style={{ backgroundColor: themeColor }}>🎁</div>
-                      )}
+      {/* ═══ MAIN CONTENT + SIDEBAR ═══ */}
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 lg:px-16 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
+
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-8 space-y-12">
+
+            {/* ═══ OFERTAS FLASH ═══ */}
+            {promoItems.length > 0 && (
+              <section>
+                <div className="flex justify-between items-end mb-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1" style={{ color: themeColor }}>
+                      <Zap size={20} className="animate-pulse" fill="currentColor" />
+                      <span className="font-semibold text-sm uppercase tracking-tighter">
+                        Termina en {String(flashTimer.hours).padStart(2, '0')}:{String(flashTimer.minutes).padStart(2, '0')}:{String(flashTimer.seconds).padStart(2, '0')}
+                      </span>
                     </div>
-                    <div className="w-2/3 p-4 flex flex-col justify-center">
-                      <h5 className="text-[16px] font-bold text-[#1a1c1d]">{combo.nombre}</h5>
-                      <p className="text-[12px] text-[#5b4137] mt-1 leading-relaxed flex-1">{combo.descripcion}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-[12px] text-[#5b4137]">{comboProducts.length} productos incluidos</span>
-                        <span className="font-bold text-[16px]" style={{ color: themeColor }}>-{combo.discount_percent}%</span>
-                      </div>
-                    </div>
+                    <h3 className="text-[28px] font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Ofertas Flash</h3>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION: OFERTAS — Products on sale
-          ═══════════════════════════════════════════════════════════ */}
-      {promoItems.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                  Ofertas
-                </h3>
-                <p className="text-[12px] text-[#8f7065] mt-1">Productos con descuento especial</p>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => scrollCarousel(offerCarouselRef, 'left')} className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90">
-                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
-                </button>
-                <button onClick={() => scrollCarousel(offerCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer" style={{ backgroundColor: themeColor, color: '#ffffff' }}>
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-            <div ref={offerCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
-              {promoItems.slice(0, 10).map((item, idx) => (
-                <div key={item.id} className="shrink-0 w-[180px] sm:w-[220px] snap-start">
-                  <PremiumProductCard
-                    item={item}
-                    config={config}
-                    onViewProductDetails={(food) => { trackRecentlyViewed(food); onViewProductDetails(food); }}
-                    addToCart={(food) => addToCart(food)}
-                    averageRating={getProductAverageRating(item.id)}
-                    reviewCount={getProductReviews(item.id).length}
-                    index={idx}
-                  />
+                  <button onClick={() => setTab('catalog')} className="font-semibold flex items-center gap-1 transition-all hover:gap-2" style={{ color: themeColor }}>
+                    Ver Todo <ChevronRight size={18} />
+                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION: PROMOTIONAL BANNERS CAROUSEL — Luminous Electric
-          ═══════════════════════════════════════════════════════════ */}
-      {carouselItems.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                {config.section_highlights_title || 'Destacados'}
-              </h3>
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => scrollPromo('left')}
-                  className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90"
-                >
-                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
-                </button>
-                <button
-                  onClick={() => scrollPromo('right')}
-                  className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
-                  style={{ backgroundColor: themeColor, color: '#ffffff' }}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div
-              ref={promoCarouselRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2 md:pb-0"
-            >
-              {carouselItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="shrink-0 w-[85vw] sm:w-[60vw] md:w-[calc(33.333%-11px)] snap-start group"
-                >
-                  <div className="rounded-xl overflow-hidden border border-[#e4beb1]/10 hover:shadow-lg transition-all duration-300 h-full flex flex-col" style={{ backgroundColor: '#ffffff' }}>
-                    <div className="relative h-44 md:h-48 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="p-4 flex flex-col flex-1">
-                      <h3 className="text-[14px] font-bold text-[#1a1c1d] mb-1">{item.title}</h3>
-                      <p className="text-[12px] text-[#5b4137] leading-relaxed flex-1">{item.description}</p>
-                      <button
-                        onClick={() => {
-                          if (item.action === 'Registrarse') setTab('profile');
-                          else setTab('catalog');
-                        }}
-                        className="mt-3 text-[12px] font-bold uppercase tracking-wide cursor-pointer transition-colors hover:underline"
-                        style={{ color: themeColor }}
-                      >
-                        {item.action} →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex md:hidden justify-center gap-1.5 mt-4">
-              {carouselItems.map((_, idx) => (
-                <div key={idx} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#e4beb1' }} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 3: MENU HIGHLIGHTS GRID — Category Cards (Luminous Electric)
-          ═══════════════════════════════════════════════════════════ */}
-      {categorySections.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                  {config.section_categories_title || 'LO MÁS POPULAR'}
-                </h3>
-                <p className="text-[12px] text-[#8f7065] mt-1">Explora nuestras categorías y ordena lo que más te guste</p>
-              </div>
-              <button
-                onClick={() => setTab('catalog')}
-                className="text-[14px] font-semibold cursor-pointer hidden sm:block"
-                style={{ color: themeColor }}
-              >
-                Ver todo el menú →
-              </button>
-            </div>
-
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-visible pb-2 md:pb-0">
-              {categorySections.map((section) => {
-                const bgImage = config.categories_images?.[section.name] || CATEGORY_HERO_BG[section.name.toLowerCase()];
-                return (
-                  <div
-                    key={section.name}
-                    className="shrink-0 w-[75vw] sm:w-[45vw] md:w-auto snap-start group"
-                  >
-                    <div className="rounded-xl overflow-hidden border border-[#e4beb1]/10 hover:shadow-lg transition-all duration-300 h-full flex flex-col" style={{ backgroundColor: '#ffffff' }}>
-                      <div className="relative h-40 md:h-44 overflow-hidden">
-                        {bgImage ? (
-                          <img
-                            src={bgImage}
-                            alt={section.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            referrerPolicy="no-referrer"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex items-center justify-center text-4xl"
-                            style={{ backgroundColor: '#eeeef0' }}
-                          >
-                            🍽️
+                <div ref={offerCarouselRef} className="grid grid-cols-1 sm:grid-cols-2 gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar md:overflow-visible pb-2 md:pb-0">
+                  {promoItems.slice(0, 4).map((item) => (
+                    <div key={item.id} className="shrink-0 w-[280px] sm:w-auto snap-start rounded-[2rem] overflow-hidden border transition-all hover:-translate-y-2 cursor-pointer group"
+                      style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff', borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}
+                      onClick={() => onViewProductDetails(item)}>
+                      <div className="relative h-56 overflow-hidden">
+                        <img src={item.imagen_urls[0]} alt={item.nombre} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        {item.precio_anterior_usd && item.precio_anterior_usd > item.precio_usd && (
+                          <div className="absolute top-4 left-4 bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-xl">
+                            -{Math.round(((item.precio_anterior_usd - item.precio_usd) / item.precio_anterior_usd) * 100)}% OFF
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
-
-                      <div className="p-4 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-[14px] font-bold text-[#1a1c1d] capitalize">{section.name}</h3>
-                          <p className="text-[11px] text-[#8f7065] mt-0.5">{section.items.length} productos</p>
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-lg font-bold" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>{item.nombre}</h4>
+                          <div className="flex items-center gap-1 text-amber-500">
+                            <Star size={14} fill="currentColor" />
+                            <span className="text-xs font-bold">{getProductAverageRating(item.id).toFixed(1)}</span>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => { setSelectedCategory(section.name); setTab('catalog'); }}
-                          className="text-white text-[12px] font-bold px-4 py-2 min-h-[40px] rounded-xl transition-all cursor-pointer hover:opacity-90 active:scale-95"
-                          style={{ backgroundColor: themeColor }}
-                        >
-                          ORDENAR
-                        </button>
+                        <p className="text-sm mb-4" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>{item.descripcion}</p>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-2xl" style={{ color: themeColor }}>${item.precio_usd.toFixed(2)}</span>
+                          {item.precio_anterior_usd && item.precio_anterior_usd > item.precio_usd && (
+                            <span className="line-through text-base" style={{ color: isDarkMode ? '#5a5a7a' : '#8f7065' }}>${item.precio_anterior_usd.toFixed(2)}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ═══ COMBOS EXPLOSIVOS ═══ */}
+            {activeCombos.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-[28px] font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Combos Explosivos</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => scrollCarousel(comboCarouselRef, 'left')} className="w-10 h-10 rounded-full border flex items-center justify-center transition-all" style={{ borderColor: isDarkMode ? '#2a2a4a' : '#e4beb1', color: isDarkMode ? '#a0a0b8' : '#1a1c1d' }}>
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button onClick={() => scrollCarousel(comboCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: themeColor }}>
+                      <ChevronRight size={18} />
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+                <div ref={comboCarouselRef} className="grid grid-cols-1 sm:grid-cols-2 gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar md:overflow-visible pb-2 md:pb-0">
+                  {activeCombos.map((combo) => {
+                    const comboProducts = combo.product_ids.map(id => activeItems.find(p => p.id === id)).filter(Boolean) as FoodItem[];
+                    const comboImage = combo.imagen_url || comboProducts[0]?.imagen_urls?.[0] || '';
+                    return (
+                      <div key={combo.id} className="flex rounded-2xl overflow-hidden h-48 snap-start border transition-all hover:-translate-y-2 group"
+                        style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff', borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}>
+                        <div className="w-2/5 relative overflow-hidden">
+                          {comboImage ? (
+                            <img src={comboImage} alt={combo.nombre} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-3xl" style={{ backgroundColor: isDarkMode ? '#16213e' : '#eeeef0' }}>🎁</div>
+                          )}
+                        </div>
+                        <div className="w-3/5 p-6 flex flex-col justify-center">
+                          <h5 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>{combo.nombre}</h5>
+                          <p className="text-sm mb-4" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>{combo.descripcion}</p>
+                          <div className="flex items-center justify-between mt-auto">
+                            <span className="font-bold text-2xl" style={{ color: themeColor }}>-{combo.discount_percent}%</span>
+                            <button className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:text-white"
+                              style={{ backgroundColor: isDarkMode ? '#16213e' : '#eeeef0', color: themeColor }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = themeColor; e.currentTarget.style.color = '#ffffff'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDarkMode ? '#16213e' : '#eeeef0'; e.currentTarget.style.color = themeColor; }}>
+                              <span className="material-symbols-outlined">add_shopping_cart</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* ═══ PRODUCTOS DESTACADOS ═══ */}
+            {bestsellerItems.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-[28px] font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>
+                      {config.section_bestseller_title || 'Lo Más Pedido'}
+                    </h3>
+                    <p className="text-sm mt-1" style={{ color: isDarkMode ? '#a0a0b8' : '#8f7065' }}>Los favoritos de nuestros clientes</p>
+                  </div>
+                  <button onClick={() => setTab('catalog')} className="font-semibold hidden sm:block transition-all" style={{ color: themeColor }}>
+                    Ver todo →
+                  </button>
+                </div>
+                <div ref={productCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+                  {bestsellerItems.slice(0, 8).map((item, idx) => (
+                    <div key={item.id} className="shrink-0 w-[180px] sm:w-[220px] snap-start">
+                      <PremiumProductCard item={item} config={config} onViewProductDetails={onViewProductDetails} addToCart={(food) => addToCart(food)} averageRating={getProductAverageRating(item.id)} reviewCount={getProductReviews(item.id).length} index={idx} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ═══ PROMOCIONES ═══ */}
+            {activePromotions.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-[28px] font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>
+                    {config.section_promos_title || 'Promociones'}
+                  </h3>
+                </div>
+                <div ref={promoCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
+                  {activePromotions.map((promo) => (
+                    <div key={promo.id} className="shrink-0 w-[280px] sm:w-[320px] snap-start rounded-2xl overflow-hidden border cursor-pointer transition-all hover:-translate-y-1"
+                      style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff', borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}
+                      onClick={() => setTab('catalog')}>
+                      <div className="relative h-40 overflow-hidden">
+                        {promo.image_url && <img src={promo.image_url} alt={promo.title} className="w-full h-full object-cover" />}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <span className="px-3 py-1 rounded-full text-white text-xs font-bold" style={{ backgroundColor: themeColor }}>{promo.discount_type === 'percent' ? `-${promo.discount_value}%` : `-$${promo.discount_value}`}</span>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-bold" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>{promo.title}</h4>
+                        <p className="text-sm mt-1" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>{promo.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ═══ BENTO GRID DESTACADOS ═══ */}
+            {categorySections.length > 0 && (
+              <section className="rounded-[3rem] p-8 md:p-12" style={{ backgroundColor: isDarkMode ? '#0a0a14' : '#ffffff' }}>
+                <h3 className="text-[28px] font-bold mb-8 text-center" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Nuestros Destacados</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {categorySections[0] && (
+                    <div className="md:col-span-2 h-[350px] md:h-[450px] relative rounded-[2rem] overflow-hidden group cursor-pointer"
+                      onClick={() => { setSelectedCategory(categorySections[0].name); setTab('catalog'); }}>
+                      <img src={config.categories_images?.[categorySections[0].name] || CATEGORY_HERO_BG[categorySections[0].name.toLowerCase()] || ''} alt={categorySections[0].name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                        <span className="font-bold text-xs uppercase tracking-widest mb-3" style={{ color: themeColor }}>Gourmet Selection</span>
+                        <h4 className="text-white font-bold text-3xl md:text-4xl mb-3">{categorySections[0].name}</h4>
+                        <p className="text-white/70 max-w-md">{categorySections[0].items.length} productos disponibles</p>
+                      </div>
+                    </div>
+                  )}
+                  {categorySections[1] && (
+                    <div className="h-[350px] md:h-[450px] relative rounded-[2rem] overflow-hidden group cursor-pointer"
+                      onClick={() => { setSelectedCategory(categorySections[1].name); setTab('catalog'); }}>
+                      <img src={config.categories_images?.[categorySections[1].name] || CATEGORY_HERO_BG[categorySections[1].name.toLowerCase()] || ''} alt={categorySections[1].name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                      <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12" style={{ backgroundColor: `${themeColor}30`, backdropFilter: 'blur(2px)' }}>
+                        <h4 className="text-white font-bold text-3xl md:text-4xl mb-3 leading-tight">{categorySections[1].name}</h4>
+                        <p className="text-white/90">{categorySections[1].items.length} productos</p>
+                        <button className="mt-6 self-start px-8 py-3 bg-white text-primary rounded-xl font-bold hover:opacity-90 transition-all" style={{ color: themeColor }}>Ver Menú</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* ═══ SIDEBAR RIGHT — Sticky ═══ */}
+          <div className="hidden lg:block lg:col-span-4">
+            <div className="sticky top-24 space-y-8">
+
+              {/* Recomendados */}
+              <div className="rounded-[2rem] p-6 border" style={{ backgroundColor: isDarkMode ? '#12122a' : '#f3f3f5', borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}>
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>
+                  <Sparkles size={18} style={{ color: themeColor }} /> Recomendados para ti
+                </h4>
+                <div className="space-y-4">
+                  {bestsellerItems.slice(0, 3).map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewProductDetails(item)}>
+                      <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0">
+                        <img src={item.imagen_urls[0]} alt={item.nombre} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>{item.nombre}</p>
+                        <p className="text-xs" style={{ color: themeColor }}>${item.precio_usd.toFixed(2)}</p>
+                      </div>
+                      <button className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                        style={{ backgroundColor: isDarkMode ? '#16213e' : '#ffffff', color: themeColor }}
+                        onClick={(e) => { e.stopPropagation(); addToCart(item); }}>
+                        <span className="text-sm font-bold">+</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setTab('catalog')} className="w-full mt-4 py-3 border-2 rounded-2xl font-semibold transition-all hover:opacity-80" style={{ borderColor: `${themeColor}30`, color: themeColor }}>
+                  Ver Más Sugerencias
+                </button>
+              </div>
+
+              {/* App Download Mini Banner */}
+              <div className="rounded-[2rem] p-6 relative overflow-hidden" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#2f3132' }}>
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl" style={{ backgroundColor: `${themeColor}20` }} />
+                <h4 className="text-lg font-bold mb-3 relative z-10 text-white">Instala nuestra Web App</h4>
+                <p className="text-white/60 text-sm mb-6 relative z-10">Acceso instantáneo y beneficios exclusivos.</p>
+                <button onClick={onInstallClick} className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 text-white relative z-10 transition-all hover:opacity-90"
+                  style={{ backgroundColor: themeColor, boxShadow: `0 8px 20px ${themeColor}40` }}>
+                  <Smartphone size={18} /> Instalar Web App
+                </button>
+                <div className="flex items-center gap-2 mt-3 relative z-10">
+                  <Gift size={14} className="text-amber-400" />
+                  <span className="text-xs text-white/80">+500 puntos de bienvenida</span>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </div>
 
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 4: POPULAR ITEMS — Top ordered products (Luminous Electric)
-          ═══════════════════════════════════════════════════════════ */}
-      {bestsellerItems.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between mb-6">
+      {/* ═══ BRAND EXPERIENCE SECTION ═══ */}
+      <section className="py-24 md:py-32 relative overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0a0a14' : '#2f3132' }}>
+        <div className="absolute top-1/4 -right-20 w-[500px] h-[500px] rounded-full blur-[150px]" style={{ backgroundColor: `${themeColor}10` }} />
+        <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full blur-[120px]" style={{ backgroundColor: `${themeColor}10` }} />
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 lg:grid-cols-2 items-center gap-16 relative z-10">
+          <div className="order-2 lg:order-1">
+            <div className="aspect-square lg:aspect-[4/3] rounded-[3rem] overflow-hidden border border-white/10 relative group">
+              <img src={config.banners?.[0] || CATEGORY_HERO_BG['combos']} alt="Brand" className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" />
+              <div className="absolute inset-0 group-hover:bg-transparent transition-all" style={{ backgroundColor: `${themeColor}10`, mixBlendMode: 'overlay' }} />
+            </div>
+          </div>
+          <div className="order-1 lg:order-2">
+            <h2 className="text-white font-extrabold mb-8" style={{ fontSize: 'clamp(32px, 4vw, 64px)', lineHeight: 1.1, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              {config.brand_section_title || 'Más que comida,'}<br /><span style={{ color: themeColor }}>{config.brand_section_subtitle || 'es una experiencia.'}</span>
+            </h2>
+            <p className="text-white/50 mb-12 text-xl leading-relaxed max-w-xl">
+              Nacimos para romper las reglas de la comida rápida. Ingredientes de primera, tecnología de punta y una obsesión por la frescura absoluta en cada entrega.
+            </p>
+            <div className="grid grid-cols-2 gap-12">
               <div>
-                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                  {config.section_bestseller_title || 'LO MÁS PEDIDO'}
-                </h3>
-                <p className="text-[12px] text-[#8f7065] mt-1">Los favoritos de nuestros clientes</p>
+                <p className="font-extrabold leading-none mb-2" style={{ fontSize: '48px', color: themeColor }}>{config.brand_stat1_value || '15min'}</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold">{config.brand_stat1_label || 'Entrega Promedio'}</p>
               </div>
-              <button
-                onClick={() => setTab('catalog')}
-                className="text-[14px] font-semibold cursor-pointer hidden sm:block"
-                style={{ color: themeColor }}
-              >
-                Ver todo →
-              </button>
-            </div>
-
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
-              {bestsellerItems.slice(0, 8).map((item, idx) => (
-                <div key={item.id} className="shrink-0 w-[180px] sm:w-[220px] snap-start">
-                  <PremiumProductCard
-                    item={item}
-                    config={config}
-                    onViewProductDetails={(food) => { trackRecentlyViewed(food); onViewProductDetails(food); }}
-                    addToCart={(food) => addToCart(food)}
-                    averageRating={getProductAverageRating(item.id)}
-                    reviewCount={getProductReviews(item.id).length}
-                    index={idx}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION: ÚLTIMOS VISTOS — Luminous Electric
-          ═══════════════════════════════════════════════════════════ */}
-      {recentlyViewed.length > 0 && (
-        <section className="w-full py-10 md:py-12" style={{ backgroundColor: '#f9f9fb' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-[32px] font-bold text-[#1a1c1d]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.02em' }}>
-                  Últimos Vistos
-                </h3>
-                <p className="text-[12px] text-[#8f7065] mt-1">Los productos que viste recientemente</p>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => scrollCarousel(recentCarouselRef, 'left')} className="w-10 h-10 rounded-full border border-[#e4beb1] flex items-center justify-center hover:bg-[#f3f3f5] transition-colors cursor-pointer active:scale-90">
-                  <ChevronLeft size={18} className="text-[#1a1c1d]" />
-                </button>
-                <button onClick={() => scrollCarousel(recentCarouselRef, 'right')} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform cursor-pointer" style={{ backgroundColor: themeColor, color: '#ffffff' }}>
-                  <ChevronRight size={18} />
-                </button>
+                <p className="font-extrabold leading-none mb-2" style={{ fontSize: '48px', color: themeColor }}>{config.brand_stat2_value || '100%'}</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold">{config.brand_stat2_label || 'Ingredientes Frescos'}</p>
               </div>
             </div>
-            <div ref={recentCarouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-2">
-              {recentlyViewed.map((item, idx) => (
-                <div key={item.id} className="shrink-0 w-[180px] sm:w-[220px] snap-start">
-                  <PremiumProductCard
-                    item={item}
-                    config={config}
-                    onViewProductDetails={(food) => { trackRecentlyViewed(food); onViewProductDetails(food); }}
-                    addToCart={(food) => addToCart(food)}
-                    averageRating={getProductAverageRating(item.id)}
-                    reviewCount={getProductReviews(item.id).length}
-                    index={idx}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 5: REWARDS PROGRAM — Luminous Electric
-          ═══════════════════════════════════════════════════════════ */}
-      <section className="w-full py-10 md:py-16" style={{ backgroundColor: themeColor }}>
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-            <div className="w-full md:w-1/2 flex justify-center">
-              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-3xl overflow-hidden shadow-2xl">
-                <img
-                  src={config.banners?.[0] || CATEGORY_HERO_BG['combos']}
-                  alt="Rewards"
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent" />
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
-                  <div className="flex items-center gap-2">
-                    <Gift size={18} style={{ color: themeColor }} />
-                    <div>
-                      <p className="text-[10px] text-[#8f7065] font-semibold uppercase tracking-wider">Puntos</p>
-                      <p className="text-lg font-black text-[#1a1c1d]">0</p>
-                    </div>
-                  </div>
-                </div>
+            <div className="mt-12 flex items-center gap-4">
+              <div className="flex -space-x-3">
+                <div className="w-10 h-10 rounded-full border-2 border-gray-800 bg-gray-700" />
+                <div className="w-10 h-10 rounded-full border-2 border-gray-800 bg-gray-600" />
+                <div className="w-10 h-10 rounded-full border-2 border-gray-800 flex items-center justify-center text-xs font-bold text-white bg-gray-500">{config.brand_users_count || '+50k'}</div>
               </div>
-            </div>
-
-            <div className="w-full md:w-1/2 text-white">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                {config.section_rewards_title || 'Únete a'}<br />
-                <span>RECOMPENSAS</span>
-              </h2>
-              <p className="text-white/70 text-sm mt-3 max-w-md leading-relaxed">
-                {config.section_rewards_description || 'El programa de fidelización más delicioso. Acumula puntos con cada compra y canjéalos por comida gratis.'}
-              </p>
-
-              <div className="flex flex-col gap-4 mt-6">
-                {[
-                  { icon: <Users size={16} />, title: config.rewards_step1_title || 'Regístrate gratis', desc: config.rewards_step1_desc || 'Crea tu cuenta en segundos' },
-                  { icon: <ShoppingCart size={16} />, title: config.rewards_step2_title || 'Ordena y acumula', desc: config.rewards_step2_desc || 'Gana puntos con cada pedido' },
-                  { icon: <Gift size={16} />, title: config.rewards_step3_title || 'Canjea recompensas', desc: config.rewards_step3_desc || 'Intercambia puntos por comida gratis' },
-                ].map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-white/20 text-white">
-                      {step.icon}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-white">{step.title}</p>
-                      <p className="text-xs text-white/60">{step.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                <button
-                  onClick={() => setTab('profile')}
-                  className="text-white font-bold text-sm px-8 py-3 min-h-[48px] rounded-xl inline-flex items-center justify-center gap-2 transition-all cursor-pointer hover:opacity-90 active:scale-95"
-                  style={{ backgroundColor: '#1a1c1d' }}
-                >
-                  ÚNETE AHORA
-                </button>
-                <button
-                  onClick={() => setTab('profile')}
-                  className="bg-transparent text-white font-bold text-sm px-8 py-3 min-h-[48px] rounded-xl inline-flex items-center justify-center gap-2 border-2 border-white/30 hover:border-white/60 hover:bg-white/10 transition-all cursor-pointer active:scale-95"
-                >
-                  INICIAR SESIÓN
-                </button>
-              </div>
+              <p className="text-white/60 text-sm">Usuarios activos disfrutan de la app a diario.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          FOOTER (incluye FAQ)
-          ═══════════════════════════════════════════════════════════ */}
-      <Footer config={config} onInstallClick={onInstallClick} onAdminClick={onAdminClick} isAdminAuthenticated={isAdminAuthenticated} />
+      {/* ═══ FAQ STANDALONE ═══ */}
+      <section className="py-20 px-4 md:px-8 lg:px-16 max-w-4xl mx-auto w-full" style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb' }}>
+        <h3 className="text-[32px] md:text-[40px] text-center mb-4 font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Preguntas Frecuentes</h3>
+        <p className="text-center mb-12 max-w-lg mx-auto" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>Todo lo que necesitas saber sobre nuestro servicio premium de delivery.</p>
+        <div className="space-y-4">
+          {faqItems.map((item) => (
+            <div key={item.id} className="rounded-2xl overflow-hidden border transition-all hover:shadow-md"
+              style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff', borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}>
+              <button className="w-full p-6 flex justify-between items-center text-left transition-colors"
+                onClick={() => setOpenFaq(openFaq === item.id ? null : item.id)}>
+                <span className="text-lg font-bold pr-4" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>{item.question}</span>
+                <ChevronDown size={24} className="shrink-0 transition-transform duration-300" style={{
+                  color: themeColor,
+                  transform: openFaq === item.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                }} />
+              </button>
+              <div className="overflow-hidden transition-all duration-500 ease-in-out" style={{ maxHeight: openFaq === item.id ? '200px' : '0' }}>
+                <div className="px-6 pb-6 pt-0" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+                  <div className="border-t pt-4" style={{ borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}>
+                    <p className="leading-relaxed">{item.answer}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          FLOATING CART BUTTON
-          ═══════════════════════════════════════════════════════════ */}
-      <FloatingCartButton
-        itemCount={cartItemCount}
-        total={cartTotal}
-        onClick={() => setTab('checkout')}
-        themeColor={themeColor}
-      />
+      {/* ═══ FOOTER ═══ */}
+      <footer className="py-16 px-4 md:px-8 lg:px-16 border-t" style={{ backgroundColor: isDarkMode ? '#0a0a14' : '#f3f3f5', borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)' }}>
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+          {/* Col 1: Logo + About */}
+          <div>
+            {config.logo_url ? (
+              <img src={config.logo_url} alt={config.site_nombre} className="h-10 w-auto mb-6" />
+            ) : (
+              <h4 className="text-xl font-extrabold mb-6" style={{ color: themeColor }}>{config.site_nombre || 'FOODPOP'}</h4>
+            )}
+            <p className="text-sm leading-relaxed mb-6" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+              {config.footer_about_text || `Redefiniendo el delivery de comida rápida con calidad premium y tecnología de punta. Tu comida favorita, en la puerta de tu casa.`}
+            </p>
+            <div className="flex gap-3">
+              {config.instagram_url && <a href={config.instagram_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center transition-all" style={{ backgroundColor: isDarkMode ? '#16213e' : '#eeeef0', color: isDarkMode ? '#a0a0b8' : '#5b4137' }}><Instagram size={18} /></a>}
+              {config.twitter_url && <a href={config.twitter_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center transition-all" style={{ backgroundColor: isDarkMode ? '#16213e' : '#eeeef0', color: isDarkMode ? '#a0a0b8' : '#5b4137' }}><Twitter size={18} /></a>}
+              {config.facebook_url && <a href={config.facebook_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center transition-all" style={{ backgroundColor: isDarkMode ? '#16213e' : '#eeeef0', color: isDarkMode ? '#a0a0b8' : '#5b4137' }}><Facebook size={18} /></a>}
+            </div>
+          </div>
+          {/* Col 2: Menú */}
+          <div>
+            <h5 className="font-bold mb-6 uppercase tracking-widest text-xs" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Menú</h5>
+            <ul className="space-y-3 text-sm" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+              {(config.categories || []).slice(0, 5).map((cat) => (
+                <li key={cat}><button onClick={() => { setSelectedCategory(cat); setTab('catalog'); }} className="hover:opacity-80 transition-colors">{cat}</button></li>
+              ))}
+            </ul>
+          </div>
+          {/* Col 3: Compañía */}
+          <div>
+            <h5 className="font-bold mb-6 uppercase tracking-widest text-xs" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Compañía</h5>
+            <ul className="space-y-3 text-sm" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+              <li><button onClick={() => setTab('profile')} className="hover:opacity-80 transition-colors">Sobre Nosotros</button></li>
+              <li><button className="hover:opacity-80 transition-colors">Blog de Comida</button></li>
+              <li><button className="hover:opacity-80 transition-colors">Sostenibilidad</button></li>
+            </ul>
+          </div>
+          {/* Col 4: Soporte */}
+          <div>
+            <h5 className="font-bold mb-6 uppercase tracking-widest text-xs" style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>Soporte</h5>
+            <ul className="space-y-3 text-sm" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+              <li><a href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-colors flex items-center gap-2"><MessageCircle size={14} className="text-green-500" /> WhatsApp</a></li>
+              <li><button className="hover:opacity-80 transition-colors">Términos de Servicio</button></li>
+              <li><button className="hover:opacity-80 transition-colors">Privacidad</button></li>
+              {onAdminClick && (
+                <li><button onClick={onAdminClick} className="hover:opacity-80 transition-colors">{isAdminAuthenticated ? 'Admin ✓' : 'Admin'}</button></li>
+              )}
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-[1440px] mx-auto pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4 text-xs" style={{ borderColor: isDarkMode ? '#2a2a4a' : 'rgba(228,190,177,0.1)', color: isDarkMode ? '#5a5a7a' : '#8f7065' }}>
+          <p>© {new Date().getFullYear()} {config.footer_copyright || config.site_nombre || 'FOODPOP'}. Todos los derechos reservados.</p>
+          <div className="flex gap-6">
+            <span>Bogotá • CDMX • Madrid</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* ═══ FLOATING CART BUTTON ═══ */}
+      <FloatingCartButton itemCount={cartItemCount} total={cartTotal} onClick={() => setTab('checkout')} themeColor={themeColor} />
     </div>
   );
 };

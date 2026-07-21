@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, UtensilsCrossed, Search, ShoppingCart, User } from 'lucide-react';
+import { Home, UtensilsCrossed, Search, ShoppingCart, User, Plus } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
 interface BottomNavProps {
@@ -8,25 +8,25 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
-  const { cart, config } = useApp();
+  const { cart, config, isDarkMode } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const themeColor = config.theme_color || '#FF6B35';
 
   const tabs = [
-    { id: 'home' as const, label: 'Home', icon: Home, materialIcon: 'home' },
-    { id: 'catalog' as const, label: 'Menu', icon: UtensilsCrossed, materialIcon: 'restaurant_menu' },
-    { id: 'catalog' as const, label: 'Search', icon: Search, materialIcon: 'search', isSearch: true },
-    { id: 'profile' as const, label: 'Profile', icon: User, materialIcon: 'person' },
-    { id: 'checkout' as const, label: 'Cart', icon: ShoppingCart, materialIcon: 'shopping_bag', badge: cartCount },
+    { id: 'home' as const, label: 'Home', icon: Home },
+    { id: 'catalog' as const, label: 'Menu', icon: UtensilsCrossed },
+    { id: 'catalog' as const, label: 'Search', icon: Search, isSearch: true },
+    { id: 'profile' as const, label: 'Profile', icon: User },
+    { id: 'checkout' as const, label: 'Cart', icon: ShoppingCart, badge: cartCount },
   ];
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-bottom" style={{
-      background: 'rgba(249, 249, 251, 0.8)',
+      background: isDarkMode ? 'rgba(10, 10, 20, 0.85)' : 'rgba(249, 249, 251, 0.85)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      borderTop: '1px solid rgba(228, 190, 177, 0.1)',
-      borderRadius: '1rem 1rem 0 0',
+      borderTop: isDarkMode ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(228, 190, 177, 0.1)',
+      borderRadius: '1.25rem 1.25rem 0 0',
     }}>
       <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {tabs.map((tabItem, idx) => {
@@ -51,7 +51,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
               onClick={handleTabClick}
               className="flex flex-col items-center justify-center gap-0.5 w-14 h-full cursor-pointer relative transition-transform duration-200 active:scale-90"
               style={{
-                color: isActive ? themeColor : 'rgba(91, 65, 55, 0.6)',
+                color: isActive ? themeColor : (isDarkMode ? 'rgba(160, 160, 184, 0.6)' : 'rgba(91, 65, 55, 0.6)'),
               }}
             >
               <div className="relative">
@@ -60,7 +60,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
                   strokeWidth={isActive ? 2.2 : 1.5}
                   className="transition-all duration-200"
                   style={{
-                    color: isActive ? themeColor : 'rgba(91, 65, 55, 0.6)',
+                    color: isActive ? themeColor : (isDarkMode ? 'rgba(160, 160, 184, 0.6)' : 'rgba(91, 65, 55, 0.6)'),
                   }}
                   fill={isActive ? themeColor : 'none'}
                 />
@@ -76,7 +76,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
               <span
                 className="text-[10px] mt-0.5 transition-colors duration-200"
                 style={{
-                  color: isActive ? themeColor : 'rgba(91, 65, 55, 0.6)',
+                  color: isActive ? themeColor : (isDarkMode ? 'rgba(160, 160, 184, 0.6)' : 'rgba(91, 65, 55, 0.6)'),
                   fontWeight: isActive ? 600 : 400,
                 }}
               >
@@ -85,6 +85,20 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
             </button>
           );
         })}
+      </div>
+
+      {/* FAB — Floating Action Button */}
+      <div className="absolute left-1/2 -translate-x-1/2 -top-6">
+        <button
+          onClick={() => setTab('catalog')}
+          className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-all active:scale-90 hover:scale-105"
+          style={{
+            backgroundColor: themeColor,
+            boxShadow: `0 8px 24px ${themeColor}50, 0 2px 8px rgba(0,0,0,0.15)`,
+          }}
+        >
+          <Plus size={28} strokeWidth={2.5} />
+        </button>
       </div>
     </nav>
   );

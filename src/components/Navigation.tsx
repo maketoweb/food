@@ -2,7 +2,7 @@
 import {
   Home, ShoppingCart, Menu, X, MapPin, User, MessageCircle,
   LogOut, Tag, ChevronRight, UtensilsCrossed, Pizza, Sandwich,
-  Coffee, IceCream, Beef, Salad, Beer, Cake, Search,
+  Coffee, IceCream, Beef, Salad, Beer, Cake, Search, Sun, Moon,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
@@ -36,7 +36,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   setDrawerOpen,
   navigateToCatalog,
 }) => {
-  const { cart, config, currentUser, logoutUser } = useApp();
+  const { cart, config, currentUser, logoutUser, isDarkMode, toggleDarkMode } = useApp();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const logoUrl = config.logo_url || '';
   const themeColor = config.theme_color || '#FF6B35';
@@ -71,10 +71,10 @@ export const Navigation: React.FC<NavigationProps> = ({
       <header
         className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 items-center transition-all duration-300"
         style={{
-          background: 'rgba(249, 249, 251, 0.6)',
+          background: isDarkMode ? 'rgba(15, 15, 26, 0.7)' : 'rgba(249, 249, 251, 0.6)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(228, 190, 177, 0.2)',
+          borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(228, 190, 177, 0.2)',
         }}
       >
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between px-8 h-full">
@@ -136,8 +136,17 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </nav>
 
-          {/* Right: Sign In + Cart */}
+          {/* Right: Dark Mode Toggle + Sign In + Cart */}
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#e4beb1]/20 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-[#5b4137]" />}
+            </button>
+
             {currentUser ? (
               <div className="flex items-center gap-2">
                 <button
@@ -318,10 +327,10 @@ export const Navigation: React.FC<NavigationProps> = ({
       <header
         className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 transition-all duration-300"
         style={{
-          background: 'rgba(249, 249, 251, 0.6)',
+          background: isDarkMode ? 'rgba(15, 15, 26, 0.7)' : 'rgba(249, 249, 251, 0.6)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(228, 190, 177, 0.2)',
+          borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(228, 190, 177, 0.2)',
         }}
       >
         <div className="flex items-center gap-3">
@@ -354,6 +363,14 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleDarkMode}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#e4beb1]/20 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
+          >
+            {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-[#5b4137]" />}
+          </button>
           <button
             type="button"
             onClick={() => setTab('checkout')}

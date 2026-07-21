@@ -16,6 +16,10 @@ interface AppContextProps {
   toggleFavorite: (itemId: string) => void;
   isFavorite: (itemId: string) => boolean;
   
+  // Dark Mode
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
+
   // Haptic Feedback
   hapticEnabled: boolean;
   toggleHaptic: () => void;
@@ -1145,6 +1149,13 @@ const DEFAULT_CONFIG: StoreConfig = {
       { id: 'tier-gold', name: 'Oro', min_points: 1500, multiplier: 1.5, benefits: ['50% más puntos', 'Envío gratis'], color: '#FF9500' },
     ],
   },
+  brand_stat1_value: '15min',
+  brand_stat1_label: 'Entrega Promedio',
+  brand_stat2_value: '100%',
+  brand_stat2_label: 'Ingredientes Frescos',
+  brand_users_count: '+50k',
+  brand_section_title: 'Más que comida,',
+  brand_section_subtitle: 'es una experiencia.',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -1221,6 +1232,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved === null ? true : saved === 'true';
   });
 
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('trv_dark_mode');
+    if (saved !== null) return saved === 'true';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
   const hapticEnabledRef = useRef(hapticEnabled);
   useEffect(() => {
     hapticEnabledRef.current = hapticEnabled;
@@ -1231,6 +1248,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setHapticEnabled(newVal);
     localStorage.setItem('trv_haptic_enabled', String(newVal));
   };
+
+  const toggleDarkMode = () => {
+    const newVal = !isDarkMode;
+    setIsDarkMode(newVal);
+    localStorage.setItem('trv_dark_mode', String(newVal));
+  };
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
 
   const toggleCurrency = () => {
     const newCurrency = displayCurrency === 'USD' ? 'BS' : 'USD';
@@ -3456,6 +3484,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toggleCurrency,
       hapticEnabled,
       toggleHaptic,
+      isDarkMode,
+      toggleDarkMode,
       reviews,
       addReview,
       getProductReviews,

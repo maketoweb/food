@@ -340,6 +340,7 @@ export interface StoreConfig {
   theme_color?: string;
   secondary_color?: string;
   accent_color?: string;
+  theme_mode?: 'light' | 'dark' | 'system';
   delivery_gratis?: boolean;
   delivery_gratis_threshold?: number;
   costo_delivery_km?: number;
@@ -406,6 +407,13 @@ export interface StoreConfig {
   jsonld_type?: string;
   jsonld_priceRange?: string;
   jsonld_servesCuisine?: string[];
+  brand_stat1_value?: string;
+  brand_stat1_label?: string;
+  brand_stat2_value?: string;
+  brand_stat2_label?: string;
+  brand_users_count?: string;
+  brand_section_title?: string;
+  brand_section_subtitle?: string;
 }
 
 // ============================================================================

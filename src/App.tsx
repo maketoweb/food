@@ -19,7 +19,7 @@ import { SplashScreen } from './components/SplashScreen';
 import { SkeletonHome, SkeletonCatalog, SkeletonCheckout, SkeletonProfile } from './components/Skeletons';
 
 function AppContent() {
-  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated, userRole, currentUser, markUserAsPwaInstalled } = useApp();
+  const { cart, config, addToCart, authenticateAdmin, isGlobalLoading, isAdminAuthenticated, userRole, currentUser, markUserAsPwaInstalled, isDarkMode } = useApp();
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -157,7 +157,7 @@ function AppContent() {
       admin: <SkeletonHome />,
     };
     return (
-      <div className="min-h-screen bg-[#f9f9fb] text-[#1a1c1d] w-full flex justify-center">
+      <div className={`min-h-screen w-full flex justify-center ${isDarkMode ? 'dark' : ''}`} style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>
         <div className="w-full">
           {skeletonMap[tab] || <SkeletonHome />}
         </div>
@@ -165,14 +165,14 @@ function AppContent() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#f9f9fb] text-[#1a1c1d] w-full flex justify-center">
-      {showSplash && <SplashScreen config={config} onComplete={() => setShowSplash(false)} />}
-      <SEOHead />
-      <OfflineBanner />
-      <PushNotificationModal />
+    return (
+      <div className={`min-h-screen w-full flex justify-center transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`} style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }}>
+        {showSplash && <SplashScreen config={config} onComplete={() => setShowSplash(false)} />}
+        <SEOHead />
+        <OfflineBanner />
+        <PushNotificationModal />
 
-      <div className="w-full bg-[#f9f9fb] flex flex-col min-h-screen relative">
+        <div className="w-full flex flex-col min-h-screen relative" style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#f9f9fb' }}>
 
         {/* ═══ HEADER DE TIENDA - oculto en panel admin ═══ */}
         {tab !== 'admin' && (

@@ -1,66 +1,63 @@
-<!DOCTYPE html>
-
-<html class="light" lang="es"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>FOODPOP - Explosión de Sabor</title>
+<!DOCTYPE html><html class="light" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FOODPOP - Premium Delivery</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             "colors": {
-                    "inverse-surface": "#2f3132",
-                    "secondary-container": "#e2dfde",
-                    "on-tertiary-fixed": "#1b1c1c",
-                    "tertiary-fixed": "#e4e2e2",
-                    "on-secondary-container": "#636262",
-                    "surface-dim": "#d9dadc",
-                    "on-tertiary": "#ffffff",
-                    "on-primary-fixed-variant": "#802a00",
-                    "error-container": "#ffdad6",
-                    "surface-variant": "#e2e2e4",
-                    "on-error-container": "#93000a",
-                    "surface-container-high": "#e8e8ea",
-                    "primary": "#a73a00",
-                    "surface": "#f9f9fb",
-                    "inverse-primary": "#ffb59a",
-                    "surface-container-highest": "#e2e2e4",
-                    "secondary-fixed": "#e5e2e1",
-                    "on-background": "#1a1c1d",
-                    "surface-container-lowest": "#ffffff",
                     "background": "#f9f9fb",
-                    "on-tertiary-fixed-variant": "#464747",
-                    "surface-bright": "#f9f9fb",
-                    "on-tertiary-container": "#2b2b2b",
-                    "on-primary-container": "#521800",
-                    "primary-fixed-dim": "#ffb59a",
-                    "on-surface-variant": "#5b4137",
-                    "on-primary": "#ffffff",
-                    "on-secondary-fixed": "#1c1b1b",
-                    "on-secondary": "#ffffff",
-                    "surface-tint": "#a73a00",
+                    "surface-variant": "#e2e2e4",
+                    "surface": "#f9f9fb",
+                    "secondary-fixed": "#e5e2e1",
                     "surface-container": "#eeeef0",
-                    "outline-variant": "#e4beb1",
-                    "on-secondary-fixed-variant": "#474746",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "primary-container": "#ff5c00",
                     "tertiary-container": "#939292",
                     "surface-container-low": "#f3f3f5",
-                    "tertiary-fixed-dim": "#c7c6c6",
-                    "inverse-on-surface": "#f0f0f2",
-                    "secondary-fixed-dim": "#c8c6c5",
-                    "error": "#ba1a1a",
-                    "primary-fixed": "#ffdbce",
                     "outline": "#8f7065",
-                    "primary-container": "#ff5c00",
-                    "on-surface": "#1a1c1d",
-                    "secondary": "#5f5e5e",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#2f3132",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#521800",
+                    "error-container": "#ffdad6",
                     "on-primary-fixed": "#370e00",
+                    "tertiary-fixed-dim": "#c7c6c6",
                     "tertiary": "#5e5e5e",
-                    "on-error": "#ffffff"
+                    "on-secondary-fixed": "#1c1b1b",
+                    "outline-variant": "#e4beb1",
+                    "primary-fixed-dim": "#ffb59a",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#e2dfde",
+                    "inverse-on-surface": "#f0f0f2",
+                    "surface-tint": "#a73a00",
+                    "on-secondary-container": "#636262",
+                    "on-surface": "#1a1c1d",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e2e2e4",
+                    "on-background": "#1a1c1d",
+                    "secondary": "#5f5e5e",
+                    "on-tertiary-container": "#2b2b2b",
+                    "on-secondary-fixed-variant": "#474746",
+                    "inverse-primary": "#ffb59a",
+                    "surface-bright": "#f9f9fb",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#ffdbce",
+                    "on-primary-fixed-variant": "#802a00",
+                    "surface-dim": "#d9dadc",
+                    "surface-container-high": "#e8e8ea",
+                    "on-surface-variant": "#5b4137",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "tertiary-fixed": "#e4e2e2",
+                    "on-tertiary-fixed-variant": "#464747",
+                    "primary": "#a73a00"
             },
             "borderRadius": {
                     "DEFAULT": "0.25rem",
@@ -69,35 +66,35 @@
                     "full": "9999px"
             },
             "spacing": {
-                    "md": "16px",
-                    "sm": "8px",
                     "xl": "40px",
+                    "md": "16px",
+                    "xs": "4px",
                     "margin-mobile": "16px",
                     "lg": "24px",
+                    "sm": "8px",
+                    "base": "4px",
                     "margin-desktop": "64px",
-                    "xs": "4px",
-                    "gutter": "20px",
-                    "base": "4px"
+                    "gutter": "20px"
             },
             "fontFamily": {
-                    "label-sm": ["Plus Jakarta Sans"],
-                    "headline-md": ["Plus Jakarta Sans"],
                     "headline-lg-mobile": ["Plus Jakarta Sans"],
                     "body-md": ["Plus Jakarta Sans"],
-                    "headline-lg": ["Plus Jakarta Sans"],
                     "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
                     "headline-xl": ["Plus Jakarta Sans"],
-                    "body-lg": ["Plus Jakarta Sans"]
+                    "headline-md": ["Plus Jakarta Sans"]
             },
             "fontSize": {
-                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
-                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
                     "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
                     "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
                     "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
                     "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
-                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
             }
           },
         },
@@ -107,301 +104,378 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.05); }
+        .glass-header { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); }
+        .card-shadow { box-shadow: 0 4px 20px -4px rgba(0,0,0,0.05); }
+        .active-pill { background: #ff5c00; color: white; box-shadow: 0 4px 12px rgba(255, 92, 0, 0.2); }
+        .nav-shadow { box-shadow: 0 -4px 16px -1px rgba(0,0,0,0.04); }
         .vertical-carousel { scroll-snap-type: y mandatory; }
         .carousel-item { scroll-snap-align: start; }
-        .orange-glow { box-shadow: 0 0 20px rgba(255, 92, 0, 0.2); }
     </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-surface text-on-surface antialiased overflow-x-hidden">
+</head>
+<body class="bg-surface text-on-surface antialiased overflow-x-hidden selection:bg-primary/20">
 <!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl border-b border-outline-variant/20 h-16">
+<header class="fixed top-0 w-full z-50 glass-header border-b border-outline-variant/10 h-16 transition-all duration-300">
 <div class="flex justify-between items-center px-margin-mobile h-full w-full max-w-7xl mx-auto">
-<div class="flex items-center gap-md">
-<button class="active:scale-95 transition-transform duration-150 text-primary">
-<span class="material-symbols-outlined">menu</span>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20 transition-colors">
+<span class="material-symbols-outlined text-on-surface">menu</span>
 </button>
-<h1 class="font-display-lg text-headline-lg-mobile tracking-tighter text-primary">FOODPOP</h1>
+<h1 class="text-primary-container font-headline-md tracking-tighter text-[22px]">FOODPOP</h1>
 </div>
-<div class="flex items-center gap-md">
-<button class="active:scale-95 transition-transform duration-150 text-on-surface-variant">
-<span class="material-symbols-outlined">notifications</span>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20 transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
 </button>
-<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20">
-<img class="w-full h-full object-cover" data-alt="A close-up portrait of a cheerful young professional man with a friendly smile, set against a clean, minimalist studio background. The lighting is soft and high-key, emphasizing a modern light-mode aesthetic. The color palette is composed of natural skin tones and a clean white backdrop, reflecting a premium and trustworthy tech-app identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZa01kaaXriL7JEjeGPD1KhYI6fGv6IdAhs0lSBaQywrq-UFqfEmhKM1-h1Blq57VhBqoP3VcLBqq8V8F_O0RxiXa4TBW-NTgqdlT7XsS1a19OzDa4vfgXcs-jTstJOVzMw1pibmyShzkq_2Vxz-z8_d54ncUUWT1h-0Alz3rZa3UbVFpkbPGMRg3A3ulrzRbe7RbgcJlgCaxBeIs9XjNMLHz95zVyxVN-YLaEBf5g-VxTWwLWkk2rw"/>
+<div class="w-9 h-9 rounded-full overflow-hidden border-2 border-primary/10">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZa01kaaXriL7JEjeGPD1KhYI6fGv6IdAhs0lSBaQywrq-UFqfEmhKM1-h1Blq57VhBqoP3VcLBqq8V8F_O0RxiXa4TBW-NTgqdlT7XsS1a19OzDa4vfgXcs-jTstJOVzMw1pibmyShzkq_2Vxz-z8_d54ncUUWT1h-0Alz3rZa3UbVFpkbPGMRg3A3ulrzRbe7RbgcJlgCaxBeIs9XjNMLHz95zVyxVN-YLaEBf5g-VxTWwLWkk2rw">
 </div>
 </div>
 </div>
 </header>
-<main class="pt-16 pb-24">
-<!-- Hero Vertical Carousel (1350x1080 Aspect Ratio Feel) -->
-<section class="relative h-[707px] md:h-[600px] overflow-hidden">
+<main class="pt-16 pb-32">
+<!-- Hero Vertical Carousel (Full Width) -->
+<section class="relative h-[700px] overflow-hidden">
 <div class="vertical-carousel h-full overflow-y-scroll no-scrollbar snap-y snap-mandatory">
 <!-- Slide 1 -->
-<div class="carousel-item relative h-full w-full flex items-center justify-center">
-<div class="absolute inset-0 bg-cover bg-center" data-alt="A vibrant, high-energy gourmet burger with melting cheese, crispy bacon, and fresh greens, exploding with color against a clean white background. The lighting is bright and crisp, highlighting the Electric Orange accents of the brand. The composition is dynamic and appetizing, suggesting a premium, fast-paced food experience." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDTHvcfZEFuZ0DssKwQeRJUHGiCY2YKr1p-n71fLqnuK48drmACHMyNZT1yqVCXeXmH7bGOYlZ7n4SS46awtHsrZOpLC6t9vIucktiUQQYyO2MZBMhh683AqI75NPQo2K8gqrWyDEwG-MW3z8laZ8hNVOAeIxbe2_4M5sZKdRUvmL5ic6qcHR4uEo0cm4kr2jX42GTpuZz7bW_DNAB4lyAH91cA2phOwKQoGAM_6QZ-HXwbnKkG1Bwaxw')"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-<div class="absolute bottom-12 left-margin-mobile right-margin-mobile">
-<span class="inline-block px-3 py-1 bg-primary-container text-on-primary-container font-label-md text-label-md rounded-full mb-md">NUEVO</span>
-<h2 class="font-headline-xl text-headline-xl text-white mb-sm">Bacon Bomb Max</h2>
-<p class="font-body-md text-body-md text-white/80 max-w-md">La explosión de sabor que estabas esperando. ¡Pídela hoy con 20% OFF!</p>
+<div class="carousel-item relative h-full w-full">
+<img alt="Hero 1" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTHvcfZEFuZ0DssKwQeRJUHGiCY2YKr1p-n71fLqnuK48drmACHMyNZT1yqVCXeXmH7bGOYlZ7n4SS46awtHsrZOpLC6t9vIucktiUQQYyO2MZBMhh683AqI75NPQo2K8gqrWyDEwG-MW3z8laZ8hNVOAeIxbe2_4M5sZKdRUvmL5ic6qcHR4uEo0cm4kr2jX42GTpuZz7bW_DNAB4lyAH91cA2phOwKQoGAM_6QZ-HXwbnKkG1Bwaxw">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-16 left-0 right-0 p-8">
+<span class="inline-flex items-center px-3 py-1 bg-primary-container text-white font-label-md text-[11px] uppercase tracking-widest rounded-full mb-4">NUEVO</span>
+<h2 class="font-headline-xl text-[44px] leading-none text-white mb-4">Bacon Bomb<br>Max Edition</h2>
+<p class="font-body-md text-white/80 max-w-xs mb-8">La explosión definitiva de sabor. Ahumada, jugosa y ahora con 20% OFF.</p>
+<button class="bg-primary-container text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 shadow-xl shadow-primary-container/20">
+                        Ordenar Ahora <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
 </div>
 </div>
 <!-- Slide 2 -->
-<div class="carousel-item relative h-full w-full flex items-center justify-center">
-<div class="absolute inset-0 bg-cover bg-center" data-alt="A close-up of a colorful, fresh Poke Bowl filled with salmon, avocado, and vibrant edamame, presented in a minimalist ceramic bowl. The scene is bathed in bright, natural light, creating an optimistic and healthy mood. Electric Orange details in the background reinforce the FoodPop visual identity, focusing on freshness and high-energy nutrition." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDPuYVhM9oczoLWgKsyPadp0E8PhOXPd94d6UTpomVkqCCGy2B_7dWNFJx2jBY3wcQWvw-FsTG-gsDc6LcFIcNoKMkcAHz8w7m2JpELp9tuizofCglyBn2CI_xhyrUGn0K2TD81821qpr7uh6ONyS-gRyXhV7j3vBNTAHYlU_bDNr3FRjXVd_BM1GoipOIpto04h_PAFeVuMpTGhlmPlE5aaL4qMsCD3Ru6JfMcOBVuHPHVNQLx-BjfGg')"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-<div class="absolute bottom-12 left-margin-mobile right-margin-mobile">
-<span class="inline-block px-3 py-1 bg-primary text-white font-label-md text-label-md rounded-full mb-md">HEALTHY POP</span>
-<h2 class="font-headline-xl text-headline-xl text-white mb-sm">Salmon Zen Bowl</h2>
-<p class="font-body-md text-body-md text-white/80 max-w-md">Frescura en cada bocado. El balance perfecto para tu día.</p>
+<div class="carousel-item relative h-full w-full">
+<img alt="Hero 2" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPuYVhM9oczoLWgKsyPadp0E8PhOXPd94d6UTpomVkqCCGy2B_7dWNFJx2jBY3wcQWvw-FsTG-gsDc6LcFIcNoKMkcAHz8w7m2JpELp9tuizofCglyBn2CI_xhyrUGn0K2TD81821qpr7uh6ONyS-gRyXhV7j3vBNTAHYlU_bDNr3FRjXVd_BM1GoipOIpto04h_PAFeVuMpTGhlmPlE5aaL4qMsCD3Ru6JfMcOBVuHPHVNQLx-BjfGg">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-16 left-0 right-0 p-8">
+<span class="inline-flex items-center px-3 py-1 bg-primary text-white font-label-md text-[11px] uppercase tracking-widest rounded-full mb-4">HEALTHY POP</span>
+<h2 class="font-headline-xl text-[44px] leading-none text-white mb-4">Salmon Zen<br>Bowl</h2>
+<p class="font-body-md text-white/80 max-w-xs mb-8">Frescura en cada bocado. El balance perfecto para tu día.</p>
+<button class="bg-primary text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2">
+                        Ver Menú <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
 </div>
 </div>
 </div>
 <!-- Scroll Indicator Dots -->
-<div class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-sm">
-<div class="w-2 h-6 bg-primary rounded-full"></div>
-<div class="w-2 h-2 bg-white/40 rounded-full"></div>
-<div class="w-2 h-2 bg-white/40 rounded-full"></div>
+<div class="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-10">
+<div class="w-1.5 h-6 bg-primary-container rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+</div>
+</section>
+<!-- Menu Bubbles -->
+<section class="py-8 px-margin-mobile"><div class="flex gap-3 overflow-x-auto no-scrollbar py-2">
+  <button class="px-6 py-2 rounded-full bg-primary-container text-white font-label-md whitespace-nowrap shadow-md">Burgers</button>
+  <button class="px-6 py-2 rounded-full bg-surface-container text-on-surface-variant font-label-md whitespace-nowrap hover:bg-surface-variant/20 transition-colors">Pizzas</button>
+  <button class="px-6 py-2 rounded-full bg-surface-container text-on-surface-variant font-label-md whitespace-nowrap hover:bg-surface-variant/20 transition-colors">Sushi</button>
+  <button class="px-6 py-2 rounded-full bg-surface-container text-on-surface-variant font-label-md whitespace-nowrap hover:bg-surface-variant/20 transition-colors">Drinks</button>
+  <button class="px-6 py-2 rounded-full bg-surface-container text-on-surface-variant font-label-md whitespace-nowrap hover:bg-surface-variant/20 transition-colors">Postres</button>
+  <button class="px-6 py-2 rounded-full bg-surface-container text-on-surface-variant font-label-md whitespace-nowrap hover:bg-surface-variant/20 transition-colors">Ensaladas</button>
+</div></section>
+<!-- Interactive List: Top Burgers -->
+<section class="py-6 px-margin-mobile">
+<h3 class="font-headline-md text-headline-md mb-6">Top Burgers</h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar -mx-margin-mobile px-margin-mobile pb-4">
+<div class="min-w-[160px] bg-white rounded-2xl p-4 card-shadow border border-outline-variant/5">
+<div class="h-32 mb-4">
+<img alt="Burger" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTHvcfZEFuZ0DssKwQeRJUHGiCY2YKr1p-n71fLqnuK48drmACHMyNZT1yqVCXeXmH7bGOYlZ7n4SS46awtHsrZOpLC6t9vIucktiUQQYyO2MZBMhh683AqI75NPQo2K8gqrWyDEwG-MW3z8laZ8hNVOAeIxbe2_4M5sZKdRUvmL5ic6qcHR4uEo0cm4kr2jX42GTpuZz7bW_DNAB4lyAH91cA2phOwKQoGAM_6QZ-HXwbnKkG1Bwaxw">
+</div>
+<h4 class="text-sm font-bold truncate">Big Pop Classic</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary-container font-bold">$8.99</span>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+</div>
+<div class="min-w-[160px] bg-white rounded-2xl p-4 card-shadow border border-outline-variant/5">
+<div class="h-32 mb-4">
+<img alt="Burger" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0XmZn3ry5xTpKP8BUboBRPX2RewPMXyMV8wtQpWVlZlkkP0a_5Vrx8ADqnZw6Yb_v_VyzP5v03WAnVb6JS7xNVFEsyEILZf1ox_OBmuGLIKTcaz_hj8zXtDlp-oM2Mr2NFItPWr7VbgA9_66OQxN8MC2BpkyAzXrQR589bHEhYiZeFuupBW-hPeDHjb7d0tcqBOiKaYD1qqCE6LDKLu6NWluWb2w1FEq6ZcBBWY5vJrY5KrVnD02oeA">
+</div>
+<h4 class="text-sm font-bold truncate">Double Smash</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary-container font-bold">$10.50</span>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+</div>
+<div class="min-w-[160px] bg-white rounded-2xl p-4 card-shadow border border-outline-variant/5">
+<div class="h-32 mb-4">
+<img alt="Burger" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0XmZn3ry5xTpKP8BUboBRPX2RewPMXyMV8wtQpWVlZlkkP0a_5Vrx8ADqnZw6Yb_v_VyzP5v03WAnVb6JS7xNVFEsyEILZf1ox_OBmuGLIKTcaz_hj8zXtDlp-oM2Mr2NFItPWr7VbgA9_66OQxN8MC2BpkyAzXrQR589bHEhYiZeFuupBW-hPeDHjb7d0tcqBOiKaYD1qqCE6LDKLu6NWluWb2w1FEq6ZcBBWY5vJrY5KrVnD02oeA">
+</div>
+<h4 class="text-sm font-bold truncate">Mega Cheese</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary-container font-bold">$9.75</span>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+</div>
 </div>
 </section>
 <!-- Ofertas Flash -->
-<section class="py-xl px-margin-mobile max-w-7xl mx-auto">
-<div class="flex justify-between items-end mb-lg">
+<section class="py-8 px-margin-mobile">
+<div class="flex justify-between items-end mb-6">
 <div>
-<div class="flex items-center gap-xs text-primary mb-xs">
-<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
-<span class="font-label-md text-label-md">TERMINA EN 02:45:12</span>
+<div class="flex items-center gap-2 text-primary-container mb-1">
+<span class="material-symbols-outlined text-[18px] fill-[1]">bolt</span>
+<span class="font-label-md text-label-md uppercase tracking-tighter">Termina en 02:45:12</span>
 </div>
 <h3 class="font-headline-lg text-headline-lg">Ofertas Flash</h3>
 </div>
-<button class="text-primary font-label-md text-label-md flex items-center gap-xs">Ver Todo <span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
+<button class="text-primary-container font-label-md text-label-md flex items-center gap-1">Ver Todo <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
 </div>
-<div class="flex gap-md overflow-x-auto no-scrollbar pb-md">
-<!-- Flash Card 1 -->
-<div class="min-w-[280px] bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden group">
-<div class="relative h-48">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Delicious, artisanal pepperoni pizza with bubbling mozzarella and fresh basil, captured in a bright, modern studio setting. The lighting is crisp and energetic, highlighting the texture of the crust and the vibrant colors of the ingredients. The scene is styled for a high-end food delivery app, emphasizing immediate cravings and premium quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpL77U_YsJWMDzOLb9QUMnymvi4WinJ3aKk-PGUnOBYfQqviLu0skjKCD73XOLSQ-f-ttFe-61EEhou7buStMCkMgAejH6FqNXycTCr0bNRUPuYSu4Q4scvyQ2HOQffS41mlO6_p_vztog5lhvKd-5P78WTP9hFnCiWF_HHPkHfj1Wc-sBFuYkUnc979vWmXJvhhCIPPoqmifKIohhek_Lbu8_zH9zxaImAXquElIM4l8AX6Ruo5AszA"/>
-<div class="absolute top-2 left-2 bg-primary text-white font-bold px-2 py-1 rounded text-xs">-40%</div>
+<div class="flex gap-5 overflow-x-auto no-scrollbar pb-4 -mx-margin-mobile px-margin-mobile">
+<div class="min-w-[260px] bg-white rounded-2xl border border-outline-variant/10 overflow-hidden card-shadow">
+<div class="relative h-44">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpL77U_YsJWMDzOLb9QUMnymvi4WinJ3aKk-PGUnOBYfQqviLu0skjKCD73XOLSQ-f-ttFe-61EEhou7buStMCkMgAejH6FqNXycTCr0bNRUPuYSu4Q4scvyQ2HOQffS41mlO6_p_vztog5lhvKd-5P78WTP9hFnCiWF_HHPkHfj1Wc-sBFuYkUnc979vWmXJvhhCIPPoqmifKIohhek_Lbu8_zH9zxaImAXquElIM4l8AX6Ruo5AszA">
+<div class="absolute top-3 left-3 bg-red-600 text-white font-bold px-2 py-1 rounded-lg text-[11px] shadow-lg">-40%</div>
 </div>
-<div class="p-md">
-<h4 class="font-headline-md text-body-lg mb-xs">Pizza Pop Pepperoni</h4>
-<div class="flex items-center gap-sm">
-<span class="text-primary font-bold text-lg">$12.99</span>
-<span class="text-on-surface-variant/40 line-through text-sm">$21.50</span>
-</div>
+<div class="p-4">
+<h4 class="font-headline-md text-[16px] mb-1 truncate">Pizza Pop Pepperoni</h4>
+<div class="flex items-center gap-2">
+<span class="text-primary-container font-bold text-lg">$12.99</span>
+<span class="text-on-surface-variant/40 line-through text-xs font-medium">$21.50</span>
 </div>
 </div>
-<!-- Flash Card 2 -->
-<div class="min-w-[280px] bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden group">
-<div class="relative h-48">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A towering classic cheeseburger with multiple patties, fresh lettuce, tomatoes, and secret sauce, presented on a minimalist white surface. The lighting is high-energy and bright, casting soft shadows that define the juicy textures. The overall aesthetic is clean and modern, using the FoodPop orange color as a subtle highlight in the composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0XmZn3ry5xTpKP8BUboBRPX2RewPMXyMV8wtQpWVlZlkkP0a_5Vrx8ADqnZw6Yb_v_VyzP5v03WAnVb6JS7xNVFEsyEILZf1ox_OBmuGLIKTcaz_hj8zXtDlp-oM2Mr2NFItPWr7VbgA9_66OQxN8MC2BpkyAzXrQR589bHEhYiZeFuupBW-hPeDHjb7d0tcqBOiKaYD1qqCE6LDKLu6NWluWb2w1FEq6ZcBBWY5vJrY5KrVnD02oeA"/>
-<div class="absolute top-2 left-2 bg-primary text-white font-bold px-2 py-1 rounded text-xs">-30%</div>
 </div>
-<div class="p-md">
-<h4 class="font-headline-md text-body-lg mb-xs">Double Smash Combo</h4>
-<div class="flex items-center gap-sm">
-<span class="text-primary font-bold text-lg">$9.50</span>
-<span class="text-on-surface-variant/40 line-through text-sm">$14.00</span>
+<div class="min-w-[260px] bg-white rounded-2xl border border-outline-variant/10 overflow-hidden card-shadow">
+<div class="relative h-44">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0XmZn3ry5xTpKP8BUboBRPX2RewPMXyMV8wtQpWVlZlkkP0a_5Vrx8ADqnZw6Yb_v_VyzP5v03WAnVb6JS7xNVFEsyEILZf1ox_OBmuGLIKTcaz_hj8zXtDlp-oM2Mr2NFItPWr7VbgA9_66OQxN8MC2BpkyAzXrQR589bHEhYiZeFuupBW-hPeDHjb7d0tcqBOiKaYD1qqCE6LDKLu6NWluWb2w1FEq6ZcBBWY5vJrY5KrVnD02oeA">
+<div class="absolute top-3 left-3 bg-red-600 text-white font-bold px-2 py-1 rounded-lg text-[11px] shadow-lg">-30%</div>
+</div>
+<div class="p-4">
+<h4 class="font-headline-md text-[16px] mb-1 truncate">Double Smash Combo</h4>
+<div class="flex items-center gap-2">
+<span class="text-primary-container font-bold text-lg">$9.50</span>
+<span class="text-on-surface-variant/40 line-through text-xs font-medium">$14.00</span>
 </div>
 </div>
 </div>
 </div>
 </section>
-<!-- Destacados (Bento Grid) -->
-<section class="py-xl bg-surface-container-low px-margin-mobile">
-<div class="max-w-7xl mx-auto">
-<h3 class="font-headline-lg text-headline-lg mb-lg">Nuestros Destacados</h3>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
-<div class="md:col-span-2 h-64 relative rounded-xl overflow-hidden group">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A gourmet pasta dish with shrimp and roasted garlic, drizzled with olive oil, served in a sleek, modern white plate. The background is a clean, bright minimalist kitchen environment. The lighting is cinematic and high-key, making the dish look luxurious and inviting. The aesthetic is fast, professional, and visually focused on culinary excellence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLqo9HOlDD74qSHwApZlz42Cn3wbxErWhmvOuBdJvNy4EWcrPrR2S0TMOmbkgZ-mu841W2kZ9Cvzvawf03G2R6jhegLYvYmksVLcfFD_EhUeoXqBhTdrQMs5ABJrQfZrHJlW5qzI-oU9yk1PbLQToPjOD-uWW520xwfblF3gx8uXx5WNlGCz1fxBWC63JcGE9ZrlLbGKcXLfB8xdbt_sTSc9YrK5IKYk8vzUQtzeJWtl7N2F1DC0HxrQ"/>
-<div class="absolute inset-0 bg-black/30 flex flex-col justify-end p-lg">
-<h4 class="text-white font-headline-md text-headline-md">Pasta Premium</h4>
-<p class="text-white/80 font-body-md">Recetas de autor directo a tu mesa.</p>
+<!-- Nuestros Destacados (Bento Grid) -->
+<section class="py-12 bg-surface-container-lowest px-margin-mobile">
+<h3 class="font-headline-lg text-headline-lg mb-8">Nuestros Destacados</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2 h-72 relative rounded-[2rem] overflow-hidden group card-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLqo9HOlDD74qSHwApZlz42Cn3wbxErWhmvOuBdJvNy4EWcrPrR2S0TMOmbkgZ-mu841W2kZ9Cvzvawf03G2R6jhegLYvYmksVLcfFD_EhUeoXqBhTdrQMs5ABJrQfZrHJlW5qzI-oU9yk1PbLQToPjOD-uWW520xwfblF3gx8uXx5WNlGCz1fxBWC63JcGE9ZrlLbGKcXLfB8xdbt_sTSc9YrK5IKYk8vzUQtzeJWtl7N2F1DC0HxrQ">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-8">
+<h4 class="text-white font-headline-md text-[24px]">Pasta Premium</h4>
+<p class="text-white/70 font-body-md text-[15px]">Recetas de autor directo a tu mesa.</p>
 </div>
 </div>
-<div class="h-64 relative rounded-xl overflow-hidden group">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A colorful Mediterranean salad bowl with chickpeas, feta, and fresh vegetables on a white table. The scene is bright and airy, reflecting a morning or midday light. The overall mood is optimistic, energetic, and clean, perfectly matching a modern health-conscious food brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGCx7B9dq3XbnsVppZAC9U_iHDIwQDq7wJlas67W0y5P2LV6NDnWMw0FIc6EQB94pJYc_Qay_bAFIAfDazhfRdKPjXYbykgY20mkNPO615P4DYnf4bo2b0Rbi5iwbdhQAUAY9Lz6YFEis8wn26PYKpymWrJ77vR5hfSOiFBal2myuoQNTUtWo7T5hoyXICizuyz17VjX8xPJYM9Vi_BEOGv0xPnOjG-HsvCz7BTlNYnzG3em5tQ8YKUA"/>
-<div class="absolute inset-0 bg-primary/20 flex flex-col justify-end p-lg">
-<h4 class="text-white font-headline-md text-headline-md">Ensaladas Pop</h4>
-<p class="text-white/80 font-body-md">Explosión natural.</p>
+<div class="h-72 relative rounded-[2rem] overflow-hidden group card-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGCx7B9dq3XbnsVppZAC9U_iHDIwQDq7wJlas67W0y5P2LV6NDnWMw0FIc6EQB94pJYc_Qay_bAFIAfDazhfRdKPjXYbykgY20mkNPO615P4DYnf4bo2b0Rbi5iwbdhQAUAY9Lz6YFEis8wn26PYKpymWrJ77vR5hfSOiFBal2myuoQNTUtWo7T5hoyXICizuyz17VjX8xPJYM9Vi_BEOGv0xPnOjG-HsvCz7BTlNYnzG3em5tQ8YKUA">
+<div class="absolute inset-0 bg-primary/20 flex flex-col justify-end p-8 backdrop-blur-[2px]">
+<h4 class="text-white font-headline-md text-[24px]">Ensaladas Pop</h4>
+<p class="text-white/80 font-body-md text-[15px]">Explosión natural.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Lo más pedido (Grid Carousel) -->
+<section class="py-12 px-margin-mobile">
+<h3 class="font-headline-lg text-headline-lg mb-8">Lo más pedido</h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar -mx-margin-mobile px-margin-mobile">
+<div class="grid grid-cols-2 grid-rows-2 gap-4 min-w-[320px]">
+<div class="bg-white p-3 rounded-2xl border border-outline-variant/10 flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTHvcfZEFuZ0DssKwQeRJUHGiCY2YKr1p-n71fLqnuK48drmACHMyNZT1yqVCXeXmH7bGOYlZ7n4SS46awtHsrZOpLC6t9vIucktiUQQYyO2MZBMhh683AqI75NPQo2K8gqrWyDEwG-MW3z8laZ8hNVOAeIxbe2_4M5sZKdRUvmL5ic6qcHR4uEo0cm4kr2jX42GTpuZz7bW_DNAB4lyAH91cA2phOwKQoGAM_6QZ-HXwbnKkG1Bwaxw">
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Classic Pop</p>
+<p class="text-[10px] text-primary-container font-bold">$7.99</p>
+</div>
+</div>
+<div class="bg-white p-3 rounded-2xl border border-outline-variant/10 flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpL77U_YsJWMDzOLb9QUMnymvi4WinJ3aKk-PGUnOBYfQqviLu0skjKCD73XOLSQ-f-ttFe-61EEhou7buStMCkMgAejH6FqNXycTCr0bNRUPuYSu4Q4scvyQ2HOQffS41mlO6_p_vztog5lhvKd-5P78WTP9hFnCiWF_HHPkHfj1Wc-sBFuYkUnc979vWmXJvhhCIPPoqmifKIohhek_Lbu8_zH9zxaImAXquElIM4l8AX6Ruo5AszA">
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Veggie Pizza</p>
+<p class="text-[10px] text-primary-container font-bold">$11.50</p>
+</div>
+</div>
+<div class="bg-white p-3 rounded-2xl border border-outline-variant/10 flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPuYVhM9oczoLWgKsyPadp0E8PhOXPd94d6UTpomVkqCCGy2B_7dWNFJx2jBY3wcQWvw-FsTG-gsDc6LcFIcNoKMkcAHz8w7m2JpELp9tuizofCglyBn2CI_xhyrUGn0K2TD81821qpr7uh6ONyS-gRyXhV7j3vBNTAHYlU_bDNr3FRjXVd_BM1GoipOIpto04h_PAFeVuMpTGhlmPlE5aaL4qMsCD3Ru6JfMcOBVuHPHVNQLx-BjfGg">
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Tuna Bowl</p>
+<p class="text-[10px] text-primary-container font-bold">$12.00</p>
+</div>
+</div>
+<div class="bg-white p-3 rounded-2xl border border-outline-variant/10 flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3bFc_tb0xJ93pPLGliY2_EaAJtsvQdMLskdZiJwt7w3sjRZhA8HzqrNDybDi-IhJBO_S90Dnt6EMrj3qRiaQNP1DBpSpH0BAQbFGcXxX_Cqpx94ZnZUU9N2CVV8erEzpQamILq86i_VdNVJSMJpxz9AF9R0ssUMmsk7TXjvbBf1S6miTSKNIM62nXQ-5vs2kOpSNh4VZWZ5Qnwhk27hzCVXI_EU7h9H9MbomWmNU34TKYOp03CE0sbg">
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Wings Pack</p>
+<p class="text-[10px] text-primary-container font-bold">$14.99</p>
 </div>
 </div>
 </div>
 </div>
 </section>
-<!-- Combos Explosivos (Asymmetric) -->
-<section class="py-xl px-margin-mobile max-w-7xl mx-auto">
-<div class="flex items-center justify-between mb-lg">
+<!-- Combos Explosivos -->
+<section class="py-12 px-margin-mobile max-w-7xl mx-auto">
+<div class="flex items-center justify-between mb-8">
 <h3 class="font-headline-lg text-headline-lg">Combos Explosivos</h3>
-<div class="flex gap-sm">
-<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center active:scale-90 transition-transform">
-<span class="material-symbols-outlined">chevron_left</span>
-</button>
-<button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center active:scale-90 transition-transform">
-<span class="material-symbols-outlined">chevron_right</span>
-</button>
+<div class="flex gap-3">
+<button class="w-11 h-11 rounded-full border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="w-11 h-11 rounded-full bg-primary-container text-white flex items-center justify-center shadow-lg"><span class="material-symbols-outlined">chevron_right</span></button>
 </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-<!-- Combo 1 -->
-<div class="flex bg-surface-container-highest rounded-xl overflow-hidden h-40">
-<div class="w-1/3">
-<img class="w-full h-full object-cover" data-alt="A dynamic, top-down shot of a large pepperoni pizza accompanied by a side of wings and a soft drink. The set is arranged on a clean white background with strong, direct lighting that creates sharp, modern shadows. The visual energy is high, focusing on a shared meal experience and brand excitement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3bFc_tb0xJ93pPLGliY2_EaAJtsvQdMLskdZiJwt7w3sjRZhA8HzqrNDybDi-IhJBO_S90Dnt6EMrj3qRiaQNP1DBpSpH0BAQbFGcXxX_Cqpx94ZnZUU9N2CVV8erEzpQamILq86i_VdNVJSMJpxz9AF9R0ssUMmsk7TXjvbBf1S6miTSKNIM62nXQ-5vs2kOpSNh4VZWZ5Qnwhk27hzCVXI_EU7h9H9MbomWmNU34TKYOp03CE0sbg"/>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex bg-white border border-outline-variant/10 rounded-2xl overflow-hidden h-44 card-shadow">
+<div class="w-1/3"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3bFc_tb0xJ93pPLGliY2_EaAJtsvQdMLskdZiJwt7w3sjRZhA8HzqrNDybDi-IhJBO_S90Dnt6EMrj3qRiaQNP1DBpSpH0BAQbFGcXxX_Cqpx94ZnZUU9N2CVV8erEzpQamILq86i_VdNVJSMJpxz9AF9R0ssUMmsk7TXjvbBf1S6miTSKNIM62nXQ-5vs2kOpSNh4VZWZ5Qnwhk27hzCVXI_EU7h9H9MbomWmNU34TKYOp03CE0sbg"></div>
+<div class="w-2/3 p-6 flex flex-col justify-center">
+<h5 class="font-headline-md text-lg mb-1">Party Pack XL</h5>
+<p class="text-on-surface-variant/70 text-xs mb-3">2 Pizzas + 10 Alitas + Refresco</p>
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary-container text-xl">$34.99</span>
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary-container hover:bg-primary-container hover:text-white transition-all"><span class="material-symbols-outlined text-[20px]">add_shopping_cart</span></button>
 </div>
-<div class="w-2/3 p-md flex flex-col justify-center">
-<h5 class="font-headline-md text-body-lg">Party Pack XL</h5>
-<p class="font-body-md text-label-sm text-on-surface-variant mb-sm">2 Pizzas + 10 Alitas + Refresco</p>
-<span class="font-bold text-primary">$34.99</span>
 </div>
 </div>
-<!-- Combo 2 -->
-<div class="flex bg-surface-container-highest rounded-xl overflow-hidden h-40">
-<div class="w-1/3">
-<img class="w-full h-full object-cover" data-alt="A stylized photo of two large burgers with crispy fries and two vibrant sodas, presented in a minimalist high-energy commercial style. The lighting is bright and surgical, emphasizing the freshness and the bold orange theme of the FoodPop brand. The mood is social, fun, and fast-paced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJSOjQQlt2OvGPFCxqleEyVzWFAp_6w4Ct-_dVoYIkJRfYN7oyE62OAckST_hKF9RiNhtl3Qm6JpKESRqbioOsE7V9enRjJounRCTxoLUoglRIntudV_RJ89J5cDydBBcyBHRwVx-CbL6_HXv6EK0lmsGXY-grwWOarL6HbA91J-vf865DSRsRo0yfhcV7zqSEjntRLCd4vZVDEdQkCZ-b6Uc9TipAPAikFiD4I98YsyFbAquy0oKISA"/>
+<div class="flex bg-white border border-outline-variant/10 rounded-2xl overflow-hidden h-44 card-shadow">
+<div class="w-1/3"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJSOjQQlt2OvGPFCxqleEyVzWFAp_6w4Ct-_dVoYIkJRfYN7oyE62OAckST_hKF9RiNhtl3Qm6JpKESRqbioOsE7V9enRjJounRCTxoLUoglRIntudV_RJ89J5cDydBBcyBHRwVx-CbL6_HXv6EK0lmsGXY-grwWOarL6HbA91J-vf865DSRsRo0yfhcV7zqSEjntRLCd4vZVDEdQkCZ-b6Uc9TipAPAikFiD4I98YsyFbAquy0oKISA"></div>
+<div class="w-2/3 p-6 flex flex-col justify-center">
+<h5 class="font-headline-md text-lg mb-1">Dúo Dinámico</h5>
+<p class="text-on-surface-variant/70 text-xs mb-3">2 Burgers + Papas + Bebidas</p>
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary-container text-xl">$18.50</span>
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary-container hover:bg-primary-container hover:text-white transition-all"><span class="material-symbols-outlined text-[20px]">add_shopping_cart</span></button>
 </div>
-<div class="w-2/3 p-md flex flex-col justify-center">
-<h5 class="font-headline-md text-body-lg">Dúo Dinámico</h5>
-<p class="font-body-md text-label-sm text-on-surface-variant mb-sm">2 Burgers + Papas + Bebidas</p>
-<span class="font-bold text-primary">$18.50</span>
 </div>
 </div>
 </div>
 </section>
-<!-- Sobre Nosotros -->
-<section class="py-xl bg-inverse-surface text-white">
-<div class="px-margin-mobile max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-xl">
-<div class="w-full md:w-1/2">
-<h2 class="font-headline-xl text-headline-xl mb-md">Más que comida,<br/><span class="text-primary-container">es una experiencia.</span></h2>
-<p class="font-body-lg text-body-lg text-white/70 mb-lg">Nacimos para romper las reglas de la comida rápida. Ingredientes de primera, tecnología de punta y una obsesión por la frescura. FOODPOP es sabor en movimiento.</p>
-<div class="flex gap-lg">
-<div class="text-center">
-<p class="font-headline-lg text-primary-container">15min</p>
-<p class="text-xs uppercase tracking-widest text-white/50">Entrega Promedio</p>
+<!-- SEO Section -->
+<section class="py-20 bg-inverse-surface text-white relative"><div class="bg-primary-container rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+  <div class="relative z-10">
+    <h3 class="text-2xl font-bold mb-2">Instala nuestra App Web</h3>
+    <p class="text-white/80 mb-6 text-sm">Instala directamente desde tu navegador para una experiencia más rápida y obtén puntos en cada pedido.</p>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <button class="h-12 bg-black text-white rounded-xl px-6 flex items-center justify-center gap-2 border border-white/10 hover:bg-white/10 transition-colors">
+        <span class="material-symbols-outlined">install_mobile</span>
+        <span class="font-bold">Instalar App Web</span>
+      </button>
+      <p class="text-[10px] text-white/60 flex items-center gap-1">
+        <span class="material-symbols-outlined text-xs">info</span>
+        Sin descargas pesadas, directo a tu pantalla de inicio
+      </p>
+    </div>
+  </div>
+  <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+</div></section>
+<!-- App Banner -->
+<section class="py-12 px-margin-mobile">
+<div class="bg-primary-container rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="text-2xl font-bold mb-2">Descarga nuestra App</h3>
+<p class="text-white/80 mb-6 text-sm">Obtén puntos intercambiables por comida gratis en cada pedido.</p>
+<div class="flex gap-3">
+<div class="h-10 bg-black rounded-lg px-4 flex items-center gap-2 border border-white/10">
+<span class="material-symbols-outlined text-[20px]">apple</span>
+<div class="flex flex-col"><span class="text-[8px] uppercase leading-none">Download on the</span><span class="text-xs font-bold leading-none">App Store</span></div>
 </div>
-<div class="text-center">
-<p class="font-headline-lg text-primary-container">100%</p>
-<p class="text-xs uppercase tracking-widest text-white/50">Fresco</p>
+<div class="h-10 bg-black rounded-lg px-4 flex items-center gap-2 border border-white/10">
+<span class="material-symbols-outlined text-[20px]">play_store</span>
+<div class="flex flex-col"><span class="text-[8px] uppercase leading-none">Get it on</span><span class="text-xs font-bold leading-none">Google Play</span></div>
 </div>
 </div>
 </div>
-<div class="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden relative">
-<img class="w-full h-full object-cover opacity-80" data-alt="A modern, high-tech kitchen where a chef is preparing fresh food with precision. The environment is sleek, stainless steel, and incredibly clean, with bright, cool lighting. This image represents the 'About Us' core values of FoodPop: precision, hygiene, and high-quality artisanal production within a modern tech-driven framework." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMrKKecwMUhpka8iQODXWcHyzKoDPDUv7B9shehe_Ant_sORLkgKnpXOLH-3wTOp8v-aghw7treGmwsx6DOWJb-i39eQ29fTPw70u_D8CviLB6y6EBLKSUqPQMLlgmuh4qfkVBFQEUUa2LeZSKZWivbgJRt82wsfX_D2fmHN74z5RsazOH12za3GNljalJfE4AR1djRa5qaDi-B5BxwCjDAm9RVFaN8e7GsLBEnCIZq45EG7qtLGxs_g"/>
-<div class="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-12 px-margin-mobile max-w-2xl mx-auto">
+<h3 class="font-headline-lg text-center mb-8">Preguntas Frecuentes</h3>
+<div class="space-y-4">
+<div class="border border-outline-variant/20 rounded-2xl overflow-hidden bg-white shadow-sm">
+<button class="w-full p-6 flex justify-between items-center text-left" onclick="toggleFaq(this)">
+<span class="font-semibold text-on-surface">¿Cuánto tarda mi pedido?</span>
+<span class="material-symbols-outlined text-primary-container">add</span>
+</button>
+<div class="faq-content max-h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant/80 text-sm">Nuestro tiempo promedio es de 15 a 25 minutos dependiendo de tu zona.</div>
+</div>
+</div>
+<div class="border border-outline-variant/20 rounded-2xl overflow-hidden bg-white shadow-sm">
+<button class="w-full p-6 flex justify-between items-center text-left" onclick="toggleFaq(this)">
+<span class="font-semibold text-on-surface">¿Tienen opciones vegetarianas?</span>
+<span class="material-symbols-outlined text-primary-container">add</span>
+</button>
+<div class="faq-content max-h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant/80 text-sm">¡Claro que sí! Contamos con una línea "Green Pop" con burgers de NotCo y ensaladas.</div>
+</div>
 </div>
 </div>
 </section>
-<!-- FAQ Accordion -->
-<section class="py-xl px-margin-mobile max-w-3xl mx-auto">
-<h3 class="font-headline-lg text-headline-lg mb-lg text-center">Preguntas Frecuentes</h3>
-<div class="space-y-md">
-<!-- FAQ Item 1 -->
-<div class="border border-outline-variant/20 rounded-xl overflow-hidden bg-surface-container-lowest">
-<button class="w-full p-md flex justify-between items-center text-left hover:bg-surface-variant/30 transition-colors" onclick="toggleFaq(this)">
-<span class="font-label-md text-label-md">¿Cuánto tarda mi pedido?</span>
-<span class="material-symbols-outlined text-primary">expand_more</span>
-</button>
-<div class="faq-content max-h-0 overflow-hidden transition-all duration-300">
-<div class="p-md pt-0 text-on-surface-variant font-body-md">
-                            Nuestro tiempo promedio es de 15 a 25 minutos dependiendo de tu zona. ¡Siempre fresco, siempre rápido!
-                        </div>
+<!-- Recomendados para ti -->
+<section class="py-12 px-margin-mobile">
+<h3 class="font-headline-md text-headline-md mb-6">Recomendados para ti</h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar -mx-margin-mobile px-margin-mobile">
+<div class="min-w-[200px] h-24 bg-surface-container rounded-2xl flex items-center p-3 gap-3">
+<div class="w-16 h-16 rounded-xl bg-white shrink-0 overflow-hidden"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTHvcfZEFuZ0DssKwQeRJUHGiCY2YKr1p-n71fLqnuK48drmACHMyNZT1yqVCXeXmH7bGOYlZ7n4SS46awtHsrZOpLC6t9vIucktiUQQYyO2MZBMhh683AqI75NPQo2K8gqrWyDEwG-MW3z8laZ8hNVOAeIxbe2_4M5sZKdRUvmL5ic6qcHR4uEo0cm4kr2jX42GTpuZz7bW_DNAB4lyAH91cA2phOwKQoGAM_6QZ-HXwbnKkG1Bwaxw"></div>
+<div class="overflow-hidden"><p class="text-sm font-bold truncate">Chicken Pop</p><p class="text-xs text-on-surface-variant">4.8 ★</p></div>
 </div>
+<div class="min-w-[200px] h-24 bg-surface-container rounded-2xl flex items-center p-3 gap-3">
+<div class="w-16 h-16 rounded-xl bg-white shrink-0 overflow-hidden"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpL77U_YsJWMDzOLb9QUMnymvi4WinJ3aKk-PGUnOBYfQqviLu0skjKCD73XOLSQ-f-ttFe-61EEhou7buStMCkMgAejH6FqNXycTCr0bNRUPuYSu4Q4scvyQ2HOQffS41mlO6_p_vztog5lhvKd-5P78WTP9hFnCiWF_HHPkHfj1Wc-sBFuYkUnc979vWmXJvhhCIPPoqmifKIohhek_Lbu8_zH9zxaImAXquElIM4l8AX6Ruo5AszA"></div>
+<div class="overflow-hidden"><p class="text-sm font-bold truncate">BBQ Pizza</p><p class="text-xs text-on-surface-variant">4.9 ★</p></div>
 </div>
-<!-- FAQ Item 2 -->
-<div class="border border-outline-variant/20 rounded-xl overflow-hidden bg-surface-container-lowest">
-<button class="w-full p-md flex justify-between items-center text-left hover:bg-surface-variant/30 transition-colors" onclick="toggleFaq(this)">
-<span class="font-label-md text-label-md">¿Tienen opciones vegetarianas?</span>
-<span class="material-symbols-outlined text-primary">expand_more</span>
-</button>
-<div class="faq-content max-h-0 overflow-hidden transition-all duration-300">
-<div class="p-md pt-0 text-on-surface-variant font-body-md">
-                            ¡Claro que sí! Contamos con una línea "Green Pop" con burgers de NotCo y ensaladas gourmet increíbles.
-                        </div>
-</div>
-</div>
-<!-- FAQ Item 3 -->
-<div class="border border-outline-variant/20 rounded-xl overflow-hidden bg-surface-container-lowest">
-<button class="w-full p-md flex justify-between items-center text-left hover:bg-surface-variant/30 transition-colors" onclick="toggleFaq(this)">
-<span class="font-label-md text-label-md">¿Dónde puedo ver mis puntos?</span>
-<span class="material-symbols-outlined text-primary">expand_more</span>
-</button>
-<div class="faq-content max-h-0 overflow-hidden transition-all duration-300">
-<div class="p-md pt-0 text-on-surface-variant font-body-md">
-                            Puedes ver tus "Pop Points" en la sección de tu Perfil. ¡Cada compra te acerca a comida gratis!
-                        </div>
-</div>
+<div class="min-w-[200px] h-24 bg-surface-container rounded-2xl flex items-center p-3 gap-3">
+<div class="w-16 h-16 rounded-xl bg-white shrink-0 overflow-hidden"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGCx7B9dq3XbnsVppZAC9U_iHDIwQDq7wJlas67W0y5P2LV6NDnWMw0FIc6EQB94pJYc_Qay_bAFIAfDazhfRdKPjXYbykgY20mkNPO615P4DYnf4bo2b0Rbi5iwbdhQAUAY9Lz6YFEis8wn26PYKpymWrJ77vR5hfSOiFBal2myuoQNTUtWo7T5hoyXICizuyz17VjX8xPJYM9Vi_BEOGv0xPnOjG-HsvCz7BTlNYnzG3em5tQ8YKUA"></div>
+<div class="overflow-hidden"><p class="text-sm font-bold truncate">Greek Salad</p><p class="text-xs text-on-surface-variant">4.7 ★</p></div>
 </div>
 </div>
 </section>
 </main>
 <!-- BottomNavBar -->
-<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center py-sm px-margin-mobile bg-surface/80 backdrop-blur-xl border-t border-outline-variant/10 z-50 rounded-t-xl">
-<a class="flex flex-col items-center justify-center text-primary active:scale-90 transition-transform duration-200" href="#">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
-<span class="font-label-caps text-[10px] mt-1">Home</span>
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-4 glass-header border-t border-outline-variant/10 z-50 rounded-t-[2.5rem] nav-shadow">
+<a class="flex flex-col items-center justify-center w-16 h-16 text-primary-container group" href="#">
+<span class="material-symbols-outlined text-[26px] fill-[1]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-0.5">Home</span>
 </a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary active:scale-90 transition-transform duration-200" href="#">
-<span class="material-symbols-outlined">restaurant_menu</span>
-<span class="font-label-caps text-[10px] mt-1">Menu</span>
+<a class="flex flex-col items-center justify-center w-16 h-16 text-on-surface-variant/40 hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[26px]">restaurant_menu</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-0.5">Menu</span>
 </a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary active:scale-90 transition-transform duration-200" href="#">
-<span class="material-symbols-outlined">search</span>
-<span class="font-label-caps text-[10px] mt-1">Search</span>
+<div class="flex items-center justify-center -mt-10">
+<button class="w-16 h-16 bg-primary-container text-white rounded-full shadow-[0_8px_24px_rgba(255,92,0,0.4)] flex items-center justify-center">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center justify-center w-16 h-16 text-on-surface-variant/40 hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[26px]">person</span>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-0.5">Profile</span>
 </a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary active:scale-90 transition-transform duration-200" href="#">
-<span class="material-symbols-outlined">person</span>
-<span class="font-label-caps text-[10px] mt-1">Profile</span>
-</a>
-<a class="relative flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary active:scale-90 transition-transform duration-200" href="#">
-<span class="material-symbols-outlined">shopping_bag</span>
-<span class="font-label-caps text-[10px] mt-1">Cart</span>
-<div class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[8px] flex items-center justify-center rounded-full">3</div>
+<a class="flex flex-col items-center justify-center w-16 h-16 text-on-surface-variant/40 hover:text-on-surface relative" href="#">
+<span class="material-symbols-outlined text-[26px]">shopping_bag</span>
+<div class="absolute top-2 right-2 w-5 h-5 bg-primary-container text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">3</div>
+<span class="text-[10px] font-bold uppercase tracking-widest mt-0.5">Cart</span>
 </a>
 </nav>
-<!-- Contextual FAB -->
-<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform duration-200 z-40 orange-glow">
-<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">add</span>
-</button>
 <script>
-        function toggleFaq(button) {
-            const content = button.nextElementSibling;
-            const icon = button.querySelector('.material-symbols-outlined');
-            
-            // Close others
-            document.querySelectorAll('.faq-content').forEach(el => {
-                if(el !== content) {
-                    el.style.maxHeight = null;
-                    el.previousElementSibling.querySelector('.material-symbols-outlined').style.transform = 'rotate(0deg)';
-                }
-            });
-
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                icon.style.transform = 'rotate(0deg)';
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-                icon.style.transform = 'rotate(180deg)';
-            }
+    function toggleFaq(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.material-symbols-outlined');
+        if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+            icon.textContent = 'add';
+        } else {
+            document.querySelectorAll('.faq-content').forEach(el => el.style.maxHeight = null);
+            document.querySelectorAll('.material-symbols-outlined').forEach(i => { if(i.textContent==='remove') i.textContent='add' });
+            content.style.maxHeight = content.scrollHeight + "px";
+            icon.textContent = 'remove';
         }
+    }
+</script>
 
-        // Micro-interaction for vertical carousel scroll snaps
-        const carousel = document.querySelector('.vertical-carousel');
-        const dots = document.querySelectorAll('.right-4 > div');
-        
-        carousel.addEventListener('scroll', () => {
-            const index = Math.round(carousel.scrollTop / carousel.clientHeight);
-            dots.forEach((dot, i) => {
-                if(i === index) {
-                    dot.className = 'w-2 h-6 bg-primary rounded-full transition-all duration-300';
-                } else {
-                    dot.className = 'w-2 h-2 bg-white/40 rounded-full transition-all duration-300';
-                }
-            });
-        });
-    </script>
+
 </body></html>

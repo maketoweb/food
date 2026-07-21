@@ -609,6 +609,54 @@ const TiendaSection: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div className="admin-card p-4">
+            <SectionTitle>Sección Brand Experience</SectionTitle>
+            <p className="text-[11px] text-slate-500 mb-3">Estadísticas y textos de la sección oscura "Más que comida".</p>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <FieldLabel>Stat 1 - Valor</FieldLabel>
+                  <input type="text" value={config.brand_stat1_value || ''} onChange={e => updateConfig({ brand_stat1_value: e.target.value })}
+                    className="admin-input mt-1" placeholder="15min" />
+                </div>
+                <div>
+                  <FieldLabel>Stat 1 - Etiqueta</FieldLabel>
+                  <input type="text" value={config.brand_stat1_label || ''} onChange={e => updateConfig({ brand_stat1_label: e.target.value })}
+                    className="admin-input mt-1" placeholder="Entrega Promedio" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <FieldLabel>Stat 2 - Valor</FieldLabel>
+                  <input type="text" value={config.brand_stat2_value || ''} onChange={e => updateConfig({ brand_stat2_value: e.target.value })}
+                    className="admin-input mt-1" placeholder="100%" />
+                </div>
+                <div>
+                  <FieldLabel>Stat 2 - Etiqueta</FieldLabel>
+                  <input type="text" value={config.brand_stat2_label || ''} onChange={e => updateConfig({ brand_stat2_label: e.target.value })}
+                    className="admin-input mt-1" placeholder="Ingredientes Frescos" />
+                </div>
+              </div>
+              <div>
+                <FieldLabel>Contador de Usuarios</FieldLabel>
+                <input type="text" value={config.brand_users_count || ''} onChange={e => updateConfig({ brand_users_count: e.target.value })}
+                  className="admin-input mt-1" placeholder="+50k" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <FieldLabel>Título Sección</FieldLabel>
+                  <input type="text" value={config.brand_section_title || ''} onChange={e => updateConfig({ brand_section_title: e.target.value })}
+                    className="admin-input mt-1" placeholder="Más que comida," />
+                </div>
+                <div>
+                  <FieldLabel>Subtítulo Sección</FieldLabel>
+                  <input type="text" value={config.brand_section_subtitle || ''} onChange={e => updateConfig({ brand_section_subtitle: e.target.value })}
+                    className="admin-input mt-1" placeholder="es una experiencia." />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -1,0 +1,557 @@
+<!DOCTYPE html><html class="light" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FOODPOP - Premium Delivery Desktop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#f9f9fb",
+                    "surface-variant": "#e2e2e4",
+                    "surface": "#f9f9fb",
+                    "secondary-fixed": "#e5e2e1",
+                    "surface-container": "#eeeef0",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "primary-container": "#ff5c00",
+                    "tertiary-container": "#939292",
+                    "surface-container-low": "#f3f3f5",
+                    "outline": "#8f7065",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#2f3132",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#521800",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#370e00",
+                    "tertiary-fixed-dim": "#c7c6c6",
+                    "tertiary": "#5e5e5e",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "outline-variant": "#e4beb1",
+                    "primary-fixed-dim": "#ffb59a",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#e2dfde",
+                    "inverse-on-surface": "#f0f0f2",
+                    "surface-tint": "#a73a00",
+                    "on-secondary-container": "#636262",
+                    "on-surface": "#1a1c1d",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e2e2e4",
+                    "on-background": "#1a1c1d",
+                    "secondary": "#5f5e5e",
+                    "on-tertiary-container": "#2b2b2b",
+                    "on-secondary-fixed-variant": "#474746",
+                    "inverse-primary": "#ffb59a",
+                    "surface-bright": "#f9f9fb",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#ffdbce",
+                    "on-primary-fixed-variant": "#802a00",
+                    "surface-dim": "#d9dadc",
+                    "surface-container-high": "#e8e8ea",
+                    "on-surface-variant": "#5b4137",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "tertiary-fixed": "#e4e2e2",
+                    "on-tertiary-fixed-variant": "#464747",
+                    "primary": "#a73a00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "40px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "margin-mobile": "16px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "base": "4px",
+                    "margin-desktop": "64px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); }
+        .card-shadow { box-shadow: 0 4px 30px -10px rgba(0,0,0,0.08); }
+        .active-pill { background: #ff5c00; color: white; box-shadow: 0 8px 20px rgba(255, 92, 0, 0.25); }
+        .nav-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .luminous-accent { position: relative; }
+        .luminous-accent::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: #ff5c00; transition: width 0.3s ease; }
+        .luminous-accent:hover::after { width: 100%; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased selection:bg-primary/20">
+<!-- Desktop Top Navigation -->
+<header class="fixed top-0 w-full z-50 glass-header border-b border-outline-variant/10 h-20 transition-all duration-300">
+<div class="flex justify-between items-center px-margin-desktop h-full w-full max-w-[1440px] mx-auto">
+<div class="flex items-center gap-12">
+<a class="flex items-center" href="#">
+<img alt="FoodPop Logo" class="h-10 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLsuRY1KGoL99RNNq168buEfmcQwYg1_9K4Gp1gFnpabX0nKA3CD4Zxz7m0InSpsD30X61yUr-kkMGFquzu77DiPdiunpL5wR9h9vY7YF8GTnJD6BfIpJbBJpcxJU9u1NsNYuhopMEioV1xZD_r0mPA5Y3vRmwxfCZIFVR7JEVpOMup2XSvaIBD66TGXawrczRzkSvaDdUcrreXw7E3D3pLx6rlOpxUw_F_f3R2K4g9j9jJOQtVWQdymi124">
+</a>
+<nav class="hidden lg:flex items-center gap-8">
+<a class="font-label-md text-on-surface luminous-accent" href="#">Explorar</a>
+<a class="font-label-md text-on-surface-variant hover:text-on-surface transition-colors luminous-accent" href="#">Promociones</a>
+<a class="font-label-md text-on-surface-variant hover:text-on-surface transition-colors luminous-accent" href="#">Pedidos</a>
+<a class="font-label-md text-on-surface-variant hover:text-on-surface transition-colors luminous-accent" href="#">Ayuda</a>
+</nav>
+</div>
+<div class="flex-1 max-w-xl mx-12 hidden md:block">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border-transparent focus:border-primary/30 focus:ring-0 rounded-full py-3 pl-12 pr-4 text-sm transition-all" placeholder="Busca tu comida favorita..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative p-2 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[28px]">shopping_bag</span>
+<span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">3</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant/30 hidden sm:block"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right hidden xl:block">
+<p class="text-xs font-bold text-on-surface">Hola, Alex</p>
+<p class="text-[10px] text-on-surface-variant">Foodie Pro</p>
+</div>
+<div class="w-11 h-11 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZa01kaaXriL7JEjeGPD1KhYI6fGv6IdAhs0lSBaQywrq-UFqfEmhKM1-h1Blq57VhBqoP3VcLBqq8V8F_O0RxiXa4TBW-NTgqdlT7XsS1a19OzDa4vfgXcs-jTstJOVzMw1pibmyShzkq_2Vxz-z8_d54ncUUWT1h-0Alz3rZa3UbVFpkbPGMRg3A3ulrzRbe7RbgcJlgCaxBeIs9XjNMLHz95zVyxVN-YLaEBf5g-VxTWwLWkk2rw">
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-20">
+<!-- Desktop Hero Section -->
+<section class="w-full px-margin-desktop py-10 max-w-[1440px] mx-auto">
+<div class="relative h-[600px] rounded-[3rem] overflow-hidden group shadow-2xl">
+<img alt="Bacon Bomb Max" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2000ms]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTHvcfZEFuZ0DssKwQeRJUHGiCY2YKr1p-n71fLqnuK48drmACHMyNZT1yqVCXeXmH7bGOYlZ7n4SS46awtHsrZOpLC6t9vIucktiUQQYyO2MZBMhh683AqI75NPQo2K8gqrWyDEwG-MW3z8laZ8hNVOAeIxbe2_4M5sZKdRUvmL5ic6qcHR4uEo0cm4kr2jX42GTpuZz7bW_DNAB4lyAH91cA2phOwKQoGAM_6QZ-HXwbnKkG1Bwaxw">
+<div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+<div class="absolute inset-0 flex flex-col justify-center p-20 max-w-3xl">
+<div class="flex items-center gap-3 mb-8">
+<span class="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/90 text-white font-label-md text-xs uppercase tracking-widest rounded-full">
+<span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> Lo más nuevo
+                    </span>
+<span class="text-white/60 font-label-md text-sm">Disponible solo esta semana</span>
+</div>
+<h2 class="font-headline-xl text-[72px] leading-[1] text-white mb-6">Bacon Bomb <br><span class="text-primary-container">Max Edition</span></h2>
+<p class="font-body-lg text-white/80 max-w-lg mb-10 text-lg leading-relaxed">Experimenta la explosión definitiva de sabor con nuestra nueva creación ahumada. Ingredientes premium y ahora con un 20% de descuento por lanzamiento.</p>
+<div class="flex gap-4">
+<button class="bg-primary text-white px-10 py-5 rounded-2xl font-label-md text-base flex items-center gap-3 hover:bg-primary-container hover:shadow-2xl hover:shadow-primary/40 active:scale-95 transition-all">
+                        Ordenar Ahora <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-5 rounded-2xl font-label-md text-base hover:bg-white/20 transition-all">
+                        Ver Detalles
+                    </button>
+</div>
+</div>
+<!-- Progress Dots -->
+<div class="absolute right-12 bottom-12 flex flex-col gap-3">
+<div class="w-2 h-10 bg-primary rounded-full"></div>
+<div class="w-2 h-2 bg-white/30 rounded-full hover:bg-white/60 cursor-pointer transition-all"></div>
+<div class="w-2 h-2 bg-white/30 rounded-full hover:bg-white/60 cursor-pointer transition-all"></div>
+</div>
+</div>
+</section>
+<!-- Categories Desktop -->
+<section class="py-8 px-margin-desktop max-w-[1440px] mx-auto">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline-md text-on-surface">Explorar por categorías</h3>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-variant/20 transition-all opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-variant/20 transition-all">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-4"><button class="active-pill px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Todas</button><button class="bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Burgers</button><button class="bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Pizzas</button><button class="bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Sushi</button><button class="bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Ensaladas</button><button class="bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Postres</button><button class="bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high px-8 py-3 rounded-full transition-all font-label-md text-sm whitespace-nowrap">Bebidas</button></div>
+</section>
+<!-- Main Content Layout -->
+<div class="max-w-[1440px] mx-auto px-margin-desktop grid grid-cols-12 gap-12 py-12">
+<!-- Left Side: Flash Sales & Combos -->
+<div class="col-span-12 lg:col-span-8 space-y-16">
+<!-- Ofertas Flash Section -->
+<section>
+<div class="flex justify-between items-end mb-8">
+<div>
+<div class="flex items-center gap-2 text-primary mb-2">
+<span class="material-symbols-outlined text-[20px] fill-[1] animate-pulse">bolt</span>
+<span class="font-label-md text-sm uppercase tracking-tighter">Termina en 02:45:12</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg">Ofertas Flash</h3>
+</div>
+<button class="text-primary font-label-md text-label-md flex items-center gap-2 hover:gap-3 transition-all">Ver Todo <span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Flash Card 1 -->
+<div class="bg-white rounded-[2rem] border border-outline-variant/10 overflow-hidden card-shadow group">
+<div class="relative h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpL77U_YsJWMDzOLb9QUMnymvi4WinJ3aKk-PGUnOBYfQqviLu0skjKCD73XOLSQ-f-ttFe-61EEhou7buStMCkMgAejH6FqNXycTCr0bNRUPuYSu4Q4scvyQ2HOQffS41mlO6_p_vztog5lhvKd-5P78WTP9hFnCiWF_HHPkHfj1Wc-sBFuYkUnc979vWmXJvhhCIPPoqmifKIohhek_Lbu8_zH9zxaImAXquElIM4l8AX6Ruo5AszA">
+<div class="absolute top-6 left-6 bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-xl">-40% OFF</div>
+<button class="absolute bottom-6 right-6 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-primary shadow-lg hover:bg-primary hover:text-white transition-all transform translate-y-20 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+<div class="p-8">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-headline-md text-xl text-on-surface">Pizza Pop Pepperoni</h4>
+<div class="flex items-center gap-1 text-amber-500">
+<span class="material-symbols-outlined text-sm fill-[1]">star</span>
+<span class="text-xs font-bold">4.8</span>
+</div>
+</div>
+<p class="text-on-surface-variant text-sm mb-6">Masa artesanal con pepperoni premium y mozzarella fundida.</p>
+<div class="flex items-center gap-3">
+<span class="text-primary font-bold text-2xl">$12.99</span>
+<span class="text-on-surface-variant/40 line-through text-base font-medium">$21.50</span>
+</div>
+</div>
+</div>
+<!-- Flash Card 2 -->
+<div class="bg-white rounded-[2rem] border border-outline-variant/10 overflow-hidden card-shadow group">
+<div class="relative h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0XmZn3ry5xTpKP8BUboBRPX2RewPMXyMV8wtQpWVlZlkkP0a_5Vrx8ADqnZw6Yb_v_VyzP5v03WAnVb6JS7xNVFEsyEILZf1ox_OBmuGLIKTcaz_hj8zXtDlp-oM2Mr2NFItPWr7VbgA9_66OQxN8MC2BpkyAzXrQR589bHEhYiZeFuupBW-hPeDHjb7d0tcqBOiKaYD1qqCE6LDKLu6NWluWb2w1FEq6ZcBBWY5vJrY5KrVnD02oeA">
+<div class="absolute top-6 left-6 bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-xl">-30% OFF</div>
+<button class="absolute bottom-6 right-6 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-primary shadow-lg hover:bg-primary hover:text-white transition-all transform translate-y-20 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+<div class="p-8">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-headline-md text-xl text-on-surface">Double Smash Combo</h4>
+<div class="flex items-center gap-1 text-amber-500">
+<span class="material-symbols-outlined text-sm fill-[1]">star</span>
+<span class="text-xs font-bold">4.9</span>
+</div>
+</div>
+<p class="text-on-surface-variant text-sm mb-6">Dos carnes smash, queso cheddar y nuestra salsa secreta Pop.</p>
+<div class="flex items-center gap-3">
+<span class="text-primary font-bold text-2xl">$9.50</span>
+<span class="text-on-surface-variant/40 line-through text-base font-medium">$14.00</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Combos Explosivos Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline-lg text-headline-lg">Combos Explosivos</h3>
+<div class="flex gap-4">
+<button class="w-12 h-12 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-variant/20 transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container shadow-lg shadow-primary/20 transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Combo 1 -->
+<div class="flex bg-white border border-outline-variant/10 rounded-[2rem] overflow-hidden h-52 card-shadow hover:translate-y-[-8px] transition-all duration-300 group">
+<div class="w-2/5 relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3bFc_tb0xJ93pPLGliY2_EaAJtsvQdMLskdZiJwt7w3sjRZhA8HzqrNDybDi-IhJBO_S90Dnt6EMrj3qRiaQNP1DBpSpH0BAQbFGcXxX_Cqpx94ZnZUU9N2CVV8erEzpQamILq86i_VdNVJSMJpxz9AF9R0ssUMmsk7TXjvbBf1S6miTSKNIM62nXQ-5vs2kOpSNh4VZWZ5Qnwhk27hzCVXI_EU7h9H9MbomWmNU34TKYOp03CE0sbg">
+</div>
+<div class="w-3/5 p-8 flex flex-col justify-center">
+<h5 class="font-headline-md text-xl mb-2">Party Pack XL</h5>
+<p class="font-body-md text-sm text-on-surface-variant/80 mb-6">2 Pizzas Grandes + 10 Alitas BBQ + Refresco 2L</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-bold text-primary text-2xl">$34.99</span>
+<button class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Combo 2 -->
+<div class="flex bg-white border border-outline-variant/10 rounded-[2rem] overflow-hidden h-52 card-shadow hover:translate-y-[-8px] transition-all duration-300 group">
+<div class="w-2/5 relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJSOjQQlt2OvGPFCxqleEyVzWFAp_6w4Ct-_dVoYIkJRfYN7oyE62OAckST_hKF9RiNhtl3Qm6JpKESRqbioOsE7V9enRjJounRCTxoLUoglRIntudV_RJ89J5cDydBBcyBHRwVx-CbL6_HXv6EK0lmsGXY-grwWOarL6HbA91J-vf865DSRsRo0yfhcV7zqSEjntRLCd4vZVDEdQkCZ-b6Uc9TipAPAikFiD4I98YsyFbAquy0oKISA">
+</div>
+<div class="w-3/5 p-8 flex flex-col justify-center">
+<h5 class="font-headline-md text-xl mb-2">Dúo Dinámico</h5>
+<p class="font-body-md text-sm text-on-surface-variant/80 mb-6">2 Burgers Smash + Papas Grandes + 2 Bebidas</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-bold text-primary text-2xl">$18.50</span>
+<button class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Side: Sticky Cart / Featured / Recommendations -->
+<div class="hidden lg:block lg:col-span-4">
+<div class="sticky top-28 space-y-10">
+<!-- Recommended Section -->
+<div class="bg-surface-container-low rounded-[2.5rem] p-8 border border-outline-variant/10">
+<h4 class="font-headline-md text-lg mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary fill-[1]">recommend</span>
+                        Recomendados para ti
+                    </h4>
+<div class="space-y-6">
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="w-16 h-16 rounded-2xl overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGCx7B9dq3XbnsVppZAC9U_iHDIwQDq7wJlas67W0y5P2LV6NDnWMw0FIc6EQB94pJYc_Qay_bAFIAfDazhfRdKPjXYbykgY20mkNPO615P4DYnf4bo2b0Rbi5iwbdhQAUAY9Lz6YFEis8wn26PYKpymWrJ77vR5hfSOiFBal2myuoQNTUtWo7T5hoyXICizuyz17VjX8xPJYM9Vi_BEOGv0xPnOjG-HsvCz7BTlNYnzG3em5tQ8YKUA">
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold">Ensalada Pop</p>
+<p class="text-xs text-on-surface-variant">$8.50</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-white text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="w-16 h-16 rounded-2xl overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLqo9HOlDD74qSHwApZlz42Cn3wbxErWhmvOuBdJvNy4EWcrPrR2S0TMOmbkgZ-mu841W2kZ9Cvzvawf03G2R6jhegLYvYmksVLcfFD_EhUeoXqBhTdrQMs5ABJrQfZrHJlW5qzI-oU9yk1PbLQToPjOD-uWW520xwfblF3gx8uXx5WNlGCz1fxBWC63JcGE9ZrlLbGKcXLfB8xdbt_sTSc9YrK5IKYk8vzUQtzeJWtl7N2F1DC0HxrQ">
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold">Pasta Premium</p>
+<p class="text-xs text-on-surface-variant">$14.99</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-white text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+<button class="w-full mt-8 py-4 border-2 border-primary/20 text-primary rounded-2xl font-label-md hover:bg-primary/5 transition-all">Ver Más Sugerencias</button>
+</div>
+<!-- App Download Mini Banner -->
+<div class="bg-inverse-surface text-white rounded-[2.5rem] p-8 relative overflow-hidden group"><div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 blur-3xl rounded-full"></div><h4 class="font-headline-md text-lg mb-4 relative z-10">Instala nuestra Web App</h4><p class="text-white/60 text-sm mb-8 relative z-10">Acceso instantáneo y beneficios exclusivos. ¡Gana el doble de puntos en cada pedido realizado desde la Web App!</p><div class="relative z-10 space-y-4"><button class="w-full py-4 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition-all shadow-lg shadow-primary/20"><span class="material-symbols-outlined">install_desktop</span> Instalar Web App</button><div class="flex items-center gap-3 px-2"><span class="material-symbols-outlined text-primary-container">stars</span><span class="text-xs text-white/80">+500 puntos de bienvenida</span></div></div></div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Destacados Full Width -->
+<section class="py-20 bg-surface-container-lowest">
+<div class="max-w-[1440px] mx-auto px-margin-desktop">
+<h3 class="font-headline-lg text-headline-lg mb-12 text-center">Nuestros Destacados</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="md:col-span-2 h-[450px] relative rounded-[3rem] overflow-hidden group card-shadow cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLqo9HOlDD74qSHwApZlz42Cn3wbxErWhmvOuBdJvNy4EWcrPrR2S0TMOmbkgZ-mu841W2kZ9Cvzvawf03G2R6jhegLYvYmksVLcfFD_EhUeoXqBhTdrQMs5ABJrQfZrHJlW5qzI-oU9yk1PbLQToPjOD-uWW520xwfblF3gx8uXx5WNlGCz1fxBWC63JcGE9ZrlLbGKcXLfB8xdbt_sTSc9YrK5IKYk8vzUQtzeJWtl7N2F1DC0HxrQ">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-12">
+<span class="text-primary-container font-bold text-xs uppercase tracking-widest mb-4">Gourmet Selection</span>
+<h4 class="text-white font-headline-xl text-4xl mb-4">Pasta Premium Italiana</h4>
+<p class="text-white/70 font-body-lg max-w-md">Recetas de autor elaboradas con ingredientes importados directamente de Italia. Sabor auténtico en cada bocado.</p>
+</div>
+</div>
+<div class="h-[450px] relative rounded-[3rem] overflow-hidden group card-shadow cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGCx7B9dq3XbnsVppZAC9U_iHDIwQDq7wJlas67W0y5P2LV6NDnWMw0FIc6EQB94pJYc_Qay_bAFIAfDazhfRdKPjXYbykgY20mkNPO615P4DYnf4bo2b0Rbi5iwbdhQAUAY9Lz6YFEis8wn26PYKpymWrJ77vR5hfSOiFBal2myuoQNTUtWo7T5hoyXICizuyz17VjX8xPJYM9Vi_BEOGv0xPnOjG-HsvCz7BTlNYnzG3em5tQ8YKUA">
+<div class="absolute inset-0 bg-primary/30 flex flex-col justify-end p-12 backdrop-blur-[2px]">
+<h4 class="text-white font-headline-xl text-4xl mb-4 leading-tight">Ensaladas <br>Pop Fresh</h4>
+<p class="text-white/90 font-body-md">Explosión natural de color y frescura para equilibrar tu día.</p>
+<button class="mt-8 self-start px-8 py-3 bg-white text-primary rounded-xl font-bold hover:bg-primary-container hover:text-white transition-all">Ver Menú Saludable</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Experience Brand Section -->
+<section class="py-32 bg-inverse-surface text-white relative overflow-hidden">
+<div class="absolute top-1/4 -right-20 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full"></div>
+<div class="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-primary-container/10 blur-[120px] rounded-full"></div>
+<div class="px-margin-desktop max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-2 items-center gap-24 relative z-10">
+<div class="order-2 lg:order-1">
+<div class="aspect-[16/10] lg:aspect-square rounded-[4rem] overflow-hidden border border-white/10 relative group">
+<img class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMrKKecwMUhpka8iQODXWcHyzKoDPDUv7B9shehe_Ant_sORLkgKnpXOLH-3wTOp8v-aghw7treGmwsx6DOWJb-i39eQ29fTPw70u_D8CviLB6y6EBLKSUqPQMLlgmuh4qfkVBFQEUUa2LeZSKZWivbgJRt82wsfX_D2fmHN74z5RsazOH12za3GNljalJfE4AR1djRa5qaDi-B5BxwCjDAm9RVFaN8e7GsLBEnCIZq45EG7qtLGxs_g">
+<div class="absolute inset-0 bg-primary/10 mix-blend-overlay group-hover:bg-transparent transition-all"></div>
+</div>
+</div>
+<div class="order-1 lg:order-2">
+<h2 class="font-headline-xl text-[64px] leading-[1.1] mb-8">Más que comida,<br><span class="text-primary-container">es una experiencia.</span></h2>
+<p class="font-body-lg text-white/50 mb-12 text-xl leading-relaxed max-w-xl">Nacimos para romper las reglas de la comida rápida. Ingredientes de primera, tecnología de punta y una obsesión por la frescura absoluta en cada entrega.</p>
+<div class="grid grid-cols-2 gap-16">
+<div>
+<p class="text-[56px] font-extrabold text-primary-container leading-none mb-4">15min</p>
+<p class="text-xs uppercase tracking-[0.3em] text-white/40 font-bold">Entrega Promedio</p>
+</div>
+<div>
+<p class="text-[56px] font-extrabold text-primary-container leading-none mb-4">100%</p>
+<p class="text-xs uppercase tracking-[0.3em] text-white/40 font-bold">Ingredientes Frescos</p>
+</div>
+</div>
+<div class="mt-16 flex items-center gap-6">
+<div class="flex -space-x-4">
+<img class="w-12 h-12 rounded-full border-2 border-inverse-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZa01kaaXriL7JEjeGPD1KhYI6fGv6IdAhs0lSBaQywrq-UFqfEmhKM1-h1Blq57VhBqoP3VcLBqq8V8F_O0RxiXa4TBW-NTgqdlT7XsS1a19OzDa4vfgXcs-jTstJOVzMw1pibmyShzkq_2Vxz-z8_d54ncUUWT1h-0Alz3rZa3UbVFpkbPGMRg3A3ulrzRbe7RbgcJlgCaxBeIs9XjNMLHz95zVyxVN-YLaEBf5g-VxTWwLWkk2rw">
+<div class="w-12 h-12 rounded-full border-2 border-inverse-surface bg-surface-container-highest flex items-center justify-center text-xs font-bold text-on-surface">+50k</div>
+</div>
+<p class="text-white/60 text-sm">Usuarios activos disfrutan FoodPop a diario.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Accordion Desktop -->
+<section class="py-32 px-margin-desktop max-w-4xl mx-auto">
+<h3 class="font-headline-lg text-[40px] text-center mb-4">Preguntas Frecuentes</h3>
+<p class="text-on-surface-variant text-center mb-16 max-w-lg mx-auto">Todo lo que necesitas saber sobre nuestro servicio premium de delivery.</p>
+<div class="space-y-6">
+<div class="border border-outline-variant/10 rounded-[2rem] overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+<button class="w-full p-8 flex justify-between items-center text-left hover:bg-surface-container-lowest transition-colors group" onclick="toggleFaq(this)">
+<span class="text-xl font-bold text-on-surface group-hover:text-primary transition-colors">¿Cuánto tarda mi pedido en llegar?</span>
+<span class="material-symbols-outlined text-primary text-3xl transition-transform duration-300">add</span>
+</button>
+<div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+<div class="p-8 pt-0 text-on-surface-variant text-lg leading-relaxed border-t border-outline-variant/5 mt-4">
+                        Nuestro compromiso es la rapidez. El tiempo promedio es de 15 a 25 minutos dependiendo de tu ubicación. Contamos con una flota propia optimizada con IA para asegurar que tu comida llegue siempre caliente y fresca.
+                    </div>
+</div>
+</div>
+<div class="border border-outline-variant/10 rounded-[2rem] overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+<button class="w-full p-8 flex justify-between items-center text-left hover:bg-surface-container-lowest transition-colors group" onclick="toggleFaq(this)">
+<span class="text-xl font-bold text-on-surface group-hover:text-primary transition-colors">¿Tienen opciones vegetarianas o veganas?</span>
+<span class="material-symbols-outlined text-primary text-3xl transition-transform duration-300">add</span>
+</button>
+<div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+<div class="p-8 pt-0 text-on-surface-variant text-lg leading-relaxed border-t border-outline-variant/5 mt-4">
+                        ¡Absolutamente! Contamos con la línea "Green Pop" que incluye burgers de NotCo, ensaladas gourmet con ingredientes orgánicos y opciones de sushi vegano. Revisa nuestra sección saludable en el menú.
+                    </div>
+</div>
+</div>
+<div class="border border-outline-variant/10 rounded-[2rem] overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+<button class="w-full p-8 flex justify-between items-center text-left hover:bg-surface-container-lowest transition-colors group" onclick="toggleFaq(this)">
+<span class="text-xl font-bold text-on-surface group-hover:text-primary transition-colors">¿Cómo puedo aplicar un código de descuento?</span>
+<span class="material-symbols-outlined text-primary text-3xl transition-transform duration-300">add</span>
+</button>
+<div class="faq-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+<div class="p-8 pt-0 text-on-surface-variant text-lg leading-relaxed border-t border-outline-variant/5 mt-4">
+                        Al finalizar tu compra en el carrito, verás un campo llamado "Código Promocional". Ingresa tu código ahí y el descuento se aplicará automáticamente al total de tu pedido.
+                    </div>
+</div>
+</div>
+</div>
+</section>
+<!-- SEO & Links Desktop Footer -->
+<footer class="bg-surface-container-low py-20 px-margin-desktop border-t border-outline-variant/10">
+<div class="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+<div>
+<img alt="FoodPop Logo" class="h-10 w-auto object-contain mb-8" src="https://lh3.googleusercontent.com/aida/AP1WRLsuRY1KGoL99RNNq168buEfmcQwYg1_9K4Gp1gFnpabX0nKA3CD4Zxz7m0InSpsD30X61yUr-kkMGFquzu77DiPdiunpL5wR9h9vY7YF8GTnJD6BfIpJbBJpcxJU9u1NsNYuhopMEioV1xZD_r0mPA5Y3vRmwxfCZIFVR7JEVpOMup2XSvaIBD66TGXawrczRzkSvaDdUcrreXw7E3D3pLx6rlOpxUw_F_f3R2K4g9j9jJOQtVWQdymi124">
+<p class="text-on-surface-variant text-sm leading-relaxed">Redefiniendo el delivery de comida rápida con calidad premium y tecnología de punta. Tu comida favorita, en la puerta de tu casa, más rápido que nunca.</p>
+<div class="flex gap-4 mt-8">
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-white transition-all shadow-sm" href="#"><span class="material-symbols-outlined text-[20px]">share</span></a>
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-white transition-all shadow-sm" href="#"><span class="material-symbols-outlined text-[20px]">public</span></a>
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-white transition-all shadow-sm" href="#"><span class="material-symbols-outlined text-[20px]">mail</span></a>
+</div>
+</div>
+<div>
+<h5 class="font-bold mb-8 uppercase tracking-widest text-xs text-on-surface">Menú</h5>
+<ul class="space-y-4 text-sm text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-colors" href="#">Burgers Smash</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Pizzas Artesanales</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Sushi Premium</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Postres Gourmet</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Combos Explosivos</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold mb-8 uppercase tracking-widest text-xs text-on-surface">Compañía</h5>
+<ul class="space-y-4 text-sm text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-colors" href="#">Sobre Nosotros</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Carreras</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Blog de Comida</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Sostenibilidad</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Prensa</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold mb-8 uppercase tracking-widest text-xs text-on-surface">Soporte</h5>
+<ul class="space-y-4 text-sm text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-colors" href="#">Centro de Ayuda</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Términos de Servicio</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Privacidad</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Cookies</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Contacto</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-[1440px] mx-auto pt-8 border-t border-outline-variant/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-on-surface-variant/60 font-medium">
+<p class="">© 2024 FOODPOP Premium Delivery. Todos los derechos reservados.</p>
+<div class="flex gap-8">
+<span class="">Hecho con ❤️ para Foodies</span>
+<span class="">Bogotá • CDMX • Madrid</span>
+</div>
+</div>
+</footer>
+</main>
+<!-- Back to top button -->
+<button class="fixed bottom-10 right-10 w-14 h-14 bg-white border border-outline-variant/20 rounded-full shadow-2xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:-translate-y-2 transition-all duration-300 z-50" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+<span class="material-symbols-outlined">expand_less</span>
+</button>
+<script>
+    function toggleFaq(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.material-symbols-outlined');
+        
+        if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+            icon.textContent = 'add';
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            // Close all other open FAQs
+            document.querySelectorAll('.faq-content').forEach(el => {
+                el.style.maxHeight = null;
+                const otherIcon = el.previousElementSibling.querySelector('.material-symbols-outlined');
+                if(otherIcon) {
+                    otherIcon.textContent = 'add';
+                    otherIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+            content.style.maxHeight = content.scrollHeight + "px";
+            icon.textContent = 'remove';
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // Scroll performance effects
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('header');
+        const currentScroll = window.pageYOffset;
+
+        if (currentScroll > 50) {
+            header.classList.add('shadow-xl');
+            header.style.height = '72px';
+        } else {
+            header.classList.remove('shadow-xl');
+            header.style.height = '80px';
+        }
+        lastScroll = currentScroll;
+    });
+</script>
+
+
+</body></html>
