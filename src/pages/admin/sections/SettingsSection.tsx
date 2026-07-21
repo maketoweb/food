@@ -304,6 +304,8 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
   const [faqQuestion, setFaqQuestion] = useState('');
   const [faqAnswer, setFaqAnswer] = useState('');
   const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
+  const [editingSedeId, setEditingSedeId] = useState<string | null>(null);
+  const [sedeForm, setSedeForm] = useState({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 });
 
   const pickerFilteredProducts = foodItems.slice(0, 5).filter(p =>
     !pickerSearch.trim() || p.nombre.toLowerCase().includes(pickerSearch.toLowerCase())
@@ -1044,8 +1046,8 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
                   <div className="flex gap-1.5 shrink-0 ml-3">
                     <button onClick={() => { const updatedSedes = (config.sedes || []).map(s => s.id === sede.id ? { ...s, activa: !s.activa } : s); updateConfig({ sedes: updatedSedes }); }} className={`p-1.5 rounded-md transition-colors cursor-pointer ${sede.activa ? 'hover:bg-amber-50 text-amber-600' : 'hover:bg-emerald-50 text-emerald-600'}`} title={sede.activa ? 'Desactivar' : 'Activar'}>{sede.activa ? <EyeOff size={14} /> : <Eye size={14} />}</button>
                     {!sede.es_principal && (<button onClick={() => { if (confirm(`¿Marcar "${sede.nombre}" como sede principal?`)) { const updatedSedes = (config.sedes || []).map(s => ({ ...s, es_principal: s.id === sede.id })); updateConfig({ sedes: updatedSedes }); } }} className="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer" title="Marcar como principal"><CheckCircle size={14} /></button>)}
-                    <button onClick={() => { const nuevoNombre = prompt('Editar nombre de la sede:', sede.nombre); if (nuevoNombre && nuevoNombre.trim()) { const updatedSedes = (config.sedes || []).map(s => s.id === sede.id ? { ...s, nombre: nuevoNombre.trim() } : s); updateConfig({ sedes: updatedSedes }); } }} className="p-1.5 rounded-md hover:bg-violet-50 text-violet-600 transition-colors cursor-pointer" title="Editar"><Edit size={14} /></button>
-                    {!sede.es_principal && (<button onClick={() => { if (confirm(`¿Eliminar la sede "${sede.nombre}"? Esta acción no se puede deshacer.`)) { const updatedSedes = (config.sedes || []).filter(s => s.id !== sede.id); updateConfig({ sedes: updatedSedes }); } }} className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer" title="Eliminar"><Trash2 size={14} /></button>)}
+                    <button onClick={() => { setEditingSedeId(sede.id); setSedeForm({ nombre: sede.nombre, telefono: sede.telefono || '', whatsapp_numero: sede.whatsapp_numero || '', direccion: sede.direccion || '', horario: sede.horario || '', lat: sede.coordenadas?.lat || 0, lng: sede.coordenadas?.lng || 0 }); }} className="p-1.5 rounded-md hover:bg-violet-50 text-violet-600 transition-colors cursor-pointer" title="Editar"><Edit size={14} /></button>
+                    <button onClick={() => { if (confirm(`¿Eliminar la sede "${sede.nombre}"? Esta acción no se puede deshacer.`)) { const updatedSedes = (config.sedes || []).filter(s => s.id !== sede.id); updateConfig({ sedes: updatedSedes }); if (editingSedeId === sede.id) { setEditingSedeId(null); setSedeForm({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 }); } } }} className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer" title="Eliminar"><Trash2 size={14} /></button>
                   </div>
                 </div>
               </div>
@@ -1054,8 +1056,75 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
           </div>
 
           <div className="border-t border-slate-200 pt-4">
-            <h5 className="text-xs font-bold text-slate-800 mb-3">Agregar Nueva Sede</h5>
-            <SedeForm onSave={(nuevaSede) => { const updatedSedes = [...(config.sedes || []), nuevaSede]; updateConfig({ sedes: updatedSedes }); setToastTitle('📍 Sede Agregada'); setToastMessage(`"${nuevaSede.nombre}" ha sido añadida exitosamente.`); }} />
+            <h5 className="text-xs font-bold text-slate-800 mb-3">{editingSedeId ? 'Editar Sede' : 'Agregar Nueva Sede'}</h5>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nombre *</span>
+                  <input type="text" value={sedeForm.nombre} onChange={e => setSedeForm({ ...sedeForm, nombre: e.target.value })} placeholder="Ej: Sede Principal" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dirección *</span>
+                  <input type="text" value={sedeForm.direccion} onChange={e => setSedeForm({ ...sedeForm, direccion: e.target.value })} placeholder="Ej: Av. Principal, Caracas" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Teléfono</span>
+                  <input type="tel" value={sedeForm.telefono} onChange={e => setSedeForm({ ...sedeForm, telefono: e.target.value })} placeholder="Ej: 0412-1234567" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">WhatsApp (opcional)</span>
+                  <input type="tel" value={sedeForm.whatsapp_numero} onChange={e => setSedeForm({ ...sedeForm, whatsapp_numero: e.target.value })} placeholder="Si difiere del teléfono" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Horario</span>
+                  <input type="text" value={sedeForm.horario} onChange={e => setSedeForm({ ...sedeForm, horario: e.target.value })} placeholder="Ej: Lun-Sab 8am-6pm" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Latitud</span>
+                  <input type="number" step="0.0001" value={sedeForm.lat || ''} onChange={e => setSedeForm({ ...sedeForm, lat: parseFloat(e.target.value) || 0 })} placeholder="10.198300" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Longitud</span>
+                  <input type="number" step="0.0001" value={sedeForm.lng || ''} onChange={e => setSedeForm({ ...sedeForm, lng: parseFloat(e.target.value) || 0 })} placeholder="-68.004400" className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-violet-500 text-xs" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => {
+                  if (!sedeForm.nombre.trim()) return;
+                  const existingSede = editingSedeId ? (config.sedes || []).find(s => s.id === editingSedeId) : null;
+                  const nuevaSede: Sede = {
+                    id: editingSedeId || `sede-${Date.now()}`,
+                    nombre: sedeForm.nombre.trim(),
+                    telefono: sedeForm.telefono,
+                    whatsapp_numero: sedeForm.whatsapp_numero || undefined,
+                    direccion: sedeForm.direccion,
+                    horario: sedeForm.horario,
+                    coordenadas: { lat: sedeForm.lat, lng: sedeForm.lng },
+                    es_principal: existingSede?.es_principal || (config.sedes || []).length === 0,
+                    activa: existingSede?.activa ?? true,
+                  };
+                  const sedes = [...(config.sedes || [])];
+                  if (editingSedeId) {
+                    const idx = sedes.findIndex(s => s.id === editingSedeId);
+                    if (idx >= 0) sedes[idx] = nuevaSede;
+                  } else {
+                    sedes.push(nuevaSede);
+                  }
+                  updateConfig({ sedes });
+                  setEditingSedeId(null);
+                  setSedeForm({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 });
+                  setToastTitle(editingSedeId ? '✏️ Sede Actualizada' : '📍 Sede Agregada');
+                  setToastMessage(`"${nuevaSede.nombre}" ha sido ${editingSedeId ? 'actualizada' : 'añadida'} exitosamente.`);
+                }} disabled={!sedeForm.nombre.trim()} className="bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white font-bold text-xs py-2.5 rounded-lg transition-colors flex-1 cursor-pointer">
+                  {editingSedeId ? 'Guardar Cambios' : 'Agregar Sede'}
+                </button>
+                {editingSedeId && (
+                  <button onClick={() => { setEditingSedeId(null); setSedeForm({ nombre: '', telefono: '', whatsapp_numero: '', direccion: '', horario: '', lat: 0, lng: 0 }); }} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2.5 rounded-lg transition-colors cursor-pointer">
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
