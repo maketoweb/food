@@ -348,6 +348,7 @@ export interface StoreConfig {
   delivery_zonas?: DeliveryZone[];
   favicon_url?: string;
   pwa_icon_url?: string;
+  splash_logo_url?: string;
   banner_texts?: string[];
   categories?: string[];
   categories_images?: Record<string, string>;
@@ -405,4 +406,81 @@ export interface StoreConfig {
   jsonld_type?: string;
   jsonld_priceRange?: string;
   jsonld_servesCuisine?: string[];
+}
+
+// ============================================================================
+// MARKETING AUTOMATION TYPES
+// ============================================================================
+
+export interface CustomerSegment {
+  id: string;
+  user_id: string;
+  segment_key: string;
+  segment_label: string;
+  computed_at: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface AutomationRule {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  enabled: boolean;
+  trigger_type: 'order_status_change' | 'time_based' | 'event_based' | 'segment_entry';
+  trigger_config: Record<string, unknown>;
+  action_type: 'push' | 'coupon_generate' | 'points_bonus';
+  action_config: Record<string, unknown>;
+  cooldown_hours: number;
+  max_sends_per_user: number;
+  last_run_at?: string;
+  total_fired: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AutomationLog {
+  id: string;
+  rule_id: string;
+  rule_slug: string;
+  user_id?: string;
+  trigger_event: Record<string, unknown>;
+  action_taken: string;
+  notification_id?: string;
+  status: 'sent' | 'rate_limited' | 'cooldown' | 'no_subscription' | 'error';
+  error_message: string;
+  created_at: string;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled';
+  channel: 'push' | 'in_app' | 'both';
+  segment_filter: string;
+  title: string;
+  body: string;
+  image_url: string;
+  link_url: string;
+  schedule_at?: string;
+  sent_at?: string;
+  total_recipients: number;
+  total_sent: number;
+  total_opened: number;
+  total_clicked: number;
+  total_rate_limited: number;
+  created_by: string;
+  created_at: string;
+}
+
+export interface PushEvent {
+  id: string;
+  notification_id: string;
+  campaign_id?: string;
+  user_id?: string;
+  anonymous_id: string;
+  event_type: 'sent' | 'delivered' | 'clicked' | 'dismissed';
+  metadata: Record<string, unknown>;
+  created_at: string;
 }

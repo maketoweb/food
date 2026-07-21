@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS store_config (
     tienda_lng NUMERIC(10, 6) NOT NULL DEFAULT -68.004400,
     logo_url TEXT DEFAULT '',
     secondary_logo_url TEXT DEFAULT '',
+    pwa_icon_url TEXT DEFAULT '',
+    splash_logo_url TEXT DEFAULT '',
     favicon_url TEXT DEFAULT '',
     site_url TEXT DEFAULT '',
 
@@ -849,6 +851,7 @@ BEGIN
     FOR SELECT USING (
       auth.uid()::text = cliente_uid
       OR (cliente_uid IS NOT NULL AND cliente_uid LIKE 'guest-%')
+      OR (cliente_uid IS NULL)
       OR (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
       OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
       OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
@@ -1262,3 +1265,469 @@ INSERT INTO products (nombre, descripcion, categoria, precio_usd, stock, imagen_
 -- [x] CORS comments agregados para functions Cloudflare
 -- [x] Migraciones legacy removidas (ya no son necesarias)
 -- ----------------------------------------------------------------------------
+
+-- ============================================================================
+-- MARKETING AUTOMATION: SISTEMA DE RETENCION Y REMARKETING
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 10.1 customer_segments: Asignacion de usuarios a segmentos
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS customer_segments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL REFERENCES usuarios_clientes(id) ON DELETE CASCADE,
+    segment_key TEXT NOT NULL,
+    segment_label TEXT NOT NULL,
+    computed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    metadata JSONB DEFAULT '{}'::JSONB,
+    UNIQUE(user_id, segment_key)
+);
+CREATE INDEX IF NOT EXISTS idx_customer_segments_user ON customer_segments(user_id);
+CREATE INDEX IF NOT EXISTS idx_customer_segments_key ON customer_segments(segment_key);
+ALTER TABLE customer_segments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "segments_admin_all" ON customer_segments;
+CREATE POLICY "segments_admin_all" ON customer_segments
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  );
+
+-- ----------------------------------------------------------------------------
+-- 10.2 automation_rules: Definicion de automatizaciones
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS automation_rules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT DEFAULT '',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    trigger_type TEXT NOT NULL,
+    trigger_config JSONB NOT NULL DEFAULT '{}'::JSONB,
+    action_type TEXT NOT NULL DEFAULT 'push',
+    action_config JSONB NOT NULL DEFAULT '{}'::JSONB,
+    cooldown_hours INTEGER DEFAULT 24,
+    max_sends_per_user INTEGER DEFAULT 3,
+    last_run_at TIMESTAMP WITH TIME ZONE,
+    total_fired INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_automation_rules_slug ON automation_rules(slug);
+CREATE INDEX IF NOT EXISTS idx_automation_rules_enabled ON automation_rules(enabled) WHERE enabled = true;
+ALTER TABLE automation_rules ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "automation_admin_all" ON automation_rules;
+CREATE POLICY "automation_admin_all" ON automation_rules
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  );
+
+-- ----------------------------------------------------------------------------
+-- 10.3 automation_log: Historial de ejecuciones
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS automation_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    rule_id UUID REFERENCES automation_rules(id) ON DELETE SET NULL,
+    rule_slug TEXT NOT NULL,
+    user_id TEXT,
+    trigger_event JSONB DEFAULT '{}'::JSONB,
+    action_taken TEXT NOT NULL DEFAULT 'push_sent',
+    notification_id TEXT,
+    status TEXT NOT NULL DEFAULT 'sent',
+    error_message TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_automation_log_rule ON automation_log(rule_id);
+CREATE INDEX IF NOT EXISTS idx_automation_log_user ON automation_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_automation_log_created ON automation_log(created_at DESC);
+ALTER TABLE automation_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "automation_log_admin_all" ON automation_log;
+CREATE POLICY "automation_log_admin_all" ON automation_log
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  );
+
+-- ----------------------------------------------------------------------------
+-- 10.4 campaigns: Campanas manuales del admin
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS campaigns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'draft',
+    channel TEXT NOT NULL DEFAULT 'push',
+    segment_filter TEXT DEFAULT 'all',
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    image_url TEXT DEFAULT '',
+    link_url TEXT DEFAULT '/',
+    schedule_at TIMESTAMP WITH TIME ZONE,
+    sent_at TIMESTAMP WITH TIME ZONE,
+    total_recipients INTEGER DEFAULT 0,
+    total_sent INTEGER DEFAULT 0,
+    total_opened INTEGER DEFAULT 0,
+    total_clicked INTEGER DEFAULT 0,
+    total_rate_limited INTEGER DEFAULT 0,
+    created_by TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_campaigns_schedule ON campaigns(schedule_at) WHERE status = 'scheduled';
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "campaigns_admin_all" ON campaigns;
+CREATE POLICY "campaigns_admin_all" ON campaigns
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  );
+
+-- ----------------------------------------------------------------------------
+-- 10.5 push_events: Tracking de envio/apertura/clic
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS push_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    notification_id TEXT NOT NULL,
+    campaign_id UUID,
+    user_id TEXT,
+    anonymous_id TEXT DEFAULT '',
+    event_type TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}'::JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_events_notif ON push_events(notification_id);
+CREATE INDEX IF NOT EXISTS idx_push_events_campaign ON push_events(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_push_events_type ON push_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_push_events_created ON push_events(created_at DESC);
+ALTER TABLE push_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "push_events_insert_anon" ON push_events;
+CREATE POLICY "push_events_insert_anon" ON push_events
+  FOR INSERT TO anon WITH CHECK (true);
+
+DROP POLICY IF EXISTS "push_events_admin_all" ON push_events;
+CREATE POLICY "push_events_admin_all" ON push_events
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  );
+
+-- ----------------------------------------------------------------------------
+-- 10.6 push_rate_limits: Rate limiting por usuario por semana
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS push_rate_limits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL,
+    week_start DATE NOT NULL,
+    push_count INTEGER NOT NULL DEFAULT 0,
+    max_pushes INTEGER NOT NULL DEFAULT 3,
+    last_push_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, week_start)
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_user_week ON push_rate_limits(user_id, week_start);
+ALTER TABLE push_rate_limits ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "rate_limits_admin_all" ON push_rate_limits;
+CREATE POLICY "rate_limits_admin_all" ON push_rate_limits
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+    OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
+  );
+
+-- ----------------------------------------------------------------------------
+-- 10.7 RPC Functions: Rate Limiting y Segmentacion
+-- ----------------------------------------------------------------------------
+
+-- Verificar si un usuario puede recibir push esta semana
+CREATE OR REPLACE FUNCTION public.check_push_rate_limit(p_user_id TEXT)
+RETURNS BOOLEAN
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_week_start DATE;
+    v_count INTEGER;
+    v_max INTEGER;
+BEGIN
+    v_week_start := date_trunc('week', CURRENT_DATE)::date;
+    SELECT push_count, max_pushes INTO v_count, v_max
+    FROM push_rate_limits
+    WHERE user_id = p_user_id AND week_start = v_week_start;
+    IF NOT FOUND THEN
+        RETURN TRUE;
+    END IF;
+    RETURN v_count < v_max;
+END;
+$$;
+
+-- Incrementar contador de pushes
+CREATE OR REPLACE FUNCTION public.increment_push_count(p_user_id TEXT)
+RETURNS VOID
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_week_start DATE;
+BEGIN
+    v_week_start := date_trunc('week', CURRENT_DATE)::date;
+    INSERT INTO push_rate_limits (user_id, week_start, push_count, last_push_at)
+    VALUES (p_user_id, v_week_start, 1, NOW())
+    ON CONFLICT (user_id, week_start) DO UPDATE
+    SET push_count = push_rate_limits.push_count + 1,
+        last_push_at = NOW();
+END;
+$$;
+
+-- Reset semanal de rate limits
+CREATE OR REPLACE FUNCTION public.reset_weekly_rate_limits()
+RETURNS VOID
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    DELETE FROM push_rate_limits
+    WHERE week_start < (CURRENT_DATE - INTERVAL '4 weeks')::date;
+END;
+$$;
+
+-- Evaluar segmentos de un usuario
+CREATE OR REPLACE FUNCTION public.evaluate_user_segments(p_user_id TEXT)
+RETURNS VOID
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_user RECORD;
+    v_order_count INTEGER;
+    v_total_spent NUMERIC;
+    v_last_order_days INTEGER;
+    v_avg_order NUMERIC;
+BEGIN
+    SELECT * INTO v_user FROM usuarios_clientes WHERE id = p_user_id;
+    IF NOT FOUND THEN RETURN; END IF;
+
+    SELECT COUNT(*), COALESCE(SUM(total_usd), 0), COALESCE(AVG(total_usd), 0)
+    INTO v_order_count, v_total_spent, v_avg_order
+    FROM orders
+    WHERE cliente_uid = p_user_id AND status = 'Entregado';
+
+    SELECT EXTRACT(DAY FROM NOW() - MAX(fecha))::int
+    INTO v_last_order_days
+    FROM orders
+    WHERE cliente_uid = p_user_id AND status = 'Entregado';
+
+    DELETE FROM customer_segments WHERE user_id = p_user_id;
+
+    IF v_user.loyalty_lifetime_points >= 500 OR v_order_count >= 20 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'vip', 'VIP Client', jsonb_build_object('order_count', v_order_count, 'total_spent', v_total_spent));
+    END IF;
+
+    IF v_avg_order > 15 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'high_value', 'Alto Valor', jsonb_build_object('avg_order', v_avg_order));
+    END IF;
+
+    IF EXTRACT(DAY FROM NOW() - v_user.created_at)::int <= 7 AND v_order_count <= 2 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'new_user', 'Usuario Nuevo', jsonb_build_object('days_since_signup', EXTRACT(DAY FROM NOW() - v_user.created_at)::int));
+    END IF;
+
+    IF v_order_count >= 3 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'returning', 'Recurrente', jsonb_build_object('order_count', v_order_count));
+    END IF;
+
+    IF v_last_order_days BETWEEN 14 AND 30 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'at_risk', 'En Riesgo', jsonb_build_object('last_order_days', v_last_order_days));
+    END IF;
+
+    IF v_last_order_days > 30 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'inactive_30d', 'Inactivo 30+ Dias', jsonb_build_object('last_order_days', v_last_order_days));
+    END IF;
+
+    IF v_last_order_days > 60 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'inactive_60d', 'Inactivo 60+ Dias', jsonb_build_object('last_order_days', v_last_order_days));
+    END IF;
+
+    IF v_last_order_days > 90 THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'churned', 'Perdido', jsonb_build_object('last_order_days', v_last_order_days));
+    END IF;
+
+    IF v_user.loyalty_tier_id IS NOT NULL AND v_user.loyalty_tier_id != '' THEN
+        INSERT INTO customer_segments (user_id, segment_key, segment_label, metadata)
+        VALUES (p_user_id, 'tier_' || v_user.loyalty_tier_id, 'Miembro Tier', jsonb_build_object('tier_id', v_user.loyalty_tier_id));
+    END IF;
+END;
+$$;
+
+-- Evaluar segmentos de todos los usuarios (batch)
+CREATE OR REPLACE FUNCTION public.evaluate_all_segments()
+RETURNS VOID
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_user RECORD;
+BEGIN
+    FOR v_user IN SELECT id FROM usuarios_clientes LOOP
+        PERFORM evaluate_user_segments(v_user.id);
+    END LOOP;
+END;
+$$;
+
+-- Incrementar click count de notificacion
+CREATE OR REPLACE FUNCTION public.increment_notification_click(p_notif_id TEXT)
+RETURNS VOID
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    UPDATE notifications SET click_count = COALESCE(click_count, 0) + 1 WHERE id = p_notif_id;
+END;
+$$;
+
+-- ----------------------------------------------------------------------------
+-- 10.8 Seed: 8 automatizaciones default
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.seed_automation_rules()
+RETURNS VOID
+SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+    INSERT INTO automation_rules (name, slug, description, trigger_type, trigger_config, action_type, action_config, cooldown_hours, max_sends_per_user) VALUES
+    (
+        'Gracias Post-Pedido', 'post_purchase_thank_you',
+        'Envia push de gracias 30 min despues de entrega con puntos por review.',
+        'event_based',
+        '{"event": "order.status_changed", "status": "Entregado", "delay_minutes": 30}'::jsonb,
+        'push',
+        '{"title_template": "Gracias por tu compra, {{user_name}}! 🎉", "body_template": "Tu pedido #{{order_id}} fue entregado. Califica tu experiencia y gana puntos extra!", "link_url": "/?tab=profile"}'::jsonb,
+        24, 1
+    ),
+    (
+        'Actualizacion de Delivery', 'delivery_status_update',
+        'Notifica cuando el pedido cambia a En camino o Entregado.',
+        'event_based',
+        '{"event": "order.status_changed", "statuses": ["En camino", "Entregado"]}'::jsonb,
+        'push',
+        '{"title_template": "Tu pedido #{{order_id}} esta en camino 🛵", "body_template": "Tu pedido va de camino. ¡Preparate para recibirlo!", "link_url": "/?tab=profile"}'::jsonb,
+        1, 10
+    ),
+    (
+        'Solicitud de Review', 'review_request',
+        'Pide review 2 horas despues de entrega con incentivo de puntos.',
+        'event_based',
+        '{"event": "order.status_changed", "status": "Entregado", "delay_minutes": 120}'::jsonb,
+        'push',
+        '{"title_template": "¿Que te pareció tu pedido? ⭐", "body_template": "Tu opinion nos ayuda a mejorar. Califica y gana puntos.", "link_url": "/?tab=profile"}'::jsonb,
+        72, 2
+    ),
+    (
+        'Carrito Abandonado', 'cart_abandonment',
+        'Recuerda carritos abandonados despues de 60 min de inactividad.',
+        'event_based',
+        '{"event": "cart.idle", "idle_minutes": 60}'::jsonb,
+        'push',
+        '{"title_template": "¡Te esperamos! 🛒", "body_template": "Tienes productos en tu carrito. ¡Ordénalos antes de que se agoten!", "link_url": "/?tab=cart"}'::jsonb,
+        48, 2
+    ),
+    (
+        'Re-engagement Inactivos', 'winback_inactive',
+        'Reactiva usuarios inactivos 30+ dias con oferta especial.',
+        'segment_entry',
+        '{"segment": "inactive_30d", "daily_cap": 1}'::jsonb,
+        'push',
+        '{"title_template": "¡Te extrañamos, {{user_name}}! 💛", "body_template": "Vuelve y disfruta de un 15% de descuento con el codigo BIENVENIDO15.", "link_url": "/?tab=catalog"}'::jsonb,
+        720, 3
+    ),
+    (
+        'Bonus Cumpleaños', 'birthday_bonus',
+        'Envia regalo de cumpleaños con puntos y cupon especial.',
+        'event_based',
+        '{"event": "user.birthday", "days_before": 0, "days_after": 3}'::jsonb,
+        'push',
+        '{"title_template": "¡Feliz cumpleaños, {{user_name}}! 🎂", "body_template": "Te regalamos puntos y un descuento especial. ¡Celebra con nosotros!", "link_url": "/?tab=profile"}'::jsonb,
+        8760, 1
+    ),
+    (
+        'Celebracion de Tier', 'tier_upgrade',
+        'Celebra cuando un usuario sube de tier de fidelizacion.',
+        'event_based',
+        '{"event": "loyalty.tier_changed"}'::jsonb,
+        'push',
+        '{"title_template": "¡Felicidades, ascendiste! 🏆", "body_template": "Ahora tienes beneficios exclusivos. Sigue acumulando puntos para subir mas.", "link_url": "/?tab=profile"}'::jsonb,
+        8760, 1
+    ),
+    (
+        'Cupón por Vencer', 'coupon_expiry_reminder',
+        'Recuerda 48 horas antes de que expire un cupon.',
+        'event_based',
+        '{"event": "coupon.expiring_soon", "hours_before": 48}'::jsonb,
+        'push',
+        '{"title_template": "Tu cupón vence pronto! ⏰", "body_template": "Tienes un descuento que vence en 48 horas. ¡Úsalo ahora!", "link_url": "/?tab=catalog"}'::jsonb,
+        24, 2
+    )
+    ON CONFLICT (slug) DO NOTHING;
+END;
+$$;
+
+SELECT seed_automation_rules();
+
+-- ----------------------------------------------------------------------------
+-- 10.9 Permisos para las nuevas tablas
+-- ----------------------------------------------------------------------------
+GRANT SELECT, INSERT, UPDATE ON customer_segments TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON customer_segments TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON automation_rules TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON automation_log TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON campaigns TO authenticated;
+GRANT SELECT, INSERT ON push_events TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON push_events TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON push_rate_limits TO authenticated;

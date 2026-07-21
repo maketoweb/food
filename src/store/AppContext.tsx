@@ -1099,6 +1099,7 @@ const DEFAULT_CONFIG: StoreConfig = {
   ],
   favicon_url: '',
   pwa_icon_url: '',
+  splash_logo_url: '',
   banner_texts: [
     'Hamburguesas Smash, Pizzas y Pollo',
     'Combos que Enamoran',
@@ -1812,6 +1813,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           secondary_color: dbConfig.secondary_color || prev.secondary_color,
           accent_color: dbConfig.accent_color || prev.accent_color,
           pwa_icon_url: dbConfig.pwa_icon_url || prev.pwa_icon_url,
+          splash_logo_url: dbConfig.splash_logo_url || prev.splash_logo_url,
           secondary_logo_url: dbConfig.secondary_logo_url || prev.secondary_logo_url,
           font_display: dbConfig.font_display || prev.font_display,
           delivery_gratis_threshold: dbConfig.delivery_gratis_threshold ?? prev.delivery_gratis_threshold,
@@ -1925,6 +1927,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .or(`tipo.eq.todos,and(tipo.eq.personal,destinatario_telefono.eq.${currentUser.telefono}),and(tipo.eq.request,destinatario_telefono.eq.${currentUser.telefono})`)
           .order('id', { ascending: false });
         if (dbNotifs) setNotifications(dbNotifs as InAppNotification[]);
+
+        // Cargar datos del usuario actual para que users[] tenga loyalty_points
+        try {
+          const { data: dbUser } = await supabase.from('usuarios_clientes')
+            .select('*').eq('id', currentUser.id).single();
+          if (dbUser) {
+            setUsers([{ ...dbUser, createdAt: dbUser.created_at, contrasena: 'managed' } as AppUser]);
+            setCurrentUser(prev => prev ? { ...prev, ...dbUser } : prev);
+          }
+        } catch (e) { console.warn('[initData] user profile load failed:', e); }
       }
 
       if (needsRateUpdate()) {
@@ -2279,11 +2291,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fecha: new Date().toLocaleString()
     };
 
-    // 1. Rebajar stock en Supabase (Persistencia Real)
+    // Nota: El stock se decrementa via trigger handle_new_order_actions en Supabase.
+    // Solo enviamos alerta de stock bajo aquí.
     for (const cartItem of cart) {
       const nextStock = Math.max(0, cartItem.item.stock - cartItem.quantity);
-      await supabase.from('products').update({ stock: nextStock }).eq('id', cartItem.item.id);
-      
       if (cartItem.item.stock >= 5 && nextStock < 5) {
         addNotification(
           'Alerta de Stock Bajo (Admin)',
@@ -2329,7 +2340,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setOrders(prev => [newOrder, ...prev]);
-    clearCart();
 
     // Auto-register guest after successful order (siempre, sin checkbox)
     if (orderData.cliente_email && !currentUser) {
@@ -3312,7 +3322,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const getUserLoyaltyPoints = (userId: string): number => {
     const user = users.find(u => u.id === userId);
-    return user?.loyalty_points || 0;
+    if (user) return user.loyalty_points || 0;
+    if (currentUser?.id === userId) return currentUser.loyalty_points || 0;
+    return 0;
   };
 
   const getUserLoyaltyTier = (userId: string): LoyaltyTier | null => {
@@ -3320,7 +3332,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!loyaltyConfig?.enabled || !loyaltyConfig.tiers?.length) return null;
     
     const user = users.find(u => u.id === userId);
-    const lifetimePoints = user?.loyalty_lifetime_points || 0;
+    const lifetimePoints = user?.loyalty_lifetime_points
+      || (currentUser?.id === userId ? currentUser.loyalty_lifetime_points || 0 : 0);
     
     let bestTier: LoyaltyTier | null = null;
     for (const tier of loyaltyConfig.tiers) {

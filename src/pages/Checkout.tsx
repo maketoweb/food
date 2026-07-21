@@ -14,7 +14,7 @@ interface CheckoutProps {
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
-  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon, orders, earnLoyaltyPoints } = useApp();
+  const { cart, config, addToCart, updateCartQuantity, removeFromCart, createOrder, currentUser, coupons, updateCoupon, orders, earnLoyaltyPoints, clearCart } = useApp();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -56,6 +56,12 @@ export const Checkout: React.FC<CheckoutProps> = ({ setTab, onClose }) => {
   const [showAlgoMas, setShowAlgoMas] = useState(false);
 
   const [showLocationModal, setShowLocationModal] = useState(false);
+
+  useEffect(() => {
+    if (processedOrder) {
+      clearCart();
+    }
+  }, [processedOrder]);
 
   const haversineDistance = useCallback((lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 6371;

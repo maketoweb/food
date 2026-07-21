@@ -26,6 +26,7 @@ const LoyaltySection = lazy(() => import('./sections/LoyaltySection'));
 const TiendaSection = lazy(() => import('./sections/TiendaSection'));
 const TrackingSection = lazy(() => import('./sections/TrackingSection'));
 const RolesSection = lazy(() => import('./sections/RolesSection'));
+const MarketingSection = lazy(() => import('./sections/MarketingSection'));
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -52,6 +53,7 @@ const ALL_SECTIONS = [
   { id: 'customers',    label: 'Clientes',       icon: User,             group: 'clientes' },
   { id: 'chat',         label: 'Mensajes',       icon: MessageSquare,    group: 'clientes' },
   { id: 'notifications',label: 'Avisos',         icon: Bell,             group: 'comunicacion' },
+  { id: 'marketing',   label: 'Marketing',      icon: Megaphone,        group: 'comunicacion', adminOnly: true },
   { id: 'tienda',      label: 'Tienda',        icon: Store,           group: 'contenido' },
   { id: 'coupons',      label: 'Cupones',        icon: Ticket,           group: 'contenido' },
   { id: 'roles',        label: 'Roles',          icon: Shield,           group: 'sistema', adminOnly: true },
@@ -157,6 +159,7 @@ export default function AdminIndex({ setTab }: AdminIndexProps) {
       case 'tracking': return <TrackingSection />;
       case 'loyalty': return <LoyaltySection />;
       case 'tienda': return <TiendaSection />;
+      case 'marketing': return <MarketingSection />;
       case 'roles': return <RolesSection />;
       default: return <DashboardSection />;
     }

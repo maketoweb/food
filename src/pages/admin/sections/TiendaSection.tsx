@@ -308,6 +308,21 @@ const TiendaSection: React.FC = () => {
           </div>
 
           <div className="admin-card p-4">
+            <SectionTitle>Logo de Bienvenida (Splash Screen)</SectionTitle>
+            <p className="text-xs mb-3" style={{ color: 'var(--ios-text-tertiary)' }}>
+              Logo que aparece con efecto zoom al abrir la app. Recomendado: fondo transparente (PNG).
+            </p>
+            <ImageField
+              value={config.splash_logo_url || ''}
+              onChange={url => updateConfig({ splash_logo_url: url })}
+              bucket="settings"
+              folder="splash-logos"
+              maxSize={512}
+              previewSize="lg"
+            />
+          </div>
+
+          <div className="admin-card p-4">
             <SectionTitle>Nombre de la App (PWA)</SectionTitle>
             <input type="text" value={config.site_nombre} onChange={e => updateConfig({ site_nombre: e.target.value })}
               className="admin-input" placeholder="Mi Restaurante" />

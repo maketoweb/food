@@ -97,6 +97,21 @@ self.addEventListener('notificationclick', function(event) {
     if (event.action === 'close') return;
 
     const targetUrl = event.notification.data?.url || '/';
+    const notifId = event.notification.data?.tag || '';
+
+    // Track click event via fetch
+    if (notifId) {
+      fetch('/api/marketing/track-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notification_id: notifId,
+          event_type: 'clicked',
+          anonymous_id: self._anonymous_id || ''
+        })
+      }).catch(function() {});
+    }
+
     event.waitUntil(
       self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
         for (const client of clientList) {
@@ -119,6 +134,10 @@ self.addEventListener('notificationclick', function(event) {
 self.addEventListener('message', function(event) {
   if (event.data?.type === 'PUSH_CLIENT_ERROR') {
     console.error('[SW Push] Error reportado desde el cliente:', event.data.error);
+  }
+
+  if (event.data?.type === 'SET_ANONYMOUS_ID') {
+    self._anonymous_id = event.data.anonymous_id;
   }
 
   // Notificar actualización de config desde el admin

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type AdminSection = 'reports' | 'orders' | 'tracking' | 'inventory' | 'tables' | 'customers' | 'coupons' | 'settings' | 'branding' | 'sedes' | 'extras' | 'notifications' | 'chat' | 'promos' | 'combos' | 'loyalty' | 'tienda' | 'roles';
+type AdminSection = 'reports' | 'orders' | 'tracking' | 'inventory' | 'tables' | 'customers' | 'coupons' | 'settings' | 'branding' | 'sedes' | 'extras' | 'notifications' | 'chat' | 'promos' | 'combos' | 'loyalty' | 'tienda' | 'roles' | 'marketing';
 
 interface AdminState {
   activeSection: AdminSection;
