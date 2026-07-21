@@ -49,7 +49,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ setTab, deferredPrompt
 
   const themeColor = config.theme_color || '#E31837';
 
-  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 1 ? active[0].telefono : config.telefono_soporte; };
+  const getWhatsAppPhone = () => { const active = config.sedes?.filter(s => s.activa); return active && active.length > 0 ? (active[0].whatsapp_numero || active[0].telefono || config.telefono_soporte) : config.telefono_soporte; };
 
   const [activeSubTab, setActiveSubTab] = useState<'profile' | 'orders' | 'notifications' | 'rewards' | 'promos' | 'coupons'>('orders');
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');

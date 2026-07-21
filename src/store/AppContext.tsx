@@ -1276,6 +1276,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentUserRef = useRef<AppUser | null>(currentUser);
   const isAdminAuthenticatedRef = useRef(isAdminAuthenticated);
   const configSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingConfigRef = useRef<Record<string, any>>({});
 
   useEffect(() => {
     currentUserRef.current = currentUser;
@@ -1393,15 +1394,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'store_config' }, (payload: Record<string, unknown>) => {
           const newRow = (payload as any)?.new;
           if (newRow) {
-            setConfig(prev => ({
-              ...prev,
-              ...newRow,
-              tasa_cambio: Number(newRow.tasa_cambio) || prev.tasa_cambio,
-              coordenadas_tienda: newRow.tienda_lat ? { lat: newRow.tienda_lat, lng: newRow.tienda_lng } : prev.coordenadas_tienda,
-              banners: [newRow.banner_url_1, newRow.banner_url_2, newRow.banner_url_3].filter(Boolean).length > 0 
-                ? [newRow.banner_url_1, newRow.banner_url_2, newRow.banner_url_3].filter(Boolean)
-                : prev.banners
-            }));
+            setConfig(prev => {
+              // Excluir campos que están pendientes de guardado local (debounce activo)
+              // para que no se sobreescriban con valores viejos de la DB
+              const pending = pendingConfigRef.current;
+              const safeNewRow: Record<string, any> = {};
+              Object.keys(newRow).forEach(key => {
+                if (!(key in pending)) {
+                  safeNewRow[key] = newRow[key];
+                }
+              });
+
+              return {
+                ...prev,
+                ...safeNewRow,
+                tasa_cambio: Number(safeNewRow.tasa_cambio) || prev.tasa_cambio,
+                coordenadas_tienda: safeNewRow.tienda_lat ? { lat: safeNewRow.tienda_lat, lng: safeNewRow.tienda_lng } : prev.coordenadas_tienda,
+                banners: [safeNewRow.banner_url_1, safeNewRow.banner_url_2, safeNewRow.banner_url_3].filter(Boolean).length > 0 
+                  ? [safeNewRow.banner_url_1, safeNewRow.banner_url_2, safeNewRow.banner_url_3].filter(Boolean)
+                  : prev.banners
+              };
+            });
           }
         })
         // Escuchar cambios en Pedidos (CDC)
@@ -1835,6 +1848,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           facebook_url: dbConfig.facebook_url || prev.facebook_url,
           tiktok_url: dbConfig.tiktok_url || prev.tiktok_url,
           youtube_url: dbConfig.youtube_url || prev.youtube_url,
+          sedes: dbConfig.sedes && Array.isArray(dbConfig.sedes) && dbConfig.sedes.length > 0 ? dbConfig.sedes : prev.sedes,
+          sede_activa_id: dbConfig.sede_activa_id || prev.sede_activa_id,
           loyalty: dbConfig.loyalty ? {
             ...prev.loyalty,
             ...dbConfig.loyalty,
@@ -1857,8 +1872,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (dbFlashSales) setFlashSales(dbFlashSales as FlashSale[]);
 
       // Cargar catálogo de recompensas
-      const { data: dbRewards } = await supabase.from('reward_catalog').select('*').eq('active', true);
+      const { data: dbRewards } = await supabase.from('reward_catalog').select('*');
       if (dbRewards) setRewardCatalog(dbRewards as RewardItem[]);
+
+      // Cargar transacciones de lealtad desde Supabase
+      const { data: dbLoyaltyTx } = await supabase.from('loyalty_transactions')
+        .select('*').order('created_at', { ascending: false }).limit(500);
+      if (dbLoyaltyTx && dbLoyaltyTx.length > 0) {
+        setLoyaltyTransactions(dbLoyaltyTx as LoyaltyTransaction[]);
+      }
 
       if (isAdmin) {
         setIsAdminAuthenticated(true);
@@ -2747,7 +2769,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setConfig(prev => {
       const updated = { ...prev, ...newSettings };
       localStorage.setItem('trv_config', JSON.stringify(updated));
-      
+
+      // Acumular cambios pendientes para el debounce (evita que se pierdan cambios rapidos)
+      Object.entries(newSettings).forEach(([key, value]) => {
+        if (value !== undefined) {
+          pendingConfigRef.current[key] = value;
+        }
+      });
+
       // Supabase Async Sync con debounce
       if (configSaveTimeoutRef.current) {
         clearTimeout(configSaveTimeoutRef.current);
@@ -2757,13 +2786,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
             console.warn('[Config] No hay sesión activa, omitiendo sync a Supabase');
+            pendingConfigRef.current = {};
             return;
           }
 
+          const settingsToSave = { ...pendingConfigRef.current };
+          pendingConfigRef.current = {};
+
           const updatePayload: any = { id: 1 };
 
-          Object.keys(newSettings).forEach(key => {
-            const value = (newSettings as any)[key];
+          Object.keys(settingsToSave).forEach(key => {
+            const value = settingsToSave[key];
             if (value !== undefined) {
               if (key === 'coordenadas_tienda' && value) {
                 updatePayload.tienda_lat = value.lat;
@@ -2851,7 +2884,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (error) {
       console.error('❌ Marketo Error (SQL):', error.message, '| Hint:', error.hint);
-      addNotification('Error de notificación', 'No se pudo guardar la notificación en el servidor.');
       return false;
     }
     
@@ -3054,6 +3086,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       created_at: new Date().toISOString(),
     };
     
+    // Persistir a Supabase (idempotente por unique index en user_id+order_id)
+    try {
+      const { error: txErr } = await supabase.from('loyalty_transactions').insert({
+        user_id: tx.user_id,
+        type: tx.type,
+        points: tx.points,
+        description: tx.description,
+        order_id: tx.order_id,
+        sede_id: tx.sede_id || '',
+      });
+      if (txErr && txErr.code !== '23505') { // 23505 = duplicate key (ya ganó puntos por esta orden)
+        console.error('[Loyalty] Error guardando transaccion:', txErr.message);
+      }
+      // Actualizar puntos en Supabase
+      const { error: ptsErr } = await supabase.from('usuarios_clientes')
+        .update({
+          loyalty_points: (user.loyalty_points || 0) + pointsEarned,
+          loyalty_lifetime_points: (user.loyalty_lifetime_points || 0) + pointsEarned,
+        })
+        .eq('id', userId);
+      if (ptsErr) console.error('[Loyalty] Error actualizando puntos:', ptsErr.message);
+    } catch (e) {
+      console.error('[Loyalty] Sync failed:', e);
+    }
+    
+    // Actualizar estado local
     setLoyaltyTransactions(prev => [...prev, tx]);
     setUsers(prev => prev.map(u => {
       if (u.id !== userId) return u;
@@ -3063,6 +3121,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loyalty_lifetime_points: (u.loyalty_lifetime_points || 0) + pointsEarned,
       };
     }));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => prev ? {
+        ...prev,
+        loyalty_points: (prev.loyalty_points || 0) + pointsEarned,
+        loyalty_lifetime_points: (prev.loyalty_lifetime_points || 0) + pointsEarned,
+      } : prev);
+    }
   };
 
   // --- PWA INSTALL DETECTION ---
@@ -3089,15 +3154,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- REWARD CATALOG CRUD ---
   const addRewardItem = async (item: Omit<RewardItem, 'id'>) => {
-    const newItem: RewardItem = { ...item, id: `reward-${Date.now()}-${Math.random().toString(36).substr(2, 6)}` };
-    setRewardCatalog(prev => [...prev, newItem]);
+    try {
+      const { data, error } = await supabase.from('reward_catalog').insert({
+        name: item.name,
+        description: item.description || '',
+        points_cost: item.points_cost,
+        reward_type: item.reward_type || 'discount',
+        reward_value: item.reward_value || 0,
+        product_id: item.product_id || null,
+        imagen_url: item.imagen_url || null,
+        active: item.active !== false,
+      }).select().single();
+      if (error) { console.error('[Rewards] Insert error:', error.message); return; }
+      if (data) setRewardCatalog(prev => [...prev, data as RewardItem]);
+    } catch (e) {
+      console.error('[Rewards] Add failed:', e);
+    }
   };
 
   const updateRewardItem = async (id: string, updated: Partial<RewardItem>) => {
+    try {
+      const { error } = await supabase.from('reward_catalog').update(updated).eq('id', id);
+      if (error) console.error('[Rewards] Update error:', error.message);
+    } catch (e) {
+      console.error('[Rewards] Update failed:', e);
+    }
     setRewardCatalog(prev => prev.map(r => r.id === id ? { ...r, ...updated } : r));
   };
 
   const deleteRewardItem = async (id: string) => {
+    try {
+      const { error } = await supabase.from('reward_catalog').delete().eq('id', id);
+      if (error) console.error('[Rewards] Delete error:', error.message);
+    } catch (e) {
+      console.error('[Rewards] Delete failed:', e);
+    }
     setRewardCatalog(prev => prev.filter(r => r.id !== id));
   };
 
@@ -3115,11 +3206,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       description: `Canje: ${reward.name}`,
       created_at: new Date().toISOString(),
     };
+
+    const newPoints = (user.loyalty_points || 0) - reward.points_cost;
+
+    // Persistir a Supabase
+    try {
+      const { error: txErr } = await supabase.from('loyalty_transactions').insert({
+        user_id: tx.user_id,
+        type: tx.type,
+        points: tx.points,
+        description: tx.description,
+      });
+      if (txErr) console.error('[Loyalty] Error guardando canje:', txErr.message);
+      const { error: ptsErr } = await supabase.from('usuarios_clientes')
+        .update({ loyalty_points: newPoints })
+        .eq('id', userId);
+      if (ptsErr) console.error('[Loyalty] Error actualizando puntos:', ptsErr.message);
+    } catch (e) {
+      console.error('[Loyalty] Sync failed:', e);
+    }
+    
+    // Actualizar estado local
     setLoyaltyTransactions(prev => [...prev, tx]);
     setUsers(prev => prev.map(u => {
       if (u.id !== userId) return u;
-      return { ...u, loyalty_points: (u.loyalty_points || 0) - reward.points_cost };
+      return { ...u, loyalty_points: newPoints };
     }));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => prev ? { ...prev, loyalty_points: newPoints } : prev);
+    }
     return true;
   };
 
@@ -3140,11 +3255,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       created_at: new Date().toISOString(),
     };
     
+    const newPoints = (user.loyalty_points || 0) - pointsToRedeem;
+
+    // Persistir a Supabase
+    try {
+      const { error: txErr } = await supabase.from('loyalty_transactions').insert({
+        user_id: tx.user_id,
+        type: tx.type,
+        points: tx.points,
+        description: tx.description,
+        order_id: tx.order_id || null,
+      });
+      if (txErr) console.error('[Loyalty] Error guardando canje:', txErr.message);
+      const { error: ptsErr } = await supabase.from('usuarios_clientes')
+        .update({ loyalty_points: newPoints })
+        .eq('id', userId);
+      if (ptsErr) console.error('[Loyalty] Error actualizando puntos:', ptsErr.message);
+    } catch (e) {
+      console.error('[Loyalty] Sync failed:', e);
+    }
+    
+    // Actualizar estado local
     setLoyaltyTransactions(prev => [...prev, tx]);
     setUsers(prev => prev.map(u => {
       if (u.id !== userId) return u;
-      return { ...u, loyalty_points: (u.loyalty_points || 0) - pointsToRedeem };
+      return { ...u, loyalty_points: newPoints };
     }));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => prev ? { ...prev, loyalty_points: newPoints } : prev);
+    }
     
     return true;
   };
@@ -3173,6 +3312,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const adjustUserPoints = async (userId: string, points: number, reason: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
     const tx: LoyaltyTransaction = {
       id: `loy-tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
       user_id: userId,
@@ -3182,16 +3324,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       created_at: new Date().toISOString(),
     };
     
+    const newPoints = Math.max(0, (user.loyalty_points || 0) + points);
+    const newLifetime = points > 0
+      ? (user.loyalty_lifetime_points || 0) + points
+      : user.loyalty_lifetime_points || 0;
+
+    // Persistir a Supabase (solo admin puede llegar aqui)
+    try {
+      await supabase.from('loyalty_transactions').insert({
+        user_id: tx.user_id,
+        type: tx.type,
+        points: tx.points,
+        description: tx.description,
+      });
+      await supabase.from('usuarios_clientes')
+        .update({ loyalty_points: newPoints, loyalty_lifetime_points: newLifetime })
+        .eq('id', userId);
+    } catch (e) {
+      console.error('[Loyalty] Adjust sync failed:', e);
+    }
+
+    // Actualizar estado local
     setLoyaltyTransactions(prev => [...prev, tx]);
     setUsers(prev => prev.map(u => {
       if (u.id !== userId) return u;
-      return {
-        ...u,
-        loyalty_points: Math.max(0, (u.loyalty_points || 0) + points),
-        loyalty_lifetime_points: points > 0
-          ? (u.loyalty_lifetime_points || 0) + points
-          : u.loyalty_lifetime_points,
-      };
+      return { ...u, loyalty_points: newPoints, loyalty_lifetime_points: newLifetime };
     }));
   };
 

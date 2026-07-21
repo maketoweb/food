@@ -420,6 +420,8 @@ CREATE TABLE IF NOT EXISTS loyalty_transactions (
 );
 CREATE INDEX IF NOT EXISTS idx_loyalty_user ON loyalty_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_loyalty_created ON loyalty_transactions(created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_loyalty_no_duplicate_order
+    ON loyalty_transactions(user_id, order_id) WHERE order_id IS NOT NULL AND type = 'earn';
 
 -- ----------------------------------------------------------------------------
 -- 5.9 admin_users (Gestion de roles admin/operador)
@@ -442,11 +444,14 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role);
 -- SECURITY: Todas las funciones SECURITY DEFINER usan SET search_path = public
 -- para prevenir search_path injection attacks.
 
--- 6.1 Funcion para sincronizar perfiles desde Auth
+-- 6.1 Funcion para sincronizar perfiles desde Auth + Welcome Bonus
 CREATE OR REPLACE FUNCTION public.handle_auth_user_created()
 RETURNS TRIGGER
 SET search_path = public
 LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_welcome_bonus int;
+    v_loyalty_config jsonb;
 BEGIN
     INSERT INTO public.usuarios_clientes (id, nombre, email, telefono, contrasena)
     VALUES (
@@ -460,6 +465,21 @@ BEGIN
         nombre = COALESCE(EXCLUDED.nombre, usuarios_clientes.nombre),
         email = COALESCE(EXCLUDED.email, usuarios_clientes.email),
         telefono = COALESCE(EXCLUDED.telefono, usuarios_clientes.telefono);
+
+    -- Welcome Bonus: otorgar puntos de bienvenida si el loyalty esta habilitado
+    SELECT loyalty INTO v_loyalty_config FROM store_config WHERE id = 1;
+    v_welcome_bonus := COALESCE((v_loyalty_config->>'welcome_bonus')::int, 0);
+
+    IF v_welcome_bonus > 0 AND COALESCE((v_loyalty_config->>'enabled')::boolean, false) THEN
+        UPDATE usuarios_clientes
+        SET loyalty_points = loyalty_points + v_welcome_bonus,
+            loyalty_lifetime_points = loyalty_lifetime_points + v_welcome_bonus
+        WHERE id = NEW.id::text;
+
+        INSERT INTO loyalty_transactions (user_id, type, points, description)
+        VALUES (NEW.id::text, 'bonus', v_welcome_bonus, 'Bonus de bienvenida');
+    END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -555,7 +575,7 @@ AFTER INSERT ON public.orders
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_new_order_actions();
 
--- 6.3 Funcion para notificar cambios de estado
+-- 6.3 Funcion para notificar cambios de estado + reversar puntos al cancelar
 CREATE OR REPLACE FUNCTION public.handle_order_status_push_update()
 RETURNS TRIGGER
 SET search_path = public
@@ -564,6 +584,8 @@ DECLARE
     v_notif_id text;
     v_mensaje text;
     v_admin_phone text;
+    v_reversed_points int;
+    v_client_uid text;
 BEGIN
     IF (OLD.status IS DISTINCT FROM NEW.status) AND NEW.status = 'En camino' THEN
         v_notif_id := 'notif-status-' || encode(gen_random_bytes(6), 'hex');
@@ -577,6 +599,26 @@ BEGIN
         v_mensaje := 'El pedido ' || NEW.id || ' de ' || COALESCE(NEW.cliente_nombre, 'N/A') || ' ha sido cancelado.';
         INSERT INTO public.notifications (id, titulo, mensaje, fecha, tipo, destinatario_telefono, link_url, leida)
         VALUES (v_notif_id, 'Pedido Cancelado', v_mensaje, to_char(NOW(), 'DD/MM/YYYY HH24:MI'), 'admin', COALESCE(v_admin_phone, ''), '/admin', FALSE);
+
+        -- REVERSAR PUNTOS DE FIDELIDAD ganados en este pedido
+        v_client_uid := COALESCE(NEW.cliente_uid, '');
+        IF v_client_uid != '' THEN
+            SELECT COALESCE(SUM(points), 0) INTO v_reversed_points
+            FROM loyalty_transactions
+            WHERE user_id = v_client_uid AND order_id = NEW.id AND type = 'earn';
+
+            IF v_reversed_points > 0 THEN
+                -- Insertar transaccion de reversal
+                INSERT INTO loyalty_transactions (user_id, type, points, description, order_id)
+                VALUES (v_client_uid, 'redeem', -v_reversed_points, 'Reversal por cancelacion pedido ' || NEW.id, NEW.id)
+                ON CONFLICT DO NOTHING;
+
+                -- Deductir puntos del usuario (solo los activos, no lifetime)
+                UPDATE usuarios_clientes
+                SET loyalty_points = GREATEST(0, loyalty_points - v_reversed_points)
+                WHERE id = v_client_uid;
+            END IF;
+        END IF;
     END IF;
 
     RETURN NEW;
@@ -806,6 +848,7 @@ BEGIN
   CREATE POLICY "orders_select_own_or_admin" ON orders
     FOR SELECT USING (
       auth.uid()::text = cliente_uid
+      OR (cliente_uid IS NOT NULL AND cliente_uid LIKE 'guest-%')
       OR (auth.jwt() ->> 'email' = 'kecho8a@gmail.com')
       OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
       OR (auth.jwt() -> 'app_metadata' ->> 'role' = 'operator')
@@ -983,11 +1026,20 @@ BEGIN
     FOR UPDATE TO anon USING (user_id IS NULL);
 
   -- =====================================================
-  -- loyalty_transactions: Own select, admin gestiona
+  -- loyalty_transactions: Own select, own insert (with validation), admin gestiona
   -- =====================================================
   DROP POLICY IF EXISTS "loyalty_select_own" ON loyalty_transactions;
   CREATE POLICY "loyalty_select_own" ON loyalty_transactions
     FOR SELECT TO authenticated USING (user_id = auth.uid()::text);
+
+  DROP POLICY IF EXISTS "loyalty_insert_own" ON loyalty_transactions;
+  CREATE POLICY "loyalty_insert_own" ON loyalty_transactions
+    FOR INSERT TO authenticated
+    WITH CHECK (
+      user_id = auth.uid()::text
+      AND points != 0
+      AND type IN ('earn', 'redeem', 'bonus')
+    );
 
   DROP POLICY IF EXISTS "loyalty_admin_all" ON loyalty_transactions;
   CREATE POLICY "loyalty_admin_all" ON loyalty_transactions
