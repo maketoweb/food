@@ -154,7 +154,7 @@ export const Home: React.FC<HomeProps> = ({
       <SEOHead title={`${config.site_nombre || 'FoodPop'} - Tu Comida Favorita`} type="home" />
 
       {/* ═══ 1. HERO — Horizontal Swipe Carousel ═══ */}
-      <section className="relative w-full overflow-hidden" style={{ height: 'clamp(280px, 42vw, 480px)' }}>
+      <section className="relative w-full overflow-hidden h-[75vh] min-h-[500px] max-h-[900px] md:h-[80vh] md:min-h-[600px] md:max-h-[800px]">
         <div
           ref={heroScrollRef}
           onScroll={handleHeroScroll}
@@ -164,21 +164,22 @@ export const Home: React.FC<HomeProps> = ({
           {heroBanners.length > 0 ? heroBanners.map((banner, idx) => (
             <div key={idx} className="relative w-full h-full shrink-0 snap-start">
               <img alt="" className="absolute inset-0 w-full h-full object-cover" src={banner} loading={idx === 0 ? 'eager' : 'lazy'} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="absolute bottom-6 left-4 right-4 md:bottom-12 md:left-12 md:right-auto md:max-w-xl">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-white font-semibold text-[10px] uppercase tracking-widest mb-2"
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+              <div className="absolute bottom-8 left-5 right-5 md:bottom-16 md:left-16 md:right-auto md:max-w-2xl">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-white font-bold text-[10px] uppercase tracking-widest mb-3"
                   style={{ backgroundColor: tc }}>
                   {idx === 0 ? 'NUEVO' : idx === 1 ? 'HOT' : 'BEST'}
                 </span>
-                <h2 className="text-white font-extrabold text-xl md:text-3xl leading-tight mb-2">
+                <h2 className="text-white font-extrabold text-2xl md:text-5xl leading-[1.05] mb-3"
+                  style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                   {config.hero_title || config.site_nombre || 'FoodPop'}
                 </h2>
-                <p className="text-white/70 text-sm md:text-base mb-4 max-w-xs">
-                  {config.hero_subtitle || config.mensaje_bienvenida || 'La explosión de sabor que estabas esperando.'}
+                <p className="text-white/75 text-sm md:text-lg mb-5 max-w-sm md:max-w-md leading-relaxed">
+                  {config.hero_subtitle || config.mensaje_bienvenida || 'Tu comida favorita, más rápido que nunca.'}
                 </p>
-                <button onClick={() => setTab('catalog')} className="text-white font-bold text-sm px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-lg active:scale-95 transition-transform"
-                  style={{ backgroundColor: tc }}>
-                  {config.hero_cta_text || 'Ordenar Ahora'} <ArrowRight size={16} />
+                <button onClick={() => setTab('catalog')} className="text-white font-bold text-sm md:text-base px-7 py-3 md:px-9 md:py-3.5 rounded-xl flex items-center gap-2 shadow-xl active:scale-95 transition-transform"
+                  style={{ backgroundColor: tc, boxShadow: `0 8px 30px ${tc}50` }}>
+                  {config.hero_cta_text || 'Ordenar Ahora'} <ArrowRight size={18} />
                 </button>
               </div>
             </div>
@@ -186,13 +187,13 @@ export const Home: React.FC<HomeProps> = ({
         </div>
 
         {heroBanners.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
             {heroBanners.map((_: string, i: number) => (
               <button key={i} onClick={() => { setHeroSlide(i); snapHeroTo(i); }}
                 className="rounded-full transition-all duration-300"
                 style={{
-                  width: i === heroSlide ? '20px' : '6px',
-                  height: '6px',
+                  width: i === heroSlide ? '24px' : '8px',
+                  height: '8px',
                   backgroundColor: i === heroSlide ? '#ffffff' : 'rgba(255,255,255,0.4)',
                 }} />
             ))}
@@ -202,12 +203,12 @@ export const Home: React.FC<HomeProps> = ({
         {heroBanners.length > 1 && (
           <>
             <button onClick={() => { const prev = (heroSlide - 1 + heroBanners.length) % heroBanners.length; setHeroSlide(prev); snapHeroTo(prev); }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/50 transition-colors hidden md:flex">
-              <ChevronLeft size={18} />
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/50 transition-colors hidden md:flex">
+              <ChevronLeft size={22} />
             </button>
             <button onClick={() => { const next = (heroSlide + 1) % heroBanners.length; setHeroSlide(next); snapHeroTo(next); }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/50 transition-colors hidden md:flex">
-              <ChevronRight size={18} />
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/50 transition-colors hidden md:flex">
+              <ChevronRight size={22} />
             </button>
           </>
         )}

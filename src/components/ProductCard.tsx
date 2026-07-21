@@ -25,7 +25,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   reviewCount = 0,
   index = 0,
 }) => {
-  const { toggleFavorite, isFavorite } = useApp();
+  const { toggleFavorite, isFavorite, isDarkMode } = useApp();
   const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
   const [showAddedToast, setShowAddedToast] = useState(false);
   const isAgotado = item.stock <= 0;
@@ -33,6 +33,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isLowStock = item.stock > 0 && item.stock < (config.stock_alert_threshold || 5);
   const hasPromoEnd = item.promo_end_date && new Date(item.promo_end_date) > new Date();
   const isFav = isFavorite(item.id);
+  const tc = isDarkMode ? '#141428' : '#ffffff';
+  const tcSurf = isDarkMode ? '#1a1a2e' : '#eeeef0';
+  const tcT1 = isDarkMode ? '#f0f0f5' : '#1a1c1d';
+  const tcT2 = isDarkMode ? '#8b8ba3' : '#5b4137';
+  const tcT3 = isDarkMode ? '#6b6b85' : '#8f7065';
+  const tcBorder = isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(228,190,177,0.1)';
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -53,14 +59,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div
       className="shrink-0 w-[170px] sm:w-[215px] flex flex-col rounded-xl overflow-hidden group relative cursor-pointer premium-hover"
       style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid rgba(228, 190, 177, 0.1)',
+        backgroundColor: tc,
+        border: `1px solid ${tcBorder}`,
         opacity: 0,
         animation: `fadeInScale 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${index * 80}ms forwards`,
       }}
       onClick={() => onViewProductDetails(item)}
     >
-      <div className="relative aspect-[4/3] overflow-hidden" style={{ backgroundColor: '#eeeef0' }}>
+      <div className="relative aspect-[4/3] overflow-hidden" style={{ backgroundColor: tcSurf }}>
         <img
           src={item.imagen_urls[0]}
           alt={item.nombre}
@@ -74,9 +80,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className={`absolute top-2 right-2 z-20 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
             isFav
               ? 'text-white shadow-lg'
-              : 'bg-white/80 backdrop-blur-sm text-[#5b4137] hover:bg-white'
+              : 'backdrop-blur-sm hover:bg-white/90'
           } ${isAnimatingHeart ? 'animate-heart-beat' : ''}`}
-          style={isFav ? { backgroundColor: themeColor } : {}}
+          style={isFav ? { backgroundColor: themeColor } : { backgroundColor: isDarkMode ? 'rgba(20,20,40,0.8)' : 'rgba(255,255,255,0.8)', color: tcT2 }}
         >
           <Heart size={12} fill={isFav ? 'currentColor' : 'none'} strokeWidth={2} />
         </button>
@@ -152,10 +158,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       <div className="p-3 flex flex-col gap-1.5 flex-1">
-        <h4 className="text-[13px] font-bold text-[#1a1c1d] line-clamp-2 leading-tight min-h-[2rem]">
+        <h4 className="text-[13px] font-bold line-clamp-2 leading-tight min-h-[2rem]" style={{ color: tcT1 }}>
           {item.nombre}
         </h4>
-        <p className="text-[10px] text-[#5b4137] line-clamp-2 leading-tight">
+        <p className="text-[10px] line-clamp-2 leading-tight" style={{ color: tcT2 }}>
           {item.descripcion}
         </p>
 
@@ -165,17 +171,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span className="flex items-center gap-0.5 text-[9px] font-bold" style={{ color: '#a73a00' }}>
               <Star size={9} fill="currentColor" strokeWidth={0} />
               {averageRating.toFixed(1)}
-              {reviewCount > 0 && <span className="text-[#8f7065] font-normal">({reviewCount})</span>}
+              {reviewCount > 0 && <span className="font-normal" style={{ color: tcT3 }}>({reviewCount})</span>}
             </span>
           )}
           {item.order_count !== undefined && item.order_count > 0 && (
-            <span className="flex items-center gap-0.5 text-[9px] text-[#8f7065]">
+            <span className="flex items-center gap-0.5 text-[9px]" style={{ color: tcT3 }}>
               <Users size={8} />
               {item.order_count} pedidos
             </span>
           )}
           {item.estimated_prep_time && (
-            <span className="flex items-center gap-0.5 text-[9px] text-[#8f7065]">
+            <span className="flex items-center gap-0.5 text-[9px]" style={{ color: tcT3 }}>
               <Clock size={8} />
               ~{item.estimated_prep_time} min
             </span>
@@ -192,7 +198,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="mt-auto flex items-center justify-between pt-1.5">
           <div className="flex flex-col">
             {item.es_promo && item.precio_anterior_usd && item.precio_anterior_usd > item.precio_usd && (
-              <span className="text-[10px] text-[#8f7065] line-through font-medium">
+              <span className="text-[10px] line-through font-medium" style={{ color: tcT3 }}>
                 ${item.precio_anterior_usd.toFixed(2)}
               </span>
             )}

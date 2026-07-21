@@ -20,9 +20,18 @@ export const Catalog: React.FC<CatalogProps> = ({
   selectedCategory, setSelectedCategory,
   onViewProductDetails, passedSearchTerm, clearPassedSearchTerm, resetGlobalFilters, setTab, onOpenDrawer
 }) => {
-  const { foodItems, config, addToCart } = useApp();
+  const { foodItems, config, addToCart, isDarkMode } = useApp();
   const themeColor = config.theme_color || '#FF6B35';
   const [searchQuery, setSearchQuery] = useState('');
+
+  const c = {
+    bg: isDarkMode ? '#0a0a14' : '#f9f9fb',
+    card: isDarkMode ? '#141428' : '#ffffff',
+    surface: isDarkMode ? '#1a1a2e' : '#eeeef0',
+    border: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+    t1: isDarkMode ? '#f0f0f5' : '#111827',
+    t2: isDarkMode ? '#8b8ba3' : '#6b7280',
+  };
 
   useEffect(() => {
     if (passedSearchTerm) {
@@ -48,29 +57,29 @@ export const Catalog: React.FC<CatalogProps> = ({
   }, [foodItems, searchQuery, selectedCategory]);
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#f9f9fb' }}>
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: c.bg }}>
       <SEOHead type="catalog" />
 
       {/* Top Bar */}
-      <div className="sticky top-0 z-10 px-4 py-3" style={{ backgroundColor: 'rgba(249,249,251,0.8)', backdropFilter: 'blur(20px)' }}>
+      <div className="sticky top-0 z-10 px-4 py-3" style={{ backgroundColor: isDarkMode ? 'rgba(10,10,20,0.85)' : 'rgba(249,249,251,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto flex items-center gap-3">
           {/* Mobile back button */}
           <button
             onClick={() => setTab('home')}
             className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl shrink-0"
-            style={{ backgroundColor: '#eeeef0' }}
+            style={{ backgroundColor: c.surface }}
           >
-            <ChevronLeft size={18} className="text-[#1a1c1d]" />
+            <ChevronLeft size={18} style={{ color: c.t1 }} />
           </button>
 
           {/* Desktop title */}
-          <h2 className="hidden lg:block text-[16px] font-bold text-[#1a1c1d] shrink-0" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <h2 className="hidden lg:block text-[16px] font-bold shrink-0" style={{ color: c.t1, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             {selectedCategory || 'Menú'}
           </h2>
 
           {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8f7065]" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: c.t2 }} />
             <input
               type="text"
               value={searchQuery}
@@ -78,15 +87,16 @@ export const Catalog: React.FC<CatalogProps> = ({
               placeholder="Buscar..."
               className="w-full rounded-xl pl-10 pr-9 py-2.5 text-[14px] outline-none transition-colors"
               style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #e4beb1/10',
-                color: '#1a1c1d'
+                backgroundColor: c.card,
+                border: `1px solid ${c.border}`,
+                color: c.t1
               }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8f7065] hover:text-[#5b4137] cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-70 cursor-pointer"
+              style={{ color: c.t2 }}
               >
                 <X size={14} />
               </button>
@@ -94,16 +104,16 @@ export const Catalog: React.FC<CatalogProps> = ({
           </div>
 
           {/* Desktop count */}
-          <span className="hidden lg:block text-[12px] text-[#8f7065] shrink-0">{filtered.length} productos</span>
+          <span className="hidden lg:block text-[12px] shrink-0" style={{ color: c.t2 }}>{filtered.length} productos</span>
 
           {/* Mobile menu */}
           {onOpenDrawer && (
             <button
               onClick={onOpenDrawer}
               className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl shrink-0"
-              style={{ backgroundColor: '#eeeef0' }}
+              style={{ backgroundColor: c.surface }}
             >
-              <Menu size={18} className="text-[#1a1c1d]" />
+              <Menu size={18} style={{ color: c.t1 }} />
             </button>
           )}
         </div>
@@ -127,8 +137,8 @@ export const Catalog: React.FC<CatalogProps> = ({
                   onClick={() => setSelectedCategory(cat)}
                   className="shrink-0 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors min-h-[40px]"
                   style={{
-                    backgroundColor: '#eeeef0',
-                    color: '#5b4137'
+                    backgroundColor: c.surface,
+                    color: c.t2
                   }}
                 >
                   {cat}
@@ -152,7 +162,7 @@ export const Catalog: React.FC<CatalogProps> = ({
         {/* Products Grid */}
         {filtered.length === 0 ? (
           <div className="text-center py-16 flex flex-col items-center gap-2">
-            <p className="text-[14px] text-[#8f7065]">No se encontraron productos</p>
+            <p className="text-[14px]" style={{ color: c.t2 }}>No se encontraron productos</p>
             <button
               onClick={() => { setSearchQuery(''); setSelectedCategory(''); resetGlobalFilters(); }}
               className="text-[13px] font-semibold px-4 py-2 rounded-xl text-white cursor-pointer"
