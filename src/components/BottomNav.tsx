@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, UtensilsCrossed, Search, ShoppingCart, User, Plus } from 'lucide-react';
+import { Home, UtensilsCrossed, Search, ShoppingCart, User } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 
 interface BottomNavProps {
@@ -85,20 +85,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setTab }) => {
             </button>
           );
         })}
-      </div>
-
-      {/* FAB — Floating Action Button */}
-      <div className="absolute left-1/2 -translate-x-1/2 -top-6">
-        <button
-          onClick={() => setTab('catalog')}
-          className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-all active:scale-90 hover:scale-105"
-          style={{
-            backgroundColor: themeColor,
-            boxShadow: `0 8px 24px ${themeColor}50, 0 2px 8px rgba(0,0,0,0.15)`,
-          }}
-        >
-          <Plus size={28} strokeWidth={2.5} />
-        </button>
       </div>
     </nav>
   );

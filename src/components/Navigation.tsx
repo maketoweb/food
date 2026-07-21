@@ -125,9 +125,9 @@ export const Navigation: React.FC<NavigationProps> = ({
                   className={`px-5 py-2 text-[13px] font-semibold tracking-wide rounded-full transition-all cursor-pointer focus:outline-none ${
                     isActive
                       ? 'text-white shadow-md'
-                      : 'text-[#5b4137] hover:text-[#1a1c1d] hover:bg-[#e4beb1]/20'
+                      : 'hover:opacity-80'
                   }`}
-                  style={isActive ? { backgroundColor: themeColor } : {}}
+                  style={isActive ? { backgroundColor: themeColor } : { color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {link.label}
@@ -173,7 +173,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#e4beb1]/20 transition-colors cursor-pointer"
               aria-label={`Carrito de compras, ${cartCount} artículos`}
             >
-              <ShoppingCart size={22} style={{ color: '#1a1c1d' }} strokeWidth={1.5} />
+              <ShoppingCart size={22} style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }} strokeWidth={1.5} />
               {cartCount > 0 && (
                 <span
                   className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 leading-none"
@@ -202,12 +202,13 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="absolute inset-0 bg-black/30" onClick={() => setSidebarOpen(false)} />
 
         <aside
-          className={`absolute top-0 bottom-0 left-0 w-[320px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out z-10 ${
+          className={`absolute top-0 bottom-0 left-0 w-[320px] shadow-2xl flex flex-col transition-transform duration-300 ease-out z-10 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
+          style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#ffffff' }}
         >
           {/* Sidebar Header */}
-          <div className="p-5 border-b border-[#e4beb1]/20 flex justify-between items-center">
+          <div className="p-5 border-b flex justify-between items-center" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
             <div className="flex items-center gap-3">
               {config.logo_url ? (
                 <img src={config.logo_url} alt={config.site_nombre || 'Logo'} className="h-8 w-auto max-w-[140px] object-contain" />
@@ -247,9 +248,9 @@ export const Navigation: React.FC<NavigationProps> = ({
                   className={`flex items-center gap-3 w-full px-4 py-3 text-sm rounded-xl font-medium transition-all cursor-pointer ${
                     currentTab === item.tab
                       ? 'font-semibold'
-                      : 'text-[#5b4137] hover:bg-[#f3f3f5]'
+                      : 'hover:opacity-80'
                   }`}
-                  style={currentTab === item.tab ? { backgroundColor: `${themeColor}12`, color: themeColor } : {}}
+                  style={currentTab === item.tab ? { backgroundColor: `${themeColor}12`, color: themeColor } : { color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
                 >
                   <item.icon size={18} strokeWidth={2} /> {item.label}
                 </button>
@@ -257,8 +258,8 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
 
             {/* Categories */}
-            <div className="border-t border-[#e4beb1]/20 pt-4">
-              <p className="text-[10px] font-bold text-[#5b4137] uppercase tracking-widest px-2 mb-3">Categorías del Menú</p>
+            <div className="border-t pt-4" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest px-2 mb-3" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>Categorías del Menú</p>
               <div className="flex flex-col gap-1">
                 {categories.map((cat) => {
                   const IconComponent = CATEGORY_ICON_MAP[cat.toLowerCase()] || UtensilsCrossed;
@@ -267,7 +268,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                       key={cat}
                       type="button"
                       onClick={() => handleCategoryClick(cat)}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-sm rounded-xl font-medium text-[#5b4137] hover:bg-[#f3f3f5] hover:text-[#1a1c1d] transition-all cursor-pointer group"
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm rounded-xl font-medium hover:opacity-80 transition-all cursor-pointer group"
+                      style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
                     >
                       <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors group-hover:scale-105"
@@ -284,26 +286,27 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
 
             {/* WhatsApp */}
-            <div className="border-t border-[#e4beb1]/20 mt-4 pt-4">
+            <div className="border-t mt-4 pt-4" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
               <a
                 href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                 target="_blank"
                 referrerPolicy="no-referrer"
-                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-[#5b4137] hover:bg-green-50 hover:text-green-600 rounded-xl font-medium transition-all"
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-green-50 hover:text-green-600 rounded-xl font-medium transition-all"
+                style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
               >
                 <MessageCircle size={18} className="text-green-500" /> WhatsApp Directo
               </a>
             </div>
 
             {/* Store address */}
-            <div className="mt-4 px-2 flex gap-2 text-xs text-[#5b4137] leading-relaxed">
-              <MapPin size={14} className="text-[#8f7065] shrink-0 mt-0.5" />
+            <div className="mt-4 px-2 flex gap-2 text-xs leading-relaxed" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+              <MapPin size={14} className="shrink-0 mt-0.5" style={{ color: isDarkMode ? '#6a6a8a' : '#8f7065' }} />
               <p>{config.direccion_fisica}</p>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-[#e4beb1]/20 flex items-center justify-between">
+          <div className="p-4 border-t flex items-center justify-between" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
             {currentUser && (
               <button
                 type="button"
@@ -377,7 +380,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#e4beb1]/20 transition-colors cursor-pointer"
             aria-label={`Carrito de compras, ${cartCount} artículos`}
           >
-            <ShoppingCart size={22} style={{ color: '#1a1c1d' }} strokeWidth={1.5} />
+            <ShoppingCart size={22} style={{ color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }} strokeWidth={1.5} />
             {cartCount > 0 && (
               <span
                 className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 leading-none"
@@ -405,11 +408,12 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="absolute inset-0 bg-black/30" onClick={() => setDrawerOpen(false)} />
 
         <aside
-          className={`absolute top-0 bottom-0 left-0 w-[280px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out z-10 ${
+          className={`absolute top-0 bottom-0 left-0 w-[280px] shadow-2xl flex flex-col transition-transform duration-300 ease-out z-10 ${
             drawerOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
+          style={{ backgroundColor: isDarkMode ? '#0f0f1a' : '#ffffff' }}
         >
-          <div className="p-5 border-b border-[#e4beb1]/20 flex justify-between items-center">
+          <div className="p-5 border-b flex justify-between items-center" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
             <div className="flex items-center gap-3">
               <h1
                 className="text-lg font-extrabold tracking-tighter"
@@ -421,7 +425,8 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#e4beb1]/20 text-[#5b4137] transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#e4beb1]/20 transition-colors"
+              style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
               aria-label="Cerrar menú"
             >
               <X size={18} />
@@ -441,8 +446,11 @@ export const Navigation: React.FC<NavigationProps> = ({
                   type="button"
                   onClick={() => { setTab(item.tab); setDrawerOpen(false); }}
                   className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-xl font-medium transition-all cursor-pointer ${
-                    currentTab === item.tab ? 'bg-[#f3f3f5] text-[#1a1c1d] font-semibold' : 'text-[#5b4137] hover:bg-[#f3f3f5]'
+                    currentTab === item.tab ? 'font-semibold' : 'hover:opacity-80'
                   }`}
+                  style={currentTab === item.tab 
+                    ? { backgroundColor: isDarkMode ? '#1a1a2e' : '#f3f3f5', color: isDarkMode ? '#e8e8f0' : '#1a1c1d' }
+                    : { color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
                 >
                   <item.icon size={18} /> {item.label}
                 </button>
@@ -450,12 +458,13 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
 
             {/* Quick actions */}
-            <div className="mt-4 pt-3 border-t border-[#e4beb1]/20 flex flex-col gap-0.5">
+            <div className="mt-4 pt-3 border-t flex flex-col gap-0.5" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
               <a
                 href={`https://wa.me/${getWhatsAppPhone().replace(/[+ ]/g, '')}`}
                 target="_blank"
                 referrerPolicy="no-referrer"
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-[#5b4137] hover:bg-green-50 hover:text-green-600 rounded-xl font-medium transition-all"
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-green-50 hover:text-green-600 rounded-xl font-medium transition-all"
+                style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}
               >
                 <MessageCircle size={16} className="text-green-500" /> WhatsApp Directo
               </a>
@@ -470,15 +479,15 @@ export const Navigation: React.FC<NavigationProps> = ({
               )}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[#e4beb1]/20">
-              <div className="flex gap-2 px-3 text-xs text-[#5b4137] leading-relaxed">
-                <MapPin size={14} className="text-[#8f7065] shrink-0 mt-0.5" />
+            <div className="mt-4 pt-3 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
+              <div className="flex gap-2 px-3 text-xs leading-relaxed" style={{ color: isDarkMode ? '#a0a0b8' : '#5b4137' }}>
+                <MapPin size={14} className="shrink-0 mt-0.5" style={{ color: isDarkMode ? '#6a6a8a' : '#8f7065' }} />
                 <p>{config.direccion_fisica}</p>
               </div>
             </div>
           </div>
 
-          <div className="p-3 border-t border-[#e4beb1]/20">
+          <div className="p-3 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(228,190,177,0.2)' }}>
             <div className="text-[9px] text-[#e4beb1] font-mono text-center">
               {config.site_nombre || 'FoodPop'} v2.0.0
             </div>
