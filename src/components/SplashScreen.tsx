@@ -20,7 +20,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 px-8"
       style={{
         background: themeColor,
         opacity: phase === 'fade' ? 0 : 1,
@@ -40,9 +40,30 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
         }
       `}</style>
 
-      {/* Mensaje de bienvenida */}
+      {/* Logo arriba */}
       <div
-        className="flex flex-col items-center gap-3 px-8 text-center"
+        className="flex items-center justify-center"
+        style={{
+          opacity: phase === 'message' ? 0 : 1,
+        }}
+      >
+        <img
+          src={logoUrl}
+          alt={config.site_nombre || 'FoodPop'}
+          className="w-32 h-32 object-contain drop-shadow-2xl"
+          style={{
+            animation: phase === 'logo' ? 'logoZoom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'none',
+            opacity: 0,
+          }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/pwa-192x192.png';
+          }}
+        />
+      </div>
+
+      {/* Mensaje de bienvenida abajo */}
+      <div
+        className="flex flex-col items-center gap-3 text-center"
         style={{
           animation: 'messageIn 0.6s ease-out forwards',
           opacity: 0,
@@ -55,27 +76,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
         <p className="text-white/85 text-sm leading-relaxed max-w-xs">
           {config.mensaje_bienvenida || 'La mejor comida con delivery express.'}
         </p>
-      </div>
-
-      {/* Logo con zoom - aparece encima del mensaje */}
-      <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        style={{
-          opacity: phase === 'message' ? 0 : 1,
-        }}
-      >
-        <img
-          src={logoUrl}
-          alt={config.site_nombre || 'FoodPop'}
-          className="w-36 h-36 object-contain drop-shadow-2xl"
-          style={{
-            animation: phase === 'logo' ? 'logoZoom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'none',
-            opacity: 0,
-          }}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/pwa-192x192.png';
-          }}
-        />
       </div>
     </div>
   );

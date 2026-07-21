@@ -317,6 +317,11 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 );
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
+UPDATE store_config 
+SET 
+  push_webhook_url = 'https://foodpop.maketo.site/api/push-notify',
+  push_webhook_secret = 'fp-push-secret-2024-xK9m'
+WHERE id = 1;
 -- ----------------------------------------------------------------------------
 -- 5.3 notifications
 -- ----------------------------------------------------------------------------
@@ -1624,6 +1629,7 @@ END;
 $$;
 
 -- Incrementar click count de notificacion
+DROP FUNCTION IF EXISTS public.increment_notification_click(TEXT);
 CREATE OR REPLACE FUNCTION public.increment_notification_click(p_notif_id TEXT)
 RETURNS VOID
 SET search_path = public

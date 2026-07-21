@@ -61,9 +61,9 @@
     <!-- Aplicar color y nombre antes de que React cargue -->
     <script>
       (function() {
-        // Seleccionar manifest dinámicamente según URL
         var manifestLink = document.getElementById('pwa-manifest');
-        if (manifestLink && window.location.pathname.startsWith('/admin')) {
+        var isAdmin = window.location.pathname.startsWith('/admin');
+        if (manifestLink && isAdmin) {
           manifestLink.href = '/manifest-admin.json';
           document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute('content', 'FoodPop Admin');
         }
@@ -80,6 +80,27 @@
               document.title = cfg.site_nombre + ' | Delivery de Comida Premium';
               document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute('content', cfg.site_nombre);
               document.querySelector('meta[property="og:site_name"]').setAttribute('content', cfg.site_nombre);
+            }
+            if (cfg.pwa_icon_url && manifestLink) {
+              fetch(manifestLink.href).then(function(r) { return r.json(); }).then(function(baseManifest) {
+                var customIcons = baseManifest.icons.map(function(icon) {
+                  var newIcon = Object.assign({}, icon);
+                  newIcon.src = cfg.pwa_icon_url;
+                  return newIcon;
+                });
+                baseManifest.icons = customIcons;
+                if (cfg.theme_color) {
+                  baseManifest.theme_color = cfg.theme_color;
+                  baseManifest.background_color = cfg.theme_color;
+                }
+                if (cfg.site_nombre) {
+                  baseManifest.name = cfg.site_nombre;
+                  baseManifest.short_name = cfg.site_nombre.substring(0, 12);
+                }
+                var blob = new Blob([JSON.stringify(baseManifest)], { type: 'application/json' });
+                var blobUrl = URL.createObjectURL(blob);
+                manifestLink.href = blobUrl;
+              }).catch(function() {});
             }
           }
         } catch(e) {}
