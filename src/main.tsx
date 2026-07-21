@@ -4,12 +4,17 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
-// Forzar limpieza de caches workbox precache viejos
-// Esto resuelve el problema donde un SW anterior cacheó respuestas HTML para assets CSS/JS
+// Forzar limpieza agresiva de todos los caches viejos
+// Resuelve problemas de logos/iconos cacheados con fondos opacos
 if ('caches' in window) {
   caches.keys().then((names) => {
     names.forEach((name) => {
-      if (name.startsWith('workbox-precache')) {
+      if (
+        name.startsWith('workbox-precache') ||
+        name.includes('images-cache') ||
+        name.includes('supabase-storage') ||
+        name.includes('manifest')
+      ) {
         caches.delete(name);
       }
     });

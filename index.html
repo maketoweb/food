@@ -35,9 +35,9 @@
     <!-- iOS PWA -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FoodPop" />
-    <meta name="theme-color" content="#ff5c00" />
+    <meta name="theme-color" content="#FF6B35" />
 
     <!-- CSP -->
     <meta
@@ -58,15 +58,27 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   </head>
   <body class="bg-[#f9f9fb] text-[#1a1c1d] antialiased overflow-x-hidden">
-    <!-- Aplicar color y nombre antes de que React cargue -->
+    <!-- Clear old caches + apply config before React loads -->
     <script>
       (function() {
+        // Force-clear all old workbox precache entries on every load
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) {
+              if (name.startsWith('workbox-precache') || name.startsWith('supabase') || name.startsWith('images-cache')) {
+                caches.delete(name);
+              }
+            });
+          });
+        }
+
         var manifestLink = document.getElementById('pwa-manifest');
         var isAdmin = window.location.pathname.startsWith('/admin');
         if (manifestLink && isAdmin) {
           manifestLink.href = '/manifest-admin.json';
           document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute('content', 'FoodPop Admin');
         }
+
         try {
           var saved = localStorage.getItem('trv_config');
           if (saved) {
@@ -74,7 +86,6 @@
             if (cfg.theme_color) {
               document.body.style.backgroundColor = cfg.theme_color;
               document.querySelector('meta[name="theme-color"]').setAttribute('content', cfg.theme_color);
-              document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'black-translucent');
             }
             if (cfg.site_nombre) {
               document.title = cfg.site_nombre + ' | Delivery de Comida Premium';

@@ -66,6 +66,56 @@ function AppContent() {
     }
   }, [config.theme_color, config.secondary_color, config.accent_color]);
 
+  // Actualizar manifest, meta tags e iconos dinamicamente cuando el admin cambia config
+  useEffect(() => {
+    if (!config.theme_color && !config.pwa_icon_url && !config.site_nombre) return;
+
+    // Update theme-color meta
+    if (config.theme_color) {
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.setAttribute('content', config.theme_color);
+      document.body.style.backgroundColor = config.theme_color;
+    }
+
+    // Update apple-touch-icon
+    const appleTouchUrl = config.pwa_icon_url || config.logo_url || config.favicon_url || '/apple-touch-icon.png';
+    let appleLink = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+    if (appleLink) appleLink.setAttribute('href', appleTouchUrl);
+
+    // Rebuild manifest blob URL with current config
+    const manifestLink = document.getElementById('pwa-manifest') as HTMLLinkElement | null;
+    if (manifestLink && config.pwa_icon_url) {
+      const baseManifestUrl = window.location.pathname.startsWith('/admin') ? '/manifest-admin.json' : '/manifest.json';
+      fetch(baseManifestUrl).then(r => r.json()).then((baseManifest: any) => {
+        baseManifest.icons = baseManifest.icons.map((icon: any) => ({
+          ...icon,
+          src: config.pwa_icon_url,
+        }));
+        if (config.theme_color) {
+          baseManifest.theme_color = config.theme_color;
+          baseManifest.background_color = config.theme_color;
+        }
+        if (config.site_nombre) {
+          baseManifest.name = config.site_nombre;
+          baseManifest.short_name = config.site_nombre.substring(0, 12);
+        }
+        const blob = new Blob([JSON.stringify(baseManifest)], { type: 'application/json' });
+        manifestLink.href = URL.createObjectURL(blob);
+      }).catch(() => {});
+    }
+
+    // Clear image caches so new logo displays immediately
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          if (name.includes('images') || name.includes('supabase') || name.includes('manifest')) {
+            caches.delete(name);
+          }
+        });
+      });
+    }
+  }, [config.theme_color, config.pwa_icon_url, config.splash_logo_url, config.site_nombre, config.logo_url, config.favicon_url]);
+
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
