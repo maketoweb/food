@@ -40,6 +40,15 @@ function AppContent() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Detectar si ya está instalada como PWA (display-mode: standalone)
+    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true) {
+      localStorage.setItem('foodapp_pwa_installed', 'true');
+      if (currentUser && !currentUser.is_pwa_installed) {
+        markUserAsPwaInstalled(currentUser.id);
+      }
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);

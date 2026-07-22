@@ -1737,6 +1737,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if ((isAdmin || isOperator) && localStorage.getItem('trv_admin_auth') !== 'true') {
         localStorage.setItem('trv_admin_auth', 'true');
         setIsAdminAuthenticated(true);
+      } else if (!isAdmin && !isOperator && localStorage.getItem('trv_admin_auth') === 'true' && session) {
+        // Sesión existe pero no es admin/operator - limpiar flag
+        localStorage.removeItem('trv_admin_auth');
+        setIsAdminAuthenticated(false);
+        setUserRole(null);
+        localStorage.removeItem('trv_user_role');
       }
 
       // Sincronizar rol desde la sesión
@@ -1815,8 +1821,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           transferencia_data: dbConfig.transferencia_data,
           transferencia_enabled: dbConfig.transferencia_enabled ?? prev.transferencia_enabled,
           transferencia_discount_percent: dbConfig.transferencia_discount_percent ?? prev.transferencia_discount_percent,
-          push_webhook_url: dbConfig.push_webhook_url,
-          push_webhook_secret: dbConfig.push_webhook_secret,
+          push_webhook_url: dbConfig.push_webhook_url || import.meta.env.VITE_PUSH_WEBHOOK_URL || '',
+          push_webhook_secret: dbConfig.push_webhook_secret || import.meta.env.VITE_WEBHOOK_SECRET || '',
           logo_url: dbConfig.logo_url ?? prev.logo_url,
           theme_color: dbConfig.theme_color || prev.theme_color,
           favicon_url: dbConfig.favicon_url || prev.favicon_url,
@@ -1977,7 +1983,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 30 * 60 * 1000); // 30 minutos
 
     return () => clearInterval(rateInterval);
-  }, [currentUser]); // Solo re-ejecutar al cambiar usuario, no al cambiar admin
+    }, [currentUser, isAdminAuthenticated]); // Re-ejecutar al cambiar usuario o estado de admin
 
   // Listener de auth state para sincronizar sesión de Supabase con estado local
   useEffect(() => {
@@ -1995,6 +2001,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             localStorage.setItem('trv_admin_auth', 'true');
             setUserRole(isAdmin ? 'admin' : 'operator');
             localStorage.setItem('trv_user_role', isAdmin ? 'admin' : 'operator');
+            // Reintentar sync de config pendiente cuando la sesión se restaura
+            if (Object.keys(pendingConfigRef.current).length > 0) {
+              const settingsToSave = { ...pendingConfigRef.current };
+              pendingConfigRef.current = {};
+              const updatePayload: any = { id: 1 };
+              Object.keys(settingsToSave).forEach(key => {
+                const value = settingsToSave[key];
+                if (value !== undefined) {
+                  if (key === 'coordenadas_tienda' && value) {
+                    updatePayload.tienda_lat = value.lat;
+                    updatePayload.tienda_lng = value.lng;
+                  } else if (key === 'banners' && Array.isArray(value)) {
+                    if (value[0] !== undefined) updatePayload.banner_url_1 = value[0];
+                    if (value[1] !== undefined) updatePayload.banner_url_2 = value[1];
+                    if (value[2] !== undefined) updatePayload.banner_url_3 = value[2];
+                  } else {
+                    updatePayload[key] = value;
+                  }
+                }
+              });
+              if (Object.keys(updatePayload).length > 1) {
+                supabase.from('store_config').upsert(updatePayload).then(({ error }) => {
+                  if (error) console.error('[Config] Retry sync failed:', error.message);
+                });
+              }
+            }
           }
         }
       } else if (event === 'SIGNED_OUT') {
@@ -2359,39 +2391,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders(prev => [newOrder, ...prev]);
 
-    // Auto-register guest after successful order (siempre, sin checkbox)
-    if (orderData.cliente_email && !currentUser) {
+    // Auto-register guest after successful order (sin checkbox, con email o telefono)
+    if (!currentUser && (orderData.cliente_email || orderData.cliente_telefono)) {
       const cleanPhone = orderData.cliente_telefono.replace(/[\s\-()]/g, '');
-      const email = orderData.cliente_email.trim().toLowerCase();
+      const email = (orderData.cliente_email || '').trim().toLowerCase() || `${cleanPhone}@guest.foodapp.local`;
       let userId = '';
       let authSucceeded = false;
 
-      // 1. Primero intentar signIn (si ya tiene cuenta)
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: cleanPhone
-      });
-      if (!signInError && signInData?.user) {
-        userId = signInData.user.id;
-        authSucceeded = true;
-      }
+      // 1. Primero intentar signIn (si ya tiene cuenta por email o telefono)
+      try {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: cleanPhone
+        });
+        if (!signInError && signInData?.user) {
+          userId = signInData.user.id;
+          authSucceeded = true;
+        }
+      } catch (e) { /* signIn falló, intentar signUp */ }
 
       // 2. Si signIn falla, intentar signUp
       if (!authSucceeded) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password: cleanPhone,
-          options: {
-            data: {
-              nombre: orderData.cliente_nombre,
-              telefono: cleanPhone
+        try {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email,
+            password: cleanPhone,
+            options: {
+              data: {
+                nombre: orderData.cliente_nombre,
+                telefono: cleanPhone
+              }
             }
+          });
+          if (!authError && authData?.user) {
+            userId = authData.user.id;
+            authSucceeded = true;
           }
-        });
-        if (!authError && authData?.user) {
-          userId = authData.user.id;
-          authSucceeded = true;
-        }
+        } catch (e) { /* signUp falló, usar ID local */ }
       }
 
       // 3. Si auth falló, usar ID local para que el usuario quede logueado
@@ -2826,8 +2862,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
-            console.warn('[Config] No hay sesión activa, omitiendo sync a Supabase');
-            pendingConfigRef.current = {};
+            console.warn('[Config] No hay sesión activa, reintentando sync en próximo cambio...');
+            // NO borramos pendingConfigRef - se reintentará en el próximo cambio
             return;
           }
 
@@ -2853,7 +2889,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
           
           if (Object.keys(updatePayload).length > 1) {
-            await supabase.from('store_config').upsert(updatePayload);
+            const { error: upsertErr } = await supabase.from('store_config').upsert(updatePayload);
+            if (upsertErr) {
+              console.error('[Config] Upsert error:', upsertErr.message);
+              // Re-acumular cambios fallidos para reintento
+              Object.keys(settingsToSave).forEach(key => {
+                pendingConfigRef.current[key] = settingsToSave[key];
+              });
+            }
           }
         } catch (e) {
           console.error('[Config] Failed to sync config', e);
@@ -2925,6 +2968,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (error) {
       console.error('❌ Marketo Error (SQL):', error.message, '| Hint:', error.hint);
+      // Rollback actualización optimista
+      setNotifications(prev => prev.filter(n => n.id !== notifId));
       return false;
     }
     

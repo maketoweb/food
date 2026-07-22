@@ -18,18 +18,19 @@ const CustomersSection: React.FC<CustomersSectionProps> = ({ setSendMsgTitle, se
     const map = new Map<string, { email: string; nombre: string; telefono: string; lastOrder: string; totalSpent: number; count: number }>();
     for (const o of orders) {
       const email = o.guest_email || o.cliente_email;
-      if (!email || !o.guest_phone) continue;
+      if (!email) continue;
       const key = email.toLowerCase();
       const existing = map.get(key);
       if (existing) {
         existing.count++;
         existing.totalSpent += Number(o.total_usd) || 0;
         if (o.fecha && o.fecha > existing.lastOrder) existing.lastOrder = o.fecha;
+        if (!existing.telefono && o.cliente_telefono) existing.telefono = o.cliente_telefono;
       } else {
         map.set(key, {
           email,
           nombre: o.cliente_nombre,
-          telefono: o.cliente_telefono,
+          telefono: o.cliente_telefono || o.guest_phone || '',
           lastOrder: o.fecha || '',
           totalSpent: Number(o.total_usd) || 0,
           count: 1,
@@ -79,9 +80,9 @@ const CustomersSection: React.FC<CustomersSectionProps> = ({ setSendMsgTitle, se
               {/* Orders for this user */}
               <div className="text-[10px] font-mono border-t border-slate-100 pt-3">
                 <strong>Historial de Pedidos:</strong>
-                {orders && orders.filter(o => o.cliente_telefono === (user.telefono || '')).length > 0 ? (
+                {orders && orders.filter(o => o.cliente_telefono === (user.telefono || '') || o.cliente_uid === user.id || o.usuario_id === user.id).length > 0 ? (
                   <ul className="list-disc pl-4 mt-2 text-slate-600">
-                    {orders.filter(o => o.cliente_telefono === (user.telefono || '')).map(o => (
+                    {orders.filter(o => o.cliente_telefono === (user.telefono || '') || o.cliente_uid === user.id || o.usuario_id === user.id).map(o => (
                       <li key={o.id}>{o.fecha} - {o.status} - ${(Number(o.total_usd) || 0).toFixed(2)}</li>
                     ))}
                   </ul>
