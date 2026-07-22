@@ -51,7 +51,7 @@ interface AppContextProps {
   
   // Checkout & Order Actions
   createOrder: (orderData: Omit<Order, 'id' | 'subtotal_usd' | 'total_usd' | 'total_bs' | 'fecha' | 'status'> & { descuento_cupon_usd?: number; cupon_codigo?: string }, preGeneratedId?: string) => Promise<Order | null>;
-  updateOrderStatus: (orderId: string, status: Order['status'], estimatedTime?: string, notas?: string) => void;
+  updateOrderStatus: (orderId: string, status: Order['status'], estimatedTime?: string, notas?: string) => Promise<void>;
   updateOrderItems: (orderId: string, newItems: OrderItem[]) => Promise<void>;
 
   // Coupon Actions
@@ -1169,6 +1169,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('trv_orders');
     return saved ? JSON.parse(saved) : [];
   });
+  const ordersRef = useRef(orders);
+  useEffect(() => { ordersRef.current = orders; }, [orders]);
 
   const [coupons, setCoupons] = useState<Coupon[]>(() => {
     const saved = localStorage.getItem('trv_coupons');
@@ -1361,7 +1363,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         new: [200, 100, 200],
         update: status === 'En camino' ? 100 : 50
       };
-      navigator.vibrate(patterns[type] || 50);
+      try {
+        navigator.vibrate(patterns[type] || 50);
+      } catch {
+        // Chrome requiere interacción previa del usuario para permitir vibrate
+      }
     }
   };
 
@@ -2441,19 +2447,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newOrder;
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['status'], estimatedTime?: string, notas?: string) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { 
-      ...o, 
-      status, 
-      tiempo_estimado_entrega: estimatedTime !== undefined ? estimatedTime : o.tiempo_estimado_entrega,
-      notas_admin: notas !== undefined ? notas : o.notas_admin 
+  const updateOrderStatus = async (orderId: string, status: Order['status'], estimatedTime?: string, notas?: string) => {
+    const updatePayload: any = { status };
+    if (estimatedTime !== undefined) updatePayload.tiempo_estimado_entrega = estimatedTime;
+    if (notas !== undefined) updatePayload.notas_admin = notas;
+
+    const prevOrder = ordersRef.current.find(o => o.id === orderId);
+
+    setOrders(prev => prev.map(o => o.id === orderId ? {
+      ...o,
+      ...updatePayload
     } : o));
-    
-    // Find who placed the order and send a profile notification
-    const orderObj = orders.find(o => o.id === orderId);
-    const targetPhone = orderObj?.cliente_telefono;
-    const clientName = orderObj?.cliente_nombre || 'Cliente';
-    
+
+    const targetPhone = prevOrder?.cliente_telefono;
+    const clientName = prevOrder?.cliente_nombre || 'Cliente';
+
     let statusMsg = `Tu pedido ${orderId} ahora se encuentra en estado: ${status}.`;
     if (status === 'En preparación') {
       statusMsg = `🥬 ¡Buenas noticias, ${clientName}! Tu pedido ${orderId} ya está en preparación en nuestros almacenes de Las Acacias.`;
@@ -2461,37 +2469,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       statusMsg = `🛵 ¡Tu pedido ${orderId} va en camino! Nuestro motorizado se dirige a tu ubicación en Valencia con cadena de frío.`;
     } else if (status === 'Entregado') {
       statusMsg = `✅ Pedido ${orderId} entregado con éxito. ¡Gracias por preferir a ${config.site_nombre || 'nuestra tienda'}!`;
-    } else {
-      statusMsg = `El pedido ${orderId} ahora se encuentra en estado: ${status}.`;
     }
-    
-    if (estimatedTime) {
-      statusMsg += ` Tiempo estimado de entrega: ${estimatedTime}.`;
-    }
-    
+    if (estimatedTime) statusMsg += ` Tiempo estimado de entrega: ${estimatedTime}.`;
+
     if (targetPhone) {
       addNotification('Estado de Pedido Actualizado', statusMsg, 'personal', targetPhone);
     } else {
       addNotification('Estado de Pedido Actualizado', statusMsg, 'todos');
     }
-    
-    if (orderObj) {
-      const updatePayload: any = { status };
-      if (estimatedTime !== undefined) {
-        updatePayload.tiempo_estimado_entrega = estimatedTime;
+
+    const { error } = await supabase.from('orders')
+      .update(updatePayload)
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Update order status error:', error);
+      if (prevOrder) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...prevOrder } : o));
       }
-      if (notas !== undefined) {
-        updatePayload.notas_admin = notas;
-      }
-      supabase.from('orders')
-        .update(updatePayload)
-        .eq('id', orderId)
-        .then(({ error }) => { if (error) console.error('Update order status error:', error); });
     }
   };
 
   const updateOrderItems = async (orderId: string, newItems: OrderItem[]) => {
-    const originalOrder = orders.find(o => o.id === orderId);
+    const originalOrder = ordersRef.current.find(o => o.id === orderId);
     if (!originalOrder) return;
 
     const oldItems = originalOrder.items;

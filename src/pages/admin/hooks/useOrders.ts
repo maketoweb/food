@@ -1,9 +1,10 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useApp } from '../../../store/AppContext';
 import { Order } from '../../../types/store';
 
 export function useOrders(sedeId?: string) {
   const { orders, updateOrderStatus } = useApp();
+  const [advancingId, setAdvancingId] = useState<string | null>(null);
 
   const filteredBySede = useMemo(() => {
     if (!sedeId) return orders;
@@ -14,11 +15,16 @@ export function useOrders(sedeId?: string) {
   const completedOrders = useMemo(() => filteredBySede.filter(o => o.status === 'Entregado'), [filteredBySede]);
   const cancelledOrders = useMemo(() => filteredBySede.filter(o => o.status === 'Cancelado'), [filteredBySede]);
 
-  const advanceStatus = useCallback((order: Order) => {
+  const advanceStatus = useCallback(async (order: Order) => {
     const statusFlow: Order['status'][] = ['Pendiente', 'Procesando', 'En preparación', 'Listo', 'En camino', 'Entregado'];
     const currentIdx = statusFlow.indexOf(order.status);
     if (currentIdx >= 0 && currentIdx < statusFlow.length - 1) {
-      updateOrderStatus(order.id, statusFlow[currentIdx + 1]);
+      setAdvancingId(order.id);
+      try {
+        await updateOrderStatus(order.id, statusFlow[currentIdx + 1]);
+      } finally {
+        setAdvancingId(null);
+      }
     }
   }, [updateOrderStatus]);
 
@@ -44,6 +50,7 @@ export function useOrders(sedeId?: string) {
     completedOrders,
     cancelledOrders,
     advanceStatus,
+    advancingId,
     getOrdersByStatus,
     getTotalRevenue,
     getTodayOrders,

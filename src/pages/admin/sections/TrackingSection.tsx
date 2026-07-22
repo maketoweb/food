@@ -20,7 +20,7 @@ const TrackingSection: React.FC = () => {
   const { config } = useApp();
   const [sedeFilter, setSedeFilter] = useState<string>('');
   const activeSedes = config.sedes?.filter(s => s.activa) || [];
-  const { activeOrders, advanceStatus } = useOrders(sedeFilter || undefined);
+  const { activeOrders, advanceStatus, advancingId } = useOrders(sedeFilter || undefined);
   const themeColor = config.theme_color || '#0f5d34';
 
   const [statusFilter, setStatusFilter] = useState<Order['status'] | 'Todos'>('Todos');
@@ -43,8 +43,8 @@ const TrackingSection: React.FC = () => {
     setSelectedOrderId(prev => prev === orderId ? null : orderId);
   }, []);
 
-  const handleAdvance = useCallback((order: Order) => {
-    advanceStatus(order);
+  const handleAdvance = useCallback(async (order: Order) => {
+    await advanceStatus(order);
   }, [advanceStatus]);
 
   const selectedOrder = filteredOrders.find(o => o.id === selectedOrderId) || null;
@@ -197,12 +197,19 @@ const TrackingSection: React.FC = () => {
                       <div className="border-t border-slate-100 p-2 bg-slate-50">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleAdvance(order); }}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 text-[11px] font-bold text-white rounded-lg cursor-pointer active:scale-95 transition-transform"
+                          disabled={advancingId === order.id}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 text-[11px] font-bold text-white rounded-lg cursor-pointer active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ backgroundColor: themeColor }}
                         >
-                          {cfg.icon}
-                          {cfg.nextLabel}
-                          <ArrowRight size={12} />
+                          {advancingId === order.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              {cfg.icon}
+                              {cfg.nextLabel}
+                              <ArrowRight size={12} />
+                            </>
+                          )}
                         </button>
                       </div>
                     )}
