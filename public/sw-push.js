@@ -1,6 +1,29 @@
 // Custom Push Notifications Service Worker Extension for Marketo PWA
 // Loaded via workbox importScripts (generateSW strategy)
 
+// ─── SPA Navigation Handler ───
+// Intercept navigation requests to prevent redirect errors from the server.
+// Serves index.html from cache for all SPA navigation routes.
+self.addEventListener('fetch', function(event) {
+  if (event.request.mode === 'navigate' && event.request.method === 'GET') {
+    var url = new URL(event.request.url);
+    if (url.pathname.startsWith('/api/')) return;
+    event.respondWith(
+      caches.open('workbox-precache-v2').then(function(cache) {
+        return cache.match('/index.html').then(function(cached) {
+          if (cached) return cached;
+          return caches.match('/index.html').then(function(c2) {
+            if (c2) return c2;
+            return fetch(event.request, { redirect: 'follow' }).catch(function() {
+              return caches.match('/offline.html');
+            });
+          });
+        });
+      })
+    );
+  }
+});
+
 function clearAssetsCache() {
   return caches.keys().then(function(names) {
     return Promise.all(names.map(function(n) {

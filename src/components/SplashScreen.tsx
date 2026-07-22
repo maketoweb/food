@@ -96,16 +96,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ config, onComplete }
           animation: phase !== 'init' ? 'logo-entrance 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'none',
         }}
       >
-        {/* Glow ring behind logo */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: 140,
-            height: 140,
-            background: `radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)`,
-            animation: 'glow-pulse 2s ease-in-out infinite',
-          }}
-        />
         <img
           src={logoUrl}
           alt={siteName}

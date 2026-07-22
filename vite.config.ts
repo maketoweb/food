@@ -19,6 +19,9 @@ export default defineConfig(({mode}) => {
           importScripts: ['/sw-push.js'],
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//],
+          additionalManifestEntries: [
+            { url: '/offline.html', revision: null },
+          ],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

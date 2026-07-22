@@ -139,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({ config, onInstallClick, onAdminC
             {/* Logo + Nombre */}
             <div className="flex items-center gap-3">
               {config.logo_url ? (
-                <img src={config.logo_url} alt={config.site_nombre} className="w-10 h-10 rounded-full object-cover" />
+                <img src={config.logo_url} alt={config.site_nombre} className="h-10 w-auto max-w-[140px] object-contain" />
               ) : (
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: themeColor }}>
                   {config.site_nombre?.[0] || 'F'}

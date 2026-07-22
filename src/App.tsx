@@ -105,6 +105,10 @@ function AppContent() {
           baseManifest.shortcuts = baseManifest.shortcuts.map((s: any) => ({
             ...s,
             url: s.url && !s.url.startsWith('http') ? origin + s.url : s.url,
+            icons: s.icons ? s.icons.map((ic: any) => ({
+              ...ic,
+              src: ic.src && !ic.src.startsWith('http') && !ic.src.startsWith('data:') ? origin + ic.src : ic.src,
+            })) : s.icons,
           }));
         }
         if (config.theme_color) {

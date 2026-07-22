@@ -1,11 +1,22 @@
-const sharp = require('sharp');
-const path = require('path');
+const { Resvg } = require('@resvg/resvg-js');
 const fs = require('fs');
+const path = require('path');
 
-const svgPath = path.join(__dirname, 'public', 'icon.svg');
-const outDir = path.join(__dirname, 'public');
+const SVG_PATH = path.join(__dirname, 'public', 'icon.svg');
+const OUT_DIR = path.join(__dirname, 'public');
 
-const sizes = [
+const svgContent = fs.readFileSync(SVG_PATH, 'utf8');
+
+function renderPNG(svg, size) {
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: 'width', value: size },
+    background: 'rgba(0,0,0,0)',
+  });
+  const pngData = resvg.render();
+  return pngData.asPng();
+}
+
+const icons = [
   { name: 'pwa-192x192.png', size: 192 },
   { name: 'pwa-512x512.png', size: 512 },
   { name: 'apple-touch-icon.png', size: 180 },
@@ -14,21 +25,18 @@ const sizes = [
   { name: 'badge.png', size: 96 },
 ];
 
-async function generate() {
-  const svgBuffer = fs.readFileSync(svgPath);
-  
-  for (const { name, size } of sizes) {
-    await sharp(svgBuffer)
-      .resize(size, size)
-      .png({ quality: 100 })
-      .toFile(path.join(outDir, name));
-    console.log(`✓ ${name} (${size}x${size})`);
+let generated = 0;
+for (const icon of icons) {
+  try {
+    const png = renderPNG(svgContent, icon.size);
+    const outPath = path.join(OUT_DIR, icon.name);
+    fs.writeFileSync(outPath, png);
+    const stats = fs.statSync(outPath);
+    console.log(`✓ ${icon.name} (${icon.size}x${icon.size}) - ${(stats.size / 1024).toFixed(1)}KB`);
+    generated++;
+  } catch (err) {
+    console.error(`  FAILED: ${icon.name} - ${err.message}`);
   }
-  
-  console.log('\nAll icons generated!');
 }
 
-generate().catch(err => {
-  console.error('Error generating icons:', err);
-  process.exit(1);
-});
+console.log(`\nGenerated ${generated}/${icons.length} icons with transparent backgrounds.`);

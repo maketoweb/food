@@ -274,7 +274,7 @@ const TiendaSection: React.FC = () => {
             <SectionTitle>Vista Previa</SectionTitle>
             <div className="flex items-center gap-4 p-3 rounded-xl" style={{ background: 'var(--ios-bg)' }}>
               {config.logo_url ? (
-                <img src={config.logo_url} alt="Logo" className="w-12 h-12 rounded-xl object-cover" style={{ border: '2px solid var(--ios-border)' }} />
+                <img src={config.logo_url} alt="Logo" className="w-12 h-12 object-contain" style={{ border: '2px solid var(--ios-border)' }} />
               ) : (
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold" style={{ background: themeColor }}>
                   {config.site_nombre?.[0] || 'A'}

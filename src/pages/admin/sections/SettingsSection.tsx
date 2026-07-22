@@ -1014,7 +1014,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ setTab }) => {
               <div className="flex items-center justify-between px-4 py-3" style={{ backgroundColor: config.theme_color || '#6d28d9' }}>
                 <div className="flex items-center gap-2">
                   {config.logo_url ? (
-                    <img src={config.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
+                    <img src={config.logo_url} alt="Logo" className="w-8 h-8 object-contain" />
                   ) : (
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: config.secondary_color || '#1e293b' }}>
                       {config.site_nombre?.[0] || 'F'}

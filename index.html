@@ -93,11 +93,13 @@
               document.querySelector('meta[property="og:site_name"]').setAttribute('content', cfg.site_nombre);
             }
             if (cfg.pwa_icon_url && manifestLink) {
+              var iconUrl = cfg.pwa_icon_url;
+              if (iconUrl && (iconUrl.startsWith('http://') || iconUrl.startsWith('https://') || iconUrl.startsWith('data:'))) {
               var manifestHref = manifestLink.getAttribute('href') || manifestLink.href;
               fetch(manifestHref).then(function(r) { return r.json(); }).then(function(baseManifest) {
                 var origin = window.location.origin;
                 baseManifest.icons = baseManifest.icons.map(function(icon) {
-                  return Object.assign({}, icon, { src: cfg.pwa_icon_url });
+                  return Object.assign({}, icon, { src: iconUrl });
                 });
                 if (baseManifest.start_url && !baseManifest.start_url.startsWith('http')) {
                   baseManifest.start_url = origin + baseManifest.start_url;
@@ -114,6 +116,15 @@
                     if (fixed.url && !fixed.url.startsWith('http')) {
                       fixed.url = origin + fixed.url;
                     }
+                    if (fixed.icons) {
+                      fixed.icons = fixed.icons.map(function(ic) {
+                        var newIc = Object.assign({}, ic);
+                        if (newIc.src && !newIc.src.startsWith('http') && !newIc.src.startsWith('data:')) {
+                          newIc.src = origin + newIc.src;
+                        }
+                        return newIc;
+                      });
+                    }
                     return fixed;
                   });
                 }
@@ -129,6 +140,7 @@
                 var blobUrl = URL.createObjectURL(blob);
                 manifestLink.href = blobUrl;
               }).catch(function() {});
+              }
             }
           }
         } catch(e) {}
